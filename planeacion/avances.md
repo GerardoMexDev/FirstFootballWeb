@@ -137,6 +137,9 @@ diseñador → Community Manager.
   marzo/noviembre Norteamérica) — la hora en Uruguay no debe desfasarse.
 - El warning `no-page-custom-font` en `app/layout.tsx` está silenciado a propósito (fuentes por
   `<link>` para no tocar los tokens de la demo).
+- **Cosmético:** el `.toast` vacío del shell asoma un pixel en el borde inferior (su
+  `transform:translate(-50%,140%)` no lo tapa del todo sin contenido). Se resuelve solo al
+  cablear los toasts; si molesta antes, no renderizar `#toast` hasta que tenga contenido.
 
 ## 7. Decisiones de arquitectura ya tomadas (no reabrir sin motivo)
 
