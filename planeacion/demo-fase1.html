@@ -1,0 +1,1228 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Football First — Fase 1</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Archivo:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#FFFFFF;--surface:#FAF9F8;--surface-2:#F3F1EF;--surface-3:#EAE7E4;
+  --line:#EDEBE8;--line-2:#DCD8D4;
+  --text:#141110;--text-2:#6E6862;--text-3:#A29B95;
+  --accent:#E64227;--accent-soft:#FDF0ED;--accent-hover:#C8371E;--on-accent:#FFFFFF;
+  --sh-1:0 1px 2px rgba(20,17,16,.04),0 1px 3px rgba(20,17,16,.03);
+  --sh-2:0 2px 6px -1px rgba(20,17,16,.06),0 8px 24px -6px rgba(20,17,16,.08);
+  --sh-3:0 4px 12px -2px rgba(20,17,16,.07),0 24px 64px -12px rgba(20,17,16,.16);
+  --ring:0 0 0 3px var(--accent-soft);
+  --velo:rgba(20,17,16,.34);
+  --foto-fb:linear-gradient(165deg,#EAE7E3,#D3CECA);
+  --t-xs:11.5px;--t-sm:12.5px;--t-md:13.5px;--t-base:15px;--t-lg:17px;
+  --display:'Anton',Impact,sans-serif;
+  --ui:'Archivo',-apple-system,BlinkMacSystemFont,sans-serif;
+  --r-lg:14px;--r:11px;--r-sm:8px;--r-xs:6px;
+  --ease:cubic-bezier(.16,1,.3,1);--ease-2:cubic-bezier(.4,0,.2,1);
+  --maxw:1400px;--pad:clamp(22px,4.5vw,60px);
+}
+[data-theme="dark"]{
+  --bg:#0E0C0B;--surface:#161312;--surface-2:#1F1B19;--surface-3:#2A2422;
+  --line:#241F1D;--line-2:#38312D;
+  --text:#F7F4F2;--text-2:#A79F99;--text-3:#6F6862;
+  --accent:#F55437;--accent-soft:#2A1411;--accent-hover:#FF6E52;--on-accent:#140A07;
+  --sh-1:inset 0 0 0 1px rgba(255,255,255,.032);
+  --sh-2:inset 0 0 0 1px rgba(255,255,255,.055),0 8px 28px -8px rgba(0,0,0,.65);
+  --sh-3:inset 0 0 0 1px rgba(255,255,255,.07),0 30px 70px -14px rgba(0,0,0,.8);
+  --ring:0 0 0 3px rgba(245,84,55,.18);--velo:rgba(0,0,0,.62);
+  --foto-fb:linear-gradient(165deg,#2C2523,#161312);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{color-scheme:light}html[data-theme="dark"]{color-scheme:dark}
+body{font-family:var(--ui);font-size:var(--t-base);background:var(--bg);color:var(--text);
+  line-height:1.55;-webkit-font-smoothing:antialiased;overflow-x:hidden;transition:background .4s var(--ease-2),color .4s var(--ease-2)}
+button,input,textarea{font:inherit;color:inherit;background:none;border:none}
+button{cursor:pointer}img{display:block;max-width:100%}
+::selection{background:var(--accent);color:var(--on-accent)}
+.ico{width:16px;height:16px;flex-shrink:0;fill:none;stroke:currentColor;stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round;transition:transform .4s var(--ease)}
+.ico--sm{width:13px;height:13px;stroke-width:2}
+:focus{outline:none}
+:focus-visible{outline:2px solid var(--accent);outline-offset:3px;border-radius:var(--r-sm)}
+.saltar{position:absolute;left:-9999px;top:0;z-index:300;padding:13px 20px;background:var(--accent);color:var(--on-accent);font-weight:600}
+.saltar:focus{left:0}
+.num,.dato b,.kpi b,.hora b,.jug__stats b,.filaht__n,.anio__m b,.celda__n,.ev b,.hero__cd b{font-variant-numeric:tabular-nums;letter-spacing:-.012em}
+.d1{font-family:var(--display);text-transform:uppercase;font-size:clamp(40px,5.6vw,72px);line-height:.84;letter-spacing:-.012em}
+.d2{font-family:var(--display);text-transform:uppercase;font-size:clamp(25px,3vw,33px);line-height:.94;letter-spacing:-.008em}
+.d3{font-family:var(--display);text-transform:uppercase;font-size:19px;line-height:1.04}
+.label{font-size:var(--t-sm);font-weight:600;color:var(--text-2)}
+.meta{font-size:var(--t-sm);color:var(--text-3);line-height:1.6}
+.meta b{font-weight:600;color:var(--text-2)}
+.tag{display:inline-flex;align-items:center;gap:6px;padding:5px 11px;border-radius:999px;font-size:var(--t-xs);font-weight:600;white-space:nowrap;line-height:1.4}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:11px 19px;border-radius:var(--r-sm);
+  background:var(--text);color:var(--bg);font-size:var(--t-md);font-weight:600;
+  transition:background .3s var(--ease-2),transform .35s var(--ease),box-shadow .35s var(--ease)}
+.btn:hover{background:var(--accent);color:var(--on-accent);transform:translateY(-1px);box-shadow:var(--sh-2)}
+.btn--a{background:var(--accent);color:var(--on-accent)}
+.btn--a:hover{background:var(--accent-hover)}
+.btn--g{background:var(--surface-2);color:var(--text-2);box-shadow:var(--sh-1)}
+.btn--g:hover{background:var(--surface-3);color:var(--text)}
+.btn--sm{padding:8px 14px;font-size:var(--t-sm);gap:6px}
+.btn--ico{padding:9px;width:36px;height:36px}
+.logo{display:block;width:100%;height:100%;fill:currentColor}
+
+.login{position:fixed;inset:0;z-index:200;display:grid;grid-template-columns:1.22fr 1fr;background:#0E0C0B}
+.login.off{display:none}
+.login__art{position:relative;overflow:hidden;display:flex;flex-direction:column;justify-content:space-between;padding:clamp(30px,4.5vw,60px)}
+.login__fb{position:absolute;inset:0;background:linear-gradient(150deg,#2C2523,#0E0C0B)}
+.login__bg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;filter:grayscale(1) contrast(1.14) brightness(.46)}
+.login__art::after{content:'';position:absolute;inset:0;background:linear-gradient(200deg,rgba(230,66,39,.26),transparent 58%)}
+.login__mark{position:relative;z-index:2;display:flex;align-items:center;gap:16px}
+.login__mark span{width:46px;height:47px;color:#E64227}
+.login__mark b{font-family:var(--display);text-transform:uppercase;font-size:27px;color:#fff;line-height:1}
+.login__claim{position:relative;z-index:2}
+.login__claim p{font-family:var(--display);text-transform:uppercase;font-size:clamp(32px,3.8vw,56px);line-height:.92;color:#fff;max-width:13ch;letter-spacing:-.012em}
+.login__claim p em{font-style:normal;color:#E64227}
+.login__claim small{display:block;margin-top:22px;font-size:var(--t-base);color:rgba(255,255,255,.6);max-width:36ch;line-height:1.65}
+.login__form{display:flex;align-items:center;justify-content:center;padding:clamp(28px,5vw,60px);background:var(--bg)}
+.form{width:100%;max-width:352px}
+.form h1{font-family:var(--display);text-transform:uppercase;font-size:33px;line-height:.94;margin-bottom:10px}
+.form>p{font-size:var(--t-md);color:var(--text-2);margin-bottom:34px}
+.campo{margin-bottom:20px}
+.campo label{display:block;font-size:var(--t-sm);font-weight:600;color:var(--text-2);margin-bottom:8px}
+.campo input{width:100%;padding:13px 15px;border-radius:var(--r-sm);background:var(--surface-2);font-size:var(--t-base);box-shadow:var(--sh-1);transition:background .3s,box-shadow .3s}
+.campo input::placeholder{color:var(--text-3)}
+.campo input:focus{outline:none;background:var(--bg);box-shadow:var(--ring),0 0 0 1px var(--accent)}
+.campo input:disabled{opacity:.5;cursor:not-allowed}
+.form .btn{width:100%;margin-top:12px;padding:14px}
+.form__pie{margin-top:20px;font-size:var(--t-sm);color:var(--text-3)}
+
+.app{display:none}.app.on{display:block}
+.top{position:sticky;top:0;z-index:90;background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:blur(20px) saturate(1.4)}
+.top::after{content:'';position:absolute;left:0;right:0;bottom:0;height:1px;background:var(--line)}
+.top__in{max-width:var(--maxw);margin:0 auto;padding:0 var(--pad);height:72px;display:flex;align-items:center;gap:34px}
+.brand{display:flex;align-items:center;gap:12px;white-space:nowrap}
+.brand span{width:27px;height:28px;color:var(--accent)}
+.brand b{font-family:var(--display);text-transform:uppercase;font-size:17px;line-height:1}
+.brand .fase{padding:3px 9px;border-radius:999px;background:var(--surface-2);font-size:var(--t-xs);font-weight:600;color:var(--text-3)}
+.nav{display:flex;gap:3px;margin-right:auto}
+.nav button{padding:9px 16px;border-radius:var(--r-sm);font-size:var(--t-md);font-weight:500;color:var(--text-2);transition:color .3s,background .3s var(--ease-2);position:relative}
+.nav button:hover{color:var(--text);background:var(--surface-2)}
+.nav button.on{color:var(--text);font-weight:600;background:var(--surface-2)}
+.nav button.on::after{content:'';position:absolute;left:16px;right:16px;bottom:5px;height:2px;border-radius:2px;background:var(--accent)}
+.top__acc{display:flex;align-items:center;gap:8px}
+.icobtn{width:37px;height:37px;display:grid;place-items:center;border-radius:var(--r-sm);color:var(--text-2);transition:background .3s,color .3s}
+.icobtn:hover{background:var(--surface-2);color:var(--text)}
+.icobtn:hover .ico{transform:rotate(-14deg) scale(1.06)}
+.buscabtn{display:flex;align-items:center;gap:10px;padding:9px 13px 9px 12px;border-radius:var(--r-sm);background:var(--surface-2);color:var(--text-3);font-size:var(--t-md);transition:background .3s,color .3s}
+.buscabtn:hover{background:var(--surface-3);color:var(--text-2)}
+.buscabtn kbd{padding:2px 6px;border-radius:5px;background:var(--bg);font-family:var(--ui);font-size:10.5px;font-weight:600;box-shadow:var(--sh-1)}
+[data-theme="dark"] .sol{display:none}[data-theme="light"] .luna{display:none}
+
+.wrap{max-width:var(--maxw);margin:0 auto;padding:clamp(36px,5vw,64px) var(--pad) 130px}
+.head{margin-bottom:44px}
+.head h1 em{font-style:normal;color:var(--accent)}
+.head .sub{margin-top:16px;font-size:var(--t-base);color:var(--text-2);max-width:60ch;line-height:1.65}
+.vista{display:none}.vista.on{display:block}
+.sec{margin-bottom:56px}
+.sec__t{display:flex;align-items:baseline;gap:16px;flex-wrap:wrap;margin-bottom:20px}
+.sec__t em{font-style:normal;color:var(--accent)}
+
+.hero{position:relative;overflow:hidden;width:100%;text-align:left;margin-bottom:44px;min-height:352px;border-radius:var(--r-lg);
+  display:flex;flex-direction:column;justify-content:flex-end;padding:clamp(26px,4vw,44px);background:#0E0C0B;
+  transition:transform .6s var(--ease),box-shadow .6s var(--ease)}
+.hero:hover{transform:translateY(-3px);box-shadow:var(--sh-3)}
+.hero__fb{position:absolute;inset:0;background:linear-gradient(150deg,#2C2523,#0E0C0B)}
+.hero__bg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;filter:grayscale(1) contrast(1.1) brightness(.46);transition:filter .9s var(--ease),transform 1.1s var(--ease)}
+.hero:hover .hero__bg{filter:grayscale(.1) brightness(.53);transform:scale(1.045)}
+.hero__grad{position:absolute;inset:0;background:linear-gradient(to top,rgba(14,12,11,.95) 6%,rgba(14,12,11,.44) 56%,rgba(14,12,11,.06) 100%)}
+.hero__top{position:absolute;top:clamp(26px,4vw,44px);left:clamp(26px,4vw,44px);right:clamp(26px,4vw,44px);z-index:2;display:flex;align-items:flex-start;justify-content:space-between;gap:18px;flex-wrap:wrap}
+.hero__flag{display:inline-flex;align-items:center;gap:7px;padding:7px 13px;border-radius:999px;background:var(--accent);color:var(--on-accent);font-size:var(--t-xs);font-weight:600}
+.hero__cd{color:#fff;text-align:right}
+.hero__cd b{display:block;font-family:var(--display);font-size:32px;line-height:.9}
+.hero__cd span{font-size:var(--t-sm);color:rgba(255,255,255,.55)}
+.hero__b{position:relative;z-index:2;color:#fff}
+.hero__c{display:flex;align-items:center;gap:10px;margin-bottom:16px}
+.hero__c i{padding:5px 10px;border-radius:var(--r-xs);font-style:normal;background:rgba(255,255,255,.13);backdrop-filter:blur(6px);font-size:10px;font-weight:700}
+.hero__c span{font-size:var(--t-md);font-weight:500;color:rgba(255,255,255,.88)}
+.hero__t{font-family:var(--display);text-transform:uppercase;font-size:clamp(32px,4.8vw,60px);line-height:.88;margin-bottom:18px;max-width:16ch;letter-spacing:-.014em}
+.hero__m{display:flex;align-items:center;gap:16px;flex-wrap:wrap;font-size:var(--t-md);color:rgba(255,255,255,.66)}
+.hero__m span{display:flex;align-items:center;gap:7px}
+.hero__j{display:flex;align-items:center;gap:11px;margin-top:22px}
+.hero__j .cara{box-shadow:0 0 0 2.5px rgba(255,255,255,.16);filter:none}
+.hero__j small{font-size:var(--t-sm);color:rgba(255,255,255,.56)}
+
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(158px,1fr));gap:10px;margin-bottom:52px}
+.kpi{padding:24px 26px 22px;border-radius:var(--r);background:var(--surface);box-shadow:var(--sh-1);transition:transform .45s var(--ease),box-shadow .45s var(--ease)}
+.kpi:hover{transform:translateY(-2px);box-shadow:var(--sh-2)}
+.kpi b{display:block;font-family:var(--display);font-size:42px;line-height:.84}
+.kpi span{display:block;margin-top:12px;font-size:var(--t-sm);font-weight:500;color:var(--text-3);line-height:1.4}
+.kpi--a b{color:var(--accent)}
+
+.barra{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:26px}
+.chip{padding:9px 16px;border-radius:999px;font-size:var(--t-md);font-weight:500;color:var(--text-2);background:var(--surface-2);transition:background .3s,color .3s,transform .35s var(--ease)}
+.chip:hover{background:var(--surface-3);color:var(--text);transform:translateY(-1px)}
+.chip.on{background:var(--text);color:var(--bg);font-weight:600;box-shadow:var(--sh-2)}
+.barra .cuenta{margin-left:auto;font-size:var(--t-md);color:var(--text-3)}
+
+.hitos__l{display:grid;grid-template-columns:repeat(auto-fill,minmax(262px,1fr));gap:10px}
+.hito{padding:22px 24px;border-radius:var(--r);text-align:left;background:var(--surface);box-shadow:var(--sh-1);transition:transform .45s var(--ease),box-shadow .45s var(--ease),background .3s}
+.hito:hover{transform:translateY(-3px);box-shadow:var(--sh-2);background:var(--surface-2)}
+.hito--ya{background:var(--accent-soft)}
+.hito__n{font-family:var(--display);font-size:38px;line-height:.84;margin-bottom:11px;font-variant-numeric:tabular-nums}
+.hito--ya .hito__n{color:var(--accent)}
+.hito__q{font-size:var(--t-md);font-weight:600;line-height:1.45;margin-bottom:9px}
+.hito__c{font-size:var(--t-sm);color:var(--text-3);line-height:1.55}
+.hito__c b{font-weight:600;color:var(--text-2)}
+
+.grupo{margin-bottom:44px}
+.grupo__t{display:flex;align-items:baseline;gap:14px;margin-bottom:14px;padding-left:2px}
+.grupo__t span{font-size:var(--t-md);color:var(--text-3)}
+.grupo--hoy .grupo__t .d3{color:var(--accent)}
+.lista__g{display:grid;gap:8px}
+.match{display:grid;grid-template-columns:126px 1fr auto;gap:30px;align-items:center;padding:26px 28px;border-radius:var(--r);width:100%;text-align:left;
+  background:var(--surface);box-shadow:var(--sh-1);position:relative;overflow:hidden;
+  transition:transform .5s var(--ease),box-shadow .5s var(--ease),background .35s var(--ease-2)}
+.match:hover{transform:translateY(-2px);box-shadow:var(--sh-2);background:var(--bg)}
+[data-theme="dark"] .match:hover{background:var(--surface-2)}
+.match::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:transparent;transition:background .35s}
+.match--hoy::before{background:var(--accent)}
+.match--tent{opacity:.62}.match--tent:hover{opacity:.85}
+.match--int{background:linear-gradient(100deg,var(--accent-soft) 0%,var(--surface) 46%)}
+.match--md{padding-top:32px;padding-bottom:32px}
+.match--md .duelo{font-size:26px}
+.hora b{display:block;font-family:var(--display);font-size:26px;line-height:.94}
+.hora .uy{display:flex;align-items:center;gap:5px;font-size:var(--t-sm);font-weight:500;color:var(--text-3);margin-top:6px}
+.hora .loc{display:flex;align-items:center;gap:5px;font-size:var(--t-sm);color:var(--text-3);margin-top:10px;padding-top:10px;box-shadow:inset 0 1px 0 var(--line)}
+.hora .loc b{display:inline;font-family:var(--ui);font-size:var(--t-md);font-weight:600;color:var(--text-2)}
+.hora .tent{color:var(--accent);font-weight:600}
+.mid{min-width:0}
+.compe{display:inline-flex;align-items:center;gap:9px;margin-bottom:11px}
+.compe__c{padding:4px 9px;border-radius:var(--r-xs);background:var(--surface-3);font-size:9.5px;font-weight:700;color:var(--text-3);letter-spacing:.03em}
+.compe__n{font-size:var(--t-sm);font-weight:600;color:var(--text-2)}
+.compe--int .compe__c{background:var(--accent);color:var(--on-accent)}
+.compe--int .compe__n{color:var(--accent)}
+.duelo{display:flex;align-items:center;flex-wrap:wrap;gap:10px;font-family:var(--display);text-transform:uppercase;font-size:22px;line-height:1.08;margin-bottom:11px;letter-spacing:-.008em}
+.duelo .vs{color:var(--text-3);font-size:14px;margin:0 4px;font-family:var(--ui);font-weight:500;text-transform:lowercase}
+.linea{display:flex;align-items:center;gap:14px;flex-wrap:wrap;font-size:var(--t-sm);color:var(--text-3)}
+.linea span{display:flex;align-items:center;gap:6px}
+.linea b{font-weight:600;color:var(--text-2)}
+.caras{display:flex;align-items:center;gap:11px;margin-top:16px;flex-wrap:wrap}
+.caras__pila{display:flex}
+.cara{width:30px;height:30px;margin-left:-10px;border-radius:50%;object-fit:cover;box-shadow:0 0 0 2.5px var(--surface);
+  background:var(--surface-3);color:var(--text-3);display:grid;place-items:center;font-size:10px;font-weight:700;
+  filter:grayscale(1);transition:filter .5s var(--ease),transform .5s var(--ease)}
+.cara:first-child{margin-left:0}
+.match:hover .cara,.jug:hover .cara{filter:none}
+.caras small{font-size:var(--t-sm);color:var(--text-3)}
+.tag--hito{background:var(--accent);color:var(--on-accent)}
+.tag--sin{background:var(--surface-3);color:var(--text-3)}
+.der{display:flex;align-items:center;gap:10px;color:var(--text-3)}
+.crest{width:27px;height:27px;flex-shrink:0;display:inline-grid;place-items:center;background:hsl(var(--h) 26% 91%);color:hsl(var(--h) 44% 33%);
+  font-family:var(--ui);font-size:9px;font-weight:700;clip-path:polygon(0 0,100% 0,100% 64%,50% 100%,0 64%);
+  filter:saturate(.12);transition:filter .5s var(--ease)}
+[data-theme="dark"] .crest{background:hsl(var(--h) 18% 23%);color:hsl(var(--h) 42% 73%)}
+.match:hover .crest,.jug:hover .crest,.panel .crest,.hero .crest{filter:none}
+.crest--lg{width:40px;height:40px;font-size:12px}
+.crest--sm{width:20px;height:20px;font-size:7px}
+
+.anio{display:grid;grid-template-columns:repeat(12,1fr);gap:6px;margin-bottom:44px}
+.anio__m{padding:15px 8px 13px;border-radius:var(--r-sm);text-align:center;background:var(--surface);box-shadow:var(--sh-1);transition:transform .4s var(--ease),background .3s}
+.anio__m:hover{transform:translateY(-2px);background:var(--surface-2)}
+.anio__m.on{background:var(--surface-3)}
+.anio__m span{display:block;font-size:var(--t-xs);font-weight:500;color:var(--text-3);margin-bottom:9px}
+.anio__m b{display:block;font-family:var(--display);font-size:20px;line-height:1}
+.anio__m.on b{color:var(--accent)}
+.anio__bar{height:3px;margin-top:10px;border-radius:2px;background:var(--surface-3);overflow:hidden}
+.anio__m.on .anio__bar{background:var(--bg)}
+.anio__bar i{display:block;height:100%;border-radius:2px;background:var(--accent);transition:width .6s var(--ease)}
+.cal__nav{display:flex;align-items:center;gap:14px;margin-bottom:22px}
+.cal__nav .d2{min-width:236px}
+.cal__dias{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin-bottom:6px}
+.cal__dias div{padding:0 10px 6px;font-size:var(--t-sm);font-weight:600;color:var(--text-3)}
+.cal__grid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
+.celda{min-height:52px;padding:10px;border-radius:var(--r-sm);background:var(--surface);transition:background .3s}
+.celda:hover{background:var(--surface-2)}
+.celda--con{min-height:auto;box-shadow:var(--sh-1)}
+.celda--fuera{background:transparent;opacity:.38}
+.celda--hoy{background:var(--accent-soft)}
+.celda__n{font-size:var(--t-md);font-weight:600;color:var(--text-3);margin-bottom:8px}
+.celda--hoy .celda__n{color:var(--accent);font-weight:700}
+.ev{display:block;width:100%;text-align:left;padding:7px 9px;margin-bottom:5px;border-radius:var(--r-xs);background:var(--bg);
+  font-size:var(--t-xs);line-height:1.45;color:var(--text-2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  box-shadow:var(--sh-1);transition:transform .35s var(--ease),box-shadow .35s,background .25s}
+.ev:last-child{margin-bottom:0}
+.ev:hover{transform:translateY(-1px);box-shadow:var(--sh-2);background:var(--surface-2)}
+.ev b{display:block;font-weight:700;color:var(--text)}
+.ev--tent{opacity:.6}
+.ev--int{background:var(--accent-soft);color:var(--accent)}
+.ev--int b{color:var(--accent)}
+.leyenda{display:flex;gap:26px;flex-wrap:wrap;margin-top:24px;font-size:var(--t-sm);color:var(--text-3)}
+.leyenda span{display:flex;align-items:center;gap:9px}
+.leyenda i{width:16px;height:8px;border-radius:3px;font-style:normal;background:var(--surface-3)}
+.leyenda .t{opacity:.4}.leyenda .a{background:var(--accent)}
+
+.plantel{display:grid;grid-template-columns:repeat(auto-fill,minmax(238px,1fr));gap:12px}
+.jug{position:relative;overflow:hidden;aspect-ratio:3/4;border-radius:var(--r);display:flex;flex-direction:column;justify-content:flex-end;
+  padding:22px;text-align:left;background:var(--surface);box-shadow:var(--sh-1);
+  transition:transform .55s var(--ease),box-shadow .55s var(--ease)}
+.jug:hover{transform:translateY(-4px);box-shadow:var(--sh-3)}
+.jug__fb{position:absolute;inset:0;background:var(--foto-fb)}
+.jug__foto{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;filter:grayscale(1) contrast(1.05);transition:filter .7s var(--ease),transform .8s var(--ease)}
+.jug:hover .jug__foto{filter:none;transform:scale(1.06)}
+.jug__grad{position:absolute;inset:0;background:linear-gradient(to top,rgba(14,12,11,.94) 4%,rgba(14,12,11,.48) 46%,rgba(14,12,11,.04) 100%)}
+.jug__txt{position:relative;z-index:2;color:#fff;transition:transform .55s var(--ease)}
+.jug:hover .jug__txt{transform:translateY(-6px)}
+.jug__txt>b{display:block;font-family:var(--display);text-transform:uppercase;font-size:21px;line-height:1;margin-bottom:9px}
+.jug__club{display:flex;align-items:center;gap:8px;font-size:var(--t-md);font-weight:500;color:rgba(255,255,255,.84);margin-bottom:3px}
+.jug__pos{font-size:var(--t-sm);color:rgba(255,255,255,.54)}
+.jug__n{position:absolute;top:18px;right:20px;z-index:2;font-family:var(--display);font-size:17px;color:rgba(255,255,255,.42);transition:color .4s}
+.jug:hover .jug__n{color:var(--accent)}
+.jug__hito{position:absolute;top:18px;left:20px;z-index:2;padding:5px 10px;border-radius:999px;background:var(--accent);color:var(--on-accent);font-size:var(--t-xs);font-weight:600}
+.jug__pais{position:absolute;top:18px;left:20px;z-index:2;padding:5px 10px;border-radius:999px;background:rgba(255,255,255,.16);backdrop-filter:blur(8px);color:#fff;font-size:var(--t-xs);font-weight:600}
+.jug__stats{position:absolute;left:0;right:0;bottom:0;z-index:3;display:grid;grid-template-columns:repeat(3,1fr);
+  background:color-mix(in srgb,var(--bg) 94%,transparent);backdrop-filter:blur(14px);
+  transform:translateY(101%);transition:transform .45s var(--ease)}
+.jug:hover .jug__stats,.jug:focus-visible .jug__stats{transform:none}
+.jug__stats div{padding:13px 8px;text-align:center}
+.jug__stats b{display:block;font-family:var(--display);font-size:19px;line-height:1}
+.jug__stats span{display:block;margin-top:4px;font-size:var(--t-xs);color:var(--text-3)}
+
+.velo{position:fixed;inset:0;z-index:110;background:var(--velo);backdrop-filter:blur(4px);opacity:0;pointer-events:none;transition:opacity .4s var(--ease-2)}
+.velo.on{opacity:1;pointer-events:auto}
+.panel{position:fixed;top:0;right:0;bottom:0;z-index:120;width:min(580px,100vw);background:var(--bg);box-shadow:var(--sh-3);
+  transform:translateX(100%);transition:transform .5s var(--ease);overflow-y:auto}
+.panel.on{transform:none}
+.panel__top{position:sticky;top:0;background:color-mix(in srgb,var(--bg) 92%,transparent);backdrop-filter:blur(16px);
+  padding:20px clamp(24px,4vw,40px);display:flex;align-items:center;justify-content:space-between;gap:12px;z-index:2}
+.panel__top::after{content:'';position:absolute;left:0;right:0;bottom:0;height:1px;background:var(--line)}
+.panel__x{width:34px;height:34px;display:grid;place-items:center;border-radius:var(--r-sm);color:var(--text-3);transition:background .3s,color .3s,transform .4s var(--ease)}
+.panel__x:hover{background:var(--surface-2);color:var(--text);transform:rotate(90deg)}
+.panel__b{padding:34px clamp(24px,4vw,40px) 80px}
+.bloque{margin-bottom:38px}
+.bloque>.label{display:block;margin-bottom:14px}
+.datos{display:grid;grid-template-columns:repeat(auto-fit,minmax(104px,1fr));gap:8px}
+.dato{padding:17px 18px;border-radius:var(--r-sm);background:var(--surface);box-shadow:var(--sh-1)}
+.dato b{display:block;font-family:var(--display);font-size:27px;line-height:.94}
+.dato span{display:block;margin-top:8px;font-size:var(--t-sm);color:var(--text-3);line-height:1.35}
+.dato--a b{color:var(--accent)}
+.filas{display:grid;gap:6px}
+.filaht{display:flex;align-items:center;gap:16px;padding:16px 18px;border-radius:var(--r-sm);background:var(--surface);box-shadow:var(--sh-1);transition:transform .4s var(--ease)}
+.filaht:hover{transform:translateX(2px)}
+.filaht--ya{background:var(--accent-soft)}
+.filaht__n{font-family:var(--display);font-size:27px;line-height:.9;min-width:46px;color:var(--accent)}
+.filaht__t{flex:1;min-width:0}
+.filaht__t b{display:block;font-size:var(--t-md);font-weight:600;margin-bottom:4px;line-height:1.35}
+.filaht__t span{font-size:var(--t-sm);color:var(--text-3);line-height:1.45}
+.filaht__d{font-size:var(--t-sm);font-weight:600;color:var(--text-2);text-align:right;white-space:nowrap}
+.lst{display:grid;gap:5px}
+.pm{display:flex;align-items:center;gap:14px;width:100%;padding:14px 16px;border-radius:var(--r-sm);background:var(--surface);
+  text-align:left;box-shadow:var(--sh-1);transition:transform .4s var(--ease),box-shadow .4s,background .3s}
+.pm:hover{transform:translateX(3px);box-shadow:var(--sh-2);background:var(--surface-2)}
+.pm img,.pm .ph{width:32px;height:32px;border-radius:50%;object-fit:cover;flex-shrink:0;background:var(--surface-3);color:var(--text-3);
+  display:grid;place-items:center;font-size:var(--t-xs);font-weight:700;filter:grayscale(1);transition:filter .4s}
+.pm:hover img{filter:none}
+.pm b{font-size:var(--t-md);font-weight:600}
+.pm>span{margin-left:auto;display:flex;align-items:center;gap:8px;font-size:var(--t-sm);color:var(--text-3)}
+.pm:hover .ico{transform:translateX(2px)}
+.aviso{display:flex;gap:11px;padding:14px 16px;border-radius:var(--r-sm);background:var(--accent-soft);font-size:var(--t-md);line-height:1.55;color:var(--text-2)}
+.aviso .ico{color:var(--accent);margin-top:2px}
+.sinDato{display:flex;gap:11px;padding:18px;border-radius:var(--r-sm);background:var(--surface);font-size:var(--t-md);color:var(--text-3);line-height:1.6}
+.sinDato .ico{margin-top:2px;flex-shrink:0}
+.redes{display:flex;gap:8px;flex-wrap:wrap}
+.red{display:inline-flex;align-items:center;gap:8px;padding:9px 14px;border-radius:999px;background:var(--surface);box-shadow:var(--sh-1);
+  font-size:var(--t-md);font-weight:500;color:var(--text-2);transition:transform .35s var(--ease),background .3s}
+.red:hover{transform:translateY(-1px);background:var(--surface-2);color:var(--text)}
+
+.busca{position:fixed;inset:0;z-index:140;display:none;align-items:flex-start;justify-content:center;padding:11vh 20px 20px;background:var(--velo);backdrop-filter:blur(5px)}
+.busca.on{display:flex}
+.busca__c{width:100%;max-width:600px;background:var(--bg);border-radius:var(--r-lg);box-shadow:var(--sh-3);max-height:72vh;display:flex;flex-direction:column;overflow:hidden}
+.busca__i{display:flex;align-items:center;gap:13px;padding:19px 22px;position:relative}
+.busca__i::after{content:'';position:absolute;left:0;right:0;bottom:0;height:1px;background:var(--line)}
+.busca__i .ico{width:19px;height:19px;color:var(--text-3)}
+.busca__i input{flex:1;font-size:var(--t-lg)}
+.busca__i input:focus{outline:none}
+.busca__i kbd{padding:3px 8px;border-radius:5px;background:var(--surface-2);font-size:10.5px;font-weight:600;color:var(--text-3)}
+.busca__r{overflow-y:auto;padding:8px}
+.res{display:flex;align-items:center;gap:13px;width:100%;padding:12px 14px;border-radius:var(--r-sm);text-align:left;transition:background .2s,transform .3s var(--ease)}
+.res:hover{background:var(--surface-2);transform:translateX(2px)}
+.res img,.res .ph{width:32px;height:32px;border-radius:50%;flex-shrink:0;object-fit:cover;background:var(--surface-3);color:var(--text-3);display:grid;place-items:center;font-size:var(--t-xs);font-weight:700}
+.res>div{min-width:0;flex:1}
+.res b{display:block;font-size:var(--t-md);font-weight:600;margin-bottom:2px}
+.res span{font-size:var(--t-sm);color:var(--text-3)}
+.res em{font-style:normal;color:var(--accent);font-weight:700}
+.busca__g{padding:14px 14px 7px;font-size:var(--t-xs);font-weight:600;color:var(--text-3)}
+.busca__v{padding:44px 20px;text-align:center;font-size:var(--t-md);color:var(--text-3)}
+
+.who{position:relative}
+.who__btn{display:flex;align-items:center;gap:12px;padding:4px 4px 4px 10px;border-radius:999px;transition:background .3s}
+.who__btn:hover{background:var(--surface-2)}
+.who__t{text-align:right;line-height:1.35}
+.who__t b{display:block;font-size:var(--t-md);font-weight:600}
+.who__t span{font-size:var(--t-sm);color:var(--text-3)}
+.who__av,.who__av img{width:35px;height:35px;border-radius:50%;object-fit:cover;flex-shrink:0}
+.who__av{background:var(--text);color:var(--bg);display:grid;place-items:center;font-weight:700;font-size:var(--t-md)}
+.drop{position:absolute;top:calc(100% + 12px);right:0;z-index:80;width:274px;padding:6px;background:var(--bg);border-radius:var(--r);box-shadow:var(--sh-3);
+  opacity:0;visibility:hidden;transform:translateY(-6px) scale(.97);transform-origin:top right;
+  transition:opacity .25s var(--ease-2),transform .3s var(--ease),visibility .25s}
+.drop.on{opacity:1;visibility:visible;transform:none}
+.drop__h{display:flex;align-items:center;gap:13px;padding:14px 13px;margin-bottom:6px;border-radius:var(--r-sm);background:var(--surface)}
+.drop__h .av,.drop__h img{width:44px;height:44px;border-radius:50%;object-fit:cover;flex-shrink:0;background:var(--text);color:var(--bg);display:grid;place-items:center;font-weight:700;font-size:16px}
+.drop__h>div{min-width:0}
+.drop__h b{display:block;font-size:var(--t-md);font-weight:600;margin-bottom:2px}
+.drop__h>div>span{display:block;font-size:var(--t-sm);color:var(--text-3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.drop__rol{display:inline-block;margin-top:7px;padding:3px 9px;border-radius:999px;background:var(--accent);color:var(--on-accent);font-size:10.5px;font-weight:600}
+.drop>button{display:flex;align-items:center;gap:11px;width:100%;padding:11px 13px;border-radius:var(--r-xs);font-size:var(--t-md);font-weight:500;color:var(--text-2);text-align:left;transition:background .2s,color .2s}
+.drop>button:hover{background:var(--surface-2);color:var(--text)}
+.drop>button.sal{color:var(--accent)}
+.drop>button.sal:hover{background:var(--accent-soft)}
+.drop__sep{height:1px;margin:6px 13px;background:var(--line)}
+.fotoedit{display:flex;align-items:center;gap:20px}
+.fotoedit__img{width:84px;height:84px;border-radius:50%;object-fit:cover;flex-shrink:0;background:var(--surface-2);color:var(--text-3);display:grid;place-items:center;font-family:var(--display);font-size:31px;filter:grayscale(1);transition:filter .4s}
+.fotoedit:hover .fotoedit__img{filter:none}
+.fotoedit>div{display:flex;gap:8px;flex-wrap:wrap}
+.switches{display:grid;gap:5px}
+.switch{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:16px 18px;border-radius:var(--r-sm);background:var(--surface)}
+.switch b{display:block;font-size:var(--t-md);font-weight:600;margin-bottom:3px}
+.switch span{font-size:var(--t-sm);color:var(--text-3);line-height:1.45}
+.switch button{width:44px;height:24px;flex-shrink:0;border-radius:999px;background:var(--surface-3);position:relative;transition:background .35s}
+.switch button::after{content:'';position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:var(--bg);box-shadow:var(--sh-1);transition:transform .35s var(--ease)}
+.switch button.on{background:var(--accent)}
+.switch button.on::after{transform:translateX(20px)}
+.toast{position:fixed;bottom:30px;left:50%;z-index:300;display:flex;align-items:center;gap:10px;padding:14px 22px;border-radius:999px;
+  background:var(--text);color:var(--bg);font-size:var(--t-md);font-weight:600;box-shadow:var(--sh-3);
+  transform:translate(-50%,140%);transition:transform .5s var(--ease)}
+.toast.on{transform:translate(-50%,0)}
+
+@media (max-width:1080px){.anio{grid-template-columns:repeat(6,1fr)}}
+@media (max-width:900px){
+  .login{grid-template-columns:1fr}.login__art{display:none}
+  .nav{gap:2px;overflow-x:auto;scrollbar-width:none}.nav::-webkit-scrollbar{display:none}
+  .who__t,.buscabtn span,.buscabtn kbd,.brand .fase{display:none}
+  .buscabtn{width:37px;height:37px;justify-content:center;padding:0}
+  .match{grid-template-columns:110px 1fr;row-gap:18px;padding:22px 20px}
+  .der{grid-column:1/-1}
+  .hero{min-height:290px}.celda{min-height:44px;padding:7px}
+}
+@media (max-width:620px){
+  .top__in{gap:14px;height:64px}.duelo{font-size:19px}
+  .anio{grid-template-columns:repeat(4,1fr)}
+  .cal__nav .d2{font-size:21px;min-width:0}.ev b{display:none}
+}
+@media (prefers-reduced-motion:reduce){*{transition-duration:.01ms!important;animation-duration:.01ms!important}}
+</style>
+</head>
+<body>
+<a class="saltar" href="#v-partidos">Saltar al contenido</a>
+<svg style="display:none" aria-hidden="true"><symbol id="ff" viewBox="0 0 188 192"><g transform="translate(0,192) scale(0.1,-0.1)">
+<path d="M640 1345 c-233 -233 -422 -427 -419 -429 40 -45 755 -756 759 -756 4 0 138 131 298 291 232 232 290 295 282 308 -5 9 -36 43 -69 76 -34 33 -61 64 -61 71 0 6 53 63 117 128 l117 117 -104 104 c-58 58 -108 104 -112 103 -5 -2 -59 -54 -122 -117 -63 -62 -121 -111 -128 -109 -37 12 -15 46 107 168 l125 124 -172 173 c-95 95 -177 173 -183 173 -6 0 -201 -191 -435 -425z"/>
+</g></symbol></svg>
+
+<section class="login" id="login">
+  <div class="login__art">
+    <div class="login__fb"></div>
+    <img class="login__bg" alt="" src="https://images.unsplash.com/photo-1551385093-ad3fb362dc43?w=1600&q=80" onerror="this.remove()">
+    <div class="login__mark"><span><svg class="logo"><use href="#ff"/></svg></span><b>Football First</b></div>
+    <div class="login__claim">
+      <p>Vos jugá,<br><em>nosotros</em><br>creamos.</p>
+      <small>Seis jugadores, seis ligas, cuatro zonas horarias. Un solo lugar para saber qué se viene.</small>
+    </div>
+  </div>
+  <div class="login__form">
+    <form class="form" id="form">
+      <h1>Panel de<br>producción</h1>
+      <p>Ingresá para ver la cobertura de la semana.</p>
+      <div class="campo"><label for="mail">Correo</label><input type="email" id="mail" value="alexis@first.uy" required></div>
+      <div class="campo"><label for="pass">Contraseña</label><input type="password" id="pass" value="demo1234" required></div>
+      <button class="btn btn--a" type="submit">Ingresar</button>
+      <p class="form__pie">Demo Fase 1 — cualquier dato entra.</p>
+    </form>
+  </div>
+</section>
+
+<div class="app" id="app">
+  <header class="top">
+    <div class="top__in">
+      <div class="brand"><span><svg class="logo"><use href="#ff"/></svg></span><b>Football First</b><span class="fase">Fase 1</span></div>
+      <nav class="nav" id="nav" aria-label="Secciones">
+        <button data-v="partidos" class="on">Partidos</button>
+        <button data-v="calendario">Calendario</button>
+        <button data-v="jugadores">Jugadores</button>
+      </nav>
+      <div class="top__acc">
+        <button class="buscabtn" id="abrir-busca" aria-label="Buscar">
+          <svg class="ico" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.6-3.6"/></svg>
+          <span>Buscar</span><kbd>⌘K</kbd></button>
+        <button class="icobtn" id="tema" aria-label="Cambiar tema">
+          <svg class="ico luna" viewBox="0 0 24 24"><path d="M20 14.6A8.5 8.5 0 1 1 9.4 4a7 7 0 0 0 10.6 10.6Z"/></svg>
+          <svg class="ico sol" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.6v2.1M12 19.3v2.1M2.6 12h2.1M19.3 12h2.1M5.3 5.3l1.5 1.5M17.2 17.2l1.5 1.5M18.7 5.3l-1.5 1.5M6.8 17.2l-1.5 1.5"/></svg>
+        </button>
+        <div class="who">
+          <button class="who__btn" id="who-btn" aria-haspopup="true" aria-expanded="false">
+            <div class="who__t"><b>Alexis</b><span>Diseñador</span></div>
+            <span class="who__av" id="who-av">A</span></button>
+          <div class="drop" id="drop">
+            <div class="drop__h" id="drop-h"></div>
+            <button data-perfil="datos"><svg class="ico" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4.5 20a7.5 7.5 0 0 1 15 0"/></svg>Mi perfil</button>
+            <button data-perfil="clave"><svg class="ico" viewBox="0 0 24 24"><rect x="4" y="10.5" width="16" height="10" rx="2"/><path d="M8 10.5V7a4 4 0 0 1 8 0v3.5"/></svg>Cambiar contraseña</button>
+            <button data-perfil="avisos"><svg class="ico" viewBox="0 0 24 24"><path d="M18 8.5a6 6 0 1 0-12 0c0 6-2.5 7.5-2.5 7.5h17S18 14.5 18 8.5"/><path d="M13.7 20a2 2 0 0 1-3.4 0"/></svg>Notificaciones</button>
+            <div class="drop__sep"></div>
+            <button class="sal" id="salir"><svg class="ico" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="m16 17 5-5-5-5"/><path d="M21 12H9"/></svg>Cerrar sesión</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <section class="vista on" id="v-partidos" tabindex="-1">
+      <div class="head"><h1 class="d1">Próximos<br><em>partidos</em></h1><p class="sub" id="fecha-hoy"></p></div>
+      <div id="hero"></div>
+      <div class="kpis" id="kpis"></div>
+      <div class="sec" id="hitos"></div>
+      <div class="barra" id="filtros">
+        <button class="chip on" data-f="todos">Todos</button>
+        <button class="chip" data-f="hoy">Hoy</button>
+        <button class="chip" data-f="semana">Esta semana</button>
+        <button class="chip" data-f="int">Internacional</button>
+        <button class="chip" data-f="hito">Con hito</button>
+        <span class="cuenta" id="cuenta"></span>
+      </div>
+      <div id="lista"></div>
+    </section>
+
+    <section class="vista" id="v-calendario" tabindex="-1">
+      <div class="head"><h1 class="d1">Calendario<br><em>anual</em></h1>
+        <p class="sub">Densidad por mes. Las fechas a más de 90 días son tentativas: el fixture se confirma por semestre y los horarios los mueve la TV.</p></div>
+      <div class="anio" id="anio"></div>
+      <div class="cal__nav">
+        <button class="btn btn--g btn--ico" id="mes-prev" aria-label="Mes anterior"><svg class="ico" viewBox="0 0 24 24"><path d="m15 6-6 6 6 6"/></svg></button>
+        <h3 class="d2" id="mes-t"></h3>
+        <button class="btn btn--g btn--ico" id="mes-next" aria-label="Mes siguiente"><svg class="ico" viewBox="0 0 24 24"><path d="m9 6 6 6-6 6"/></svg></button>
+      </div>
+      <div class="cal__dias"><div>Lunes</div><div>Martes</div><div>Miércoles</div><div>Jueves</div><div>Viernes</div><div>Sábado</div><div>Domingo</div></div>
+      <div class="cal__grid" id="cal"></div>
+      <div class="leyenda"><span><i></i> Confirmado</span><span><i class="t"></i> Fecha tentativa</span><span><i class="a"></i> Competición internacional</span></div>
+    </section>
+
+    <section class="vista" id="v-jugadores" tabindex="-1">
+      <div class="head"><h1 class="d1">El<br><em>plantel</em></h1>
+        <p class="sub">Seis jugadores en seis ligas. Pasá el cursor para ver los números, clic para la ficha completa.</p></div>
+      <div class="plantel" id="plantel"></div>
+    </section>
+  </main>
+</div>
+
+<div class="busca" id="busca" role="dialog" aria-modal="true" aria-label="Buscar">
+  <div class="busca__c">
+    <div class="busca__i">
+      <svg class="ico" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.6-3.6"/></svg>
+      <input type="text" id="busca-i" placeholder="Buscar jugador, club, rival, liga o país…" autocomplete="off"><kbd>ESC</kbd>
+    </div>
+    <div class="busca__r" id="busca-r"></div>
+  </div>
+</div>
+
+<div class="velo" id="velo"></div>
+<aside class="panel" id="panel" role="dialog" aria-modal="true" aria-labelledby="panel-t">
+  <div class="panel__top"><span class="label" id="panel-t">Detalle</span>
+    <button class="panel__x" id="panel-x" aria-label="Cerrar"><svg class="ico" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg></button></div>
+  <div class="panel__b" id="panel-b"></div>
+</aside>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+/* ════════════════════════════════════════════════════════════
+   FOOTBALL FIRST — DEMO FASE 1
+   Datos de muestra. En producción todo viene de la vista
+   `proximos_partidos` de Supabase (ver schema-fase1.sql).
+   ════════════════════════════════════════════════════════════ */
+
+const P={
+  flecha:'<path d="M5 12h14"/><path d="m13 6 6 6-6 6"/>',
+  atras:'<path d="M19 12H5"/><path d="m11 18-6-6 6-6"/>',
+  chevron:'<path d="m9 6 6 6-6 6"/>',
+  reloj:'<circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l2.8 1.8"/>',
+  pin:'<path d="M19 10.5c0 5-7 10.5-7 10.5S5 15.5 5 10.5a7 7 0 1 1 14 0Z"/><circle cx="12" cy="10.3" r="2.6"/>',
+  trofeo:'<path d="M7 4h10v5a5 5 0 0 1-10 0Z"/><path d="M7 6H4.6a2 2 0 0 0 0 4H7"/><path d="M17 6h2.4a2 2 0 0 1 0 4H17"/><path d="M10 14h4l.6 5H9.4Z"/><path d="M8 20h8"/>',
+  medalla:'<circle cx="12" cy="14.5" r="5.2"/><path d="M8.5 9.8 6 3h4l2 3 2-3h4l-2.5 6.8"/>',
+  alerta:'<path d="M12 4.5 2.8 20h18.4Z"/><path d="M12 10v4"/><path d="M12 17.2h.01"/>',
+  check:'<path d="m4.5 12.5 5 5 10-11"/>',
+  calendario:'<rect x="3.5" y="5" width="17" height="16" rx="2"/><path d="M3.5 10h17M8.5 3v4M15.5 3v4"/>',
+  cerrar:'<path d="M18 6 6 18M6 6l12 12"/>',
+  fuego:'<path d="M12 3s5 4.2 5 9a5 5 0 0 1-10 0c0-1.6.6-2.9 1.3-3.9.5 1 1.3 1.7 2.2 1.7 1 0 1.5-.9 1.5-2.3 0-1.7-.5-3.2 0-4.5Z"/>',
+  torta:'<path d="M4 21h16"/><path d="M5 21v-6a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v6"/><path d="M12 10V7"/><path d="M9 13v-2M15 13v-2"/>',
+  ig:'<rect x="3.5" y="3.5" width="17" height="17" rx="5"/><circle cx="12" cy="12" r="4"/><path d="M17.2 6.8h.01"/>',
+  globo:'<circle cx="12" cy="12" r="8.5"/><path d="M3.5 12h17"/><path d="M12 3.5a13 13 0 0 1 0 17a13 13 0 0 1 0-17Z"/>',
+  base:'<ellipse cx="12" cy="6" rx="8" ry="3"/><path d="M4 6v12c0 1.7 3.6 3 8 3s8-1.3 8-3V6"/><path d="M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3"/>',
+};
+const ico=(n,c='ico')=>`<svg class="${c}" viewBox="0 0 24 24" aria-hidden="true">${P[n]}</svg>`;
+
+const FOTOS=[
+ 'https://images.unsplash.com/photo-1545525201-e1a5a2a18293?w=700&q=80',
+ 'https://images.unsplash.com/photo-1657957746418-6a38df9e1ea7?w=700&q=80',
+ 'https://images.unsplash.com/photo-1650153067934-043ff9481543?w=700&q=80',
+ 'https://images.unsplash.com/photo-1551385093-ad3fb362dc43?w=700&q=80',
+ 'https://images.unsplash.com/photo-1650153068477-11afafa825be?w=700&q=80',
+ 'https://images.unsplash.com/photo-1569337042150-c21c85b80a10?w=700&q=80',
+];
+const FOTO_HERO='https://images.unsplash.com/photo-1633785587101-58bc8350818f?w=1600&q=80';
+
+/* ── LIGAS ──
+   `cobertura` refleja lo que devuelve GET /leagues?id= en API-Football.
+   Liga de Expansión MX está en null a propósito: hay que verificarla,
+   y el sistema tiene que mostrarlo en vez de inventar ceros.        */
+const LIGAS={
+  saudi:      {n:'Saudi Pro League',       c:'SPL',  pais:'Arabia Saudita', int:false, cobertura:true},
+  ligamx:     {n:'Liga MX',                c:'MX',   pais:'México',         int:false, cobertura:true},
+  expansion:  {n:'Liga de Expansión MX',   c:'EXP',  pais:'México',         int:false, cobertura:null},
+  brasil:     {n:'Brasileirão Série A',    c:'CBF',  pais:'Brasil',         int:false, cobertura:true},
+  chile:      {n:'Primera División',       c:'ANFP', pais:'Chile',          int:false, cobertura:true},
+  belgica:    {n:'Jupiler Pro League',     c:'JPL',  pais:'Bélgica',        int:false, cobertura:true},
+  libertadores:{n:'CONMEBOL Libertadores', c:'LIB',  pais:'Sudamérica',     int:true,  cobertura:true},
+  sudamericana:{n:'CONMEBOL Sudamericana', c:'SUD',  pais:'Sudamérica',     int:true,  cobertura:true},
+  europa:     {n:'UEFA Europa League',     c:'UEL',  pais:'Europa',         int:true,  cobertura:true},
+  eliminatorias:{n:'Eliminatorias FIFA',   c:'FIFA', pais:'Mundial',        int:true,  cobertura:true},
+};
+
+/* ── JUGADORES ── Estadísticas de muestra: verificar antes de presentar */
+const JUGADORES=[
+ {id:'nahitan-nandez',n:'Nahitan Nández',apodo:'Nahitan',pos:'Mediocampista',num:5,
+  club:'Al-Qadsiah',liga:'saudi',pais:'Arabia Saudita',nacionalidad:'Uruguay',seleccion:'Uruguay',
+  nac:'1995-12-28',debut:'2013-08-17',fichaje:'2025-07-01',ig:'@nahitannandez',
+  car:{pj:298,min:23140,g:24,a:31},sel:{pj:84,g:4},
+  temp:{pj:6,min:512,g:1,a:2,am:2,rating:7.1}},
+
+ {id:'federico-pereira',n:'Federico Pereira',apodo:'Fede',pos:'Defensa',num:3,
+  club:'Toluca',liga:'ligamx',pais:'México',nacionalidad:'Uruguay',seleccion:null,
+  nac:'1998-05-11',debut:'2017-03-04',fichaje:'2025-01-10',ig:'@fedepereira3',
+  car:{pj:197,min:15760,g:4,a:9},sel:{pj:0,g:0},
+  temp:{pj:11,min:990,g:0,a:1,am:3,rating:6.9}},
+
+ {id:'ignacio-sosa',n:'Ignacio Sosa',apodo:'Nacho',pos:'Mediocampista',num:8,
+  club:'Red Bull Bragantino',liga:'brasil',pais:'Brasil',nacionalidad:'Uruguay',seleccion:null,
+  nac:'1999-11-08',debut:'2018-09-22',fichaje:'2024-07-15',ig:'@nachosossa',
+  car:{pj:161,min:11270,g:11,a:24},sel:{pj:0,g:0},
+  temp:{pj:19,min:1482,g:2,a:5,am:4,rating:7.0}},
+
+ {id:'javier-mendez',n:'Javier Méndez',apodo:'Javi',pos:'Mediocampista',num:20,
+  club:'Colo-Colo',liga:'chile',pais:'Chile',nacionalidad:'Uruguay',seleccion:null,
+  nac:'2002-04-30',debut:'2020-11-14',fichaje:'2025-01-20',ig:'@javimendez_',
+  car:{pj:118,min:8260,g:23,a:14},sel:{pj:0,g:0},
+  temp:{pj:16,min:1184,g:5,a:3,am:2,rating:7.2}},
+
+ {id:'kevin-amaro',n:'Kevin Amaro',apodo:'Kevin',pos:'Defensa',num:2,
+  club:'KRC Genk',liga:'belgica',pais:'Bélgica',nacionalidad:'Uruguay',seleccion:null,
+  nac:'2001-01-22',debut:'2019-04-06',fichaje:'2024-08-28',ig:'@kevinamaro2',
+  car:{pj:98,min:7840,g:1,a:6},sel:{pj:0,g:0},
+  temp:{pj:7,min:585,g:0,a:1,am:1,rating:6.8}},
+
+ {id:'martin-fernandez',n:'Martín Fernández',apodo:'Martín',pos:'Mediocampista',num:16,
+  club:'Atlante',liga:'expansion',pais:'México',nacionalidad:'Uruguay',seleccion:null,
+  nac:'1999-09-18',debut:'2019-02-10',fichaje:'2025-06-30',ig:'@martifernandez',
+  /* Liga de Expansión: cobertura sin verificar → sin datos, no ceros */
+  car:{pj:121,min:8470,g:8,a:11},sel:{pj:0,g:0},
+  temp:null},
+];
+JUGADORES.forEach((j,i)=>{j.foto=FOTOS[i%FOTOS.length];});
+const J=Object.fromEntries(JUGADORES.map(j=>[j.id,j]));
+const ini=n=>n.split(' ').map(p=>p[0]).slice(0,2).join('');
+const esc=s=>String(s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+function crest(nombre,clase=''){
+  const h=[...nombre].reduce((a,c)=>a+c.charCodeAt(0),0)%360;
+  return `<span class="crest ${clase}" style="--h:${h}">${ini(nombre)}</span>`;
+}
+function av(j,cls){
+  return `<img class="${cls}" src="${j.foto}" alt="" onerror="this.outerHTML='<span class=\\'${cls} ph\\'>${ini(j.n)}</span>'">`;
+}
+
+const HOY=new Date();HOY.setHours(0,0,0,0);
+const dSuma=n=>{const d=new Date(HOY);d.setDate(d.getDate()+n);return d;};
+
+/* ── PARTIDOS ──
+   hUY = hora Uruguay · hLoc = hora en el estadio.
+   Arabia +6, Bélgica +5, México −3, Brasil y Chile igual que Uruguay. */
+let PARTIDOS=[
+ {id:1, f:dSuma(0), hUY:'16:00',hLoc:'16:00',tz:'BRT', jug:'ignacio-sosa',   rival:'Palmeiras',           local:true, liga:'brasil',   ronda:'Fecha 24', estadio:'Estádio Nabi Abi Chedid', ciudad:'Bragança Paulista'},
+ {id:2, f:dSuma(0), hUY:'15:45',hLoc:'20:45',tz:'CEST',jug:'kevin-amaro',    rival:'Club Brugge',         local:false,liga:'belgica',  ronda:'Jornada 6',estadio:'Jan Breydelstadion',      ciudad:'Brujas'},
+ {id:3, f:dSuma(1), hUY:'22:00',hLoc:'19:00',tz:'CST', jug:'federico-pereira',rival:'Club América',       local:false,liga:'ligamx',   ronda:'Jornada 8',estadio:'Estadio Azteca',          ciudad:'Ciudad de México'},
+ {id:4, f:dSuma(2), hUY:'14:00',hLoc:'20:00',tz:'AST', jug:'nahitan-nandez', rival:'Al-Hilal',            local:false,liga:'saudi',    ronda:'Jornada 4',estadio:'Kingdom Arena',           ciudad:'Riad'},
+ {id:5, f:dSuma(2), hUY:'22:00',hLoc:'19:00',tz:'CST', jug:'martin-fernandez',rival:'Tampico Madero',     local:true, liga:'expansion',ronda:'Jornada 7',estadio:'Estadio Ciudad de los Deportes',ciudad:'Ciudad de México'},
+ {id:6, f:dSuma(3), hUY:'17:30',hLoc:'17:30',tz:'CLT', jug:'javier-mendez',  rival:'Universidad de Chile',local:true, liga:'chile',    ronda:'Superclásico',estadio:'Estadio Monumental',   ciudad:'Santiago'},
+ {id:7, f:dSuma(5), hUY:'21:30',hLoc:'21:30',tz:'CLT', jug:'javier-mendez',  rival:'River Plate',         local:true, liga:'libertadores',ronda:'Cuartos — Ida',estadio:'Estadio Monumental',ciudad:'Santiago'},
+ {id:8, f:dSuma(6), hUY:'19:00',hLoc:'19:00',tz:'BRT', jug:'ignacio-sosa',   rival:'Lanús',               local:false,liga:'sudamericana',ronda:'Cuartos — Ida',estadio:'Estadio Ciudad de Lanús',ciudad:'Buenos Aires'},
+ {id:9, f:dSuma(7), hUY:'16:00',hLoc:'21:00',tz:'CEST',jug:'kevin-amaro',    rival:'AS Roma',             local:true, liga:'europa',   ronda:'Fase liga',estadio:'Cegeka Arena',            ciudad:'Genk'},
+ {id:10,f:dSuma(9), hUY:'23:00',hLoc:'20:00',tz:'CST', jug:'federico-pereira',rival:'Cruz Azul',          local:true, liga:'ligamx',   ronda:'Jornada 9',estadio:'Estadio Nemesio Díez',    ciudad:'Toluca'},
+ {id:11,f:dSuma(10),hUY:'15:00',hLoc:'20:00',tz:'CEST',jug:'kevin-amaro',    rival:'RSC Anderlecht',      local:true, liga:'belgica',  ronda:'Jornada 7',estadio:'Cegeka Arena',            ciudad:'Genk'},
+ {id:12,f:dSuma(12),hUY:'22:00',hLoc:'19:00',tz:'CST', jug:'martin-fernandez',rival:'Cancún FC',          local:false,liga:'expansion',ronda:'Jornada 8',estadio:'Estadio Andrés Quintana Roo',ciudad:'Cancún'},
+ {id:13,f:dSuma(13),hUY:'18:00',hLoc:'18:00',tz:'CLT', jug:'javier-mendez',  rival:'Cobresal',            local:false,liga:'chile',    ronda:'Fecha 24', estadio:'Estadio El Cobre',        ciudad:'El Salvador'},
+ {id:14,f:dSuma(16),hUY:'13:00',hLoc:'19:00',tz:'AST', jug:'nahitan-nandez', rival:'Al-Nassr',            local:true, liga:'saudi',    ronda:'Jornada 5',estadio:'Prince Saud bin Jalawi',  ciudad:'Al Khobar'},
+ {id:15,f:dSuma(18),hUY:'20:30',hLoc:'20:30',tz:'BRT', jug:'ignacio-sosa',   rival:'Flamengo',            local:false,liga:'brasil',   ronda:'Fecha 25', estadio:'Maracanã',                ciudad:'Río de Janeiro'},
+ {id:16,f:dSuma(24),hUY:'21:00',hLoc:'21:00',tz:'UYT', jug:'nahitan-nandez', rival:'Colombia',            local:true, liga:'eliminatorias',ronda:'Fecha 15',estadio:'Estadio Centenario',  ciudad:'Montevideo', seleccion:true},
+ {id:17,f:dSuma(26),hUY:'22:00',hLoc:'19:00',tz:'CST', jug:'martin-fernandez',rival:'Tepatitlán',         local:true, liga:'expansion',ronda:'Jornada 10',estadio:'Estadio Ciudad de los Deportes',ciudad:'Ciudad de México'},
+ {id:18,f:dSuma(31),hUY:'15:30',hLoc:'20:30',tz:'CEST',jug:'kevin-amaro',    rival:'Union Saint-Gilloise',local:false,liga:'belgica',  ronda:'Jornada 9',estadio:'Estadio Joseph Marien',   ciudad:'Bruselas'},
+ {id:19,f:dSuma(38),hUY:'14:00',hLoc:'20:00',tz:'AST', jug:'nahitan-nandez', rival:'Al-Ittihad',          local:false,liga:'saudi',    ronda:'Jornada 7',estadio:'Estadio Rey Abdullah',    ciudad:'Yeda'},
+ {id:20,f:dSuma(44),hUY:'23:00',hLoc:'20:00',tz:'CST', jug:'federico-pereira',rival:'Monterrey',          local:false,liga:'ligamx',   ronda:'Jornada 12',estadio:'Estadio BBVA',           ciudad:'Monterrey'},
+ {id:21,f:dSuma(52),hUY:'16:00',hLoc:'16:00',tz:'BRT', jug:'ignacio-sosa',   rival:'Corinthians',         local:true, liga:'brasil',   ronda:'Fecha 28', estadio:'Estádio Nabi Abi Chedid', ciudad:'Bragança Paulista'},
+ {id:22,f:dSuma(96),hUY:'13:00',hLoc:'19:00',tz:'AST', jug:'nahitan-nandez', rival:'Al-Ahli',             local:true, liga:'saudi',    ronda:'Jornada 14',estadio:'Prince Saud bin Jalawi', ciudad:'Al Khobar'},
+ {id:23,f:dSuma(112),hUY:'17:00',hLoc:'17:00',tz:'CLT',jug:'javier-mendez',  rival:'Universidad Católica',local:false,liga:'chile',    ronda:'Fecha 3',  estadio:'Estadio Santa Laura',     ciudad:'Santiago'},
+ {id:24,f:dSuma(130),hUY:'23:00',hLoc:'20:00',tz:'CST',jug:'federico-pereira',rival:'Tigres UANL',        local:true, liga:'ligamx',   ronda:'Liguilla', estadio:'Estadio Nemesio Díez',    ciudad:'Toluca'},
+];
+/* El club sale del jugador: si mañana se va a otro equipo, se
+   cambia en un solo lugar y todos sus partidos lo siguen. */
+PARTIDOS.forEach(p=>{p.club=J[p.jug].club;});
+
+const esTentativo=p=>(p.f-HOY)/864e5>90;
+const mismoDia=(a,b)=>a.toDateString()===b.toDateString();
+const MESES=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+const MESES_C=['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Set','Oct','Nov','Dic'];
+function etiquetaDia(f){
+  const d=Math.round((f-HOY)/864e5);
+  if(d===0)return'Hoy';if(d===1)return'Mañana';
+  if(d<7)return new Intl.DateTimeFormat('es-UY',{weekday:'long'}).format(f);
+  return new Intl.DateTimeFormat('es-UY',{weekday:'long',day:'numeric',month:'long'}).format(f);
+}
+function peso(p){return (LIGAS[p.liga].int?2:0)+1;}
+function claseP(p){return peso(p)>=3?'match--md':'';}
+
+/* ── MOTOR DE HITOS ──
+   Escalas configurables. En producción vienen de la tabla `escalas_hito`. */
+const ESCALAS=[
+ {k:'pj',base:'car',paso:50,aviso:5,frase:v=>`Partido ${v}`},
+ {k:'g', base:'car',paso:25,aviso:3,frase:v=>`Gol ${v}`},
+ {k:'a', base:'car',paso:25,aviso:3,frase:v=>`Asistencia ${v}`},
+ {k:'pj',base:'sel',paso:25,aviso:3,frase:v=>`Partido ${v} con la selección`},
+ {k:'g', base:'sel',paso:10,aviso:2,frase:v=>`Gol ${v} con la selección`},
+];
+const proximosDe=id=>PARTIDOS.filter(p=>p.jug===id).sort((a,b)=>a.f-b.f);
+
+function hitosDe(j){
+  const out=[];
+  ESCALAS.forEach(e=>{
+    const v=j[e.base][e.k];if(v===0&&e.base==='sel')return;
+    const objetivo=Math.ceil((v+1)/e.paso)*e.paso,falta=objetivo-v;
+    if(falta>e.aviso)return;
+    /* Solo los hitos de partidos se pueden ubicar en una fecha concreta */
+    const partido=(e.k==='pj'&&e.base==='car')?(proximosDe(j.id)[falta-1]||null):null;
+    out.push({jug:j,falta,objetivo,frase:e.frase(objetivo),partido,unidad:e.k,tipo:'metrica'});
+  });
+  /* Hitos de fecha: la API no los da, salen de la tabla `jugadores` */
+  const fechas=[
+    {campo:'nac',   etiqueta:n=>`Cumple ${n}`,                    icono:'torta'},
+    {campo:'debut', etiqueta:n=>`${n} años de su debut`,          icono:'medalla'},
+    {campo:'fichaje',etiqueta:n=>`${n} año${n>1?'s':''} en el club`,icono:'trofeo'},
+  ];
+  fechas.forEach(({campo,etiqueta})=>{
+    if(!j[campo])return;
+    const n0=new Date(j[campo]);
+    let px=new Date(HOY.getFullYear(),n0.getMonth(),n0.getDate());
+    if(px<HOY)px.setFullYear(px.getFullYear()+1);
+    const dias=Math.round((px-HOY)/864e5);
+    const n=px.getFullYear()-n0.getFullYear();
+    if(dias<=30&&n>0)out.push({jug:j,falta:dias,objetivo:n,frase:etiqueta(n),partido:null,unidad:'dias',tipo:'fecha'});
+  });
+  return out;
+}
+function todosLosHitos(){
+  return JUGADORES.flatMap(hitosDe).sort((a,b)=>{
+    const fa=a.partido?a.partido.f:dSuma(a.unidad==='dias'?a.falta:60);
+    const fb=b.partido?b.partido.f:dSuma(b.unidad==='dias'?b.falta:60);
+    return fa-fb;
+  });
+}
+const partidosConHito=()=>new Set(todosLosHitos().filter(h=>h.partido).map(h=>h.partido.id));
+
+let filtro='todos',filtroJugador=null,panelTipo=null,panelId=null;
+let mesVista=new Date(HOY.getFullYear(),HOY.getMonth(),1);
+
+function filtrar(){
+  let r=[...PARTIDOS];const conHito=partidosConHito();
+  if(filtroJugador)r=r.filter(p=>p.jug===filtroJugador);
+  if(filtro==='hoy')r=r.filter(p=>mismoDia(p.f,HOY));
+  if(filtro==='semana')r=r.filter(p=>(p.f-HOY)/864e5<7);
+  if(filtro==='int')r=r.filter(p=>LIGAS[p.liga].int);
+  if(filtro==='hito')r=r.filter(p=>conHito.has(p.id));
+  return r.sort((a,b)=>a.f-b.f);
+}
+let toastT;
+function toast(msg,icono='check'){
+  const t=document.getElementById('toast');
+  t.innerHTML=`${ico(icono)}<span>${esc(msg)}</span>`;t.classList.add('on');
+  clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('on'),2800);
+}
+
+function renderHero(){
+  const cand=PARTIDOS.filter(p=>{const d=(p.f-HOY)/864e5;return d>=0&&d<=3;});
+  if(!cand.length){document.getElementById('hero').innerHTML='';return;}
+  const conHito=partidosConHito();
+  const p=cand.sort((a,b)=>(conHito.has(b.id)-conHito.has(a.id))||peso(b)-peso(a)||a.f-b.f)[0];
+  const L=LIGAS[p.liga],j=J[p.jug];
+  const dias=Math.round((p.f-HOY)/864e5);
+  const cd=dias===0?{b:'Hoy',s:`${p.hUY} hora Uruguay`}:{b:`${dias} día${dias>1?'s':''}`,s:etiquetaDia(p.f)};
+  const hs=hitosDe(j).filter(h=>h.partido&&h.partido.id===p.id);
+  document.getElementById('hero').innerHTML=`
+  <button class="hero" data-id="${p.id}" aria-label="Partido destacado">
+    <div class="hero__fb"></div>
+    <img class="hero__bg" src="${FOTO_HERO}" alt="" onerror="this.remove()">
+    <div class="hero__grad"></div>
+    <div class="hero__top">
+      <span class="hero__flag">${ico(hs.length?'medalla':'fuego','ico ico--sm')}${hs.length?'Partido del día · con hito':'Partido del día'}</span>
+      <div class="hero__cd"><b>${cd.b}</b><span>${cd.s}</span></div>
+    </div>
+    <div class="hero__b">
+      <div class="hero__c"><i>${L.c}</i><span>${L.n} · ${esc(p.ronda)}</span></div>
+      <div class="hero__t">${esc(p.club)} vs ${esc(p.rival)}</div>
+      <div class="hero__m">
+        <span>${ico('pin','ico ico--sm')}${esc(p.estadio)}, ${esc(p.ciudad)}</span>
+        <span>${ico('reloj','ico ico--sm')}${p.hUY} UY${p.hUY!==p.hLoc?` · ${p.hLoc} ${p.tz}`:''}</span>
+      </div>
+      <div class="hero__j">
+        <div class="caras__pila">${av(j,'cara')}</div>
+        <small>${j.n}${hs.length?` · ${hs[0].frase}`:''}</small>
+      </div>
+    </div>
+  </button>`;
+}
+
+function cardPartido(p){
+  const hoy=mismoDia(p.f,HOY),tent=esTentativo(p);
+  const L=LIGAS[p.liga],j=J[p.jug];
+  const conHito=partidosConHito().has(p.id);
+  const mismaHora=p.hUY===p.hLoc;
+  return `
+  <article class="match ${claseP(p)} ${hoy?'match--hoy':''} ${tent?'match--tent':''} ${L.int?'match--int':''}" data-id="${p.id}" tabindex="0" role="button">
+    <div class="hora">
+      <b>${p.hUY}</b>
+      <div class="uy ${tent?'tent':''}">${tent?ico('alerta','ico ico--sm')+'Tentativa':'Hora Uruguay'}</div>
+      ${mismaHora?'':`<div class="loc">${ico('pin','ico ico--sm')}<b>${p.hLoc}</b> ${p.tz}</div>`}
+    </div>
+    <div class="mid">
+      <div class="compe ${L.int?'compe--int':''}"><span class="compe__c">${L.c}</span><span class="compe__n">${L.n} · ${L.pais}</span></div>
+      <div class="duelo">${crest(p.club)} ${esc(p.club)}<span class="vs">vs</span>${crest(p.rival)} ${esc(p.rival)}</div>
+      <div class="linea">
+        <span>${ico('trofeo','ico ico--sm')}<b>${esc(p.ronda)}</b></span>
+        <span>${ico('pin','ico ico--sm')}${esc(p.estadio)}, ${esc(p.ciudad)}</span>
+      </div>
+      <div class="caras">
+        <div class="caras__pila">${av(j,'cara')}</div>
+        <small>${j.n}${p.seleccion?' · con la selección':''}</small>
+        ${conHito?`<span class="tag tag--hito">${ico('medalla','ico ico--sm')}Hito</span>`:''}
+      </div>
+    </div>
+    <div class="der">${ico('chevron')}</div>
+  </article>`;
+}
+
+function renderPartidos(){
+  const lista=filtrar();
+  document.getElementById('cuenta').textContent=`${lista.length} partido${lista.length!==1?'s':''}`;
+  if(!lista.length){
+    document.getElementById('lista').innerHTML=`<div class="sinDato" style="justify-content:center;padding:56px">${ico('alerta')}Sin resultados para este filtro.</div>`;
+    return;
+  }
+  const g={};lista.forEach(p=>{(g[p.f.toDateString()] ??= []).push(p);});
+  document.getElementById('lista').innerHTML=Object.entries(g).map(([k,ps])=>{
+    const f=new Date(k);
+    return `<section class="grupo ${mismoDia(f,HOY)?'grupo--hoy':''}">
+      <div class="grupo__t"><h2 class="d3">${etiquetaDia(f)}</h2><span>${ps.length} partido${ps.length!==1?'s':''}</span></div>
+      <div class="lista__g">${ps.map(cardPartido).join('')}</div></section>`;
+  }).join('');
+}
+
+function renderKpis(){
+  const hoy=PARTIDOS.filter(p=>mismoDia(p.f,HOY)).length;
+  const semana=PARTIDOS.filter(p=>(p.f-HOY)/864e5<7).length;
+  const inter=PARTIDOS.filter(p=>LIGAS[p.liga].int&&(p.f-HOY)/864e5<30).length;
+  document.getElementById('kpis').innerHTML=`
+    <div class="kpi kpi--a"><b>${hoy}</b><span>Partidos hoy</span></div>
+    <div class="kpi"><b>${semana}</b><span>Esta semana</span></div>
+    <div class="kpi kpi--a"><b>${todosLosHitos().length}</b><span>Hitos por alcanzar</span></div>
+    <div class="kpi"><b>${inter}</b><span>Internacionales, 30 días</span></div>
+    <div class="kpi"><b>${JUGADORES.length}</b><span>Jugadores en ${new Set(JUGADORES.map(j=>j.liga)).size} ligas</span></div>`;
+}
+
+function renderHitos(){
+  const hs=todosLosHitos().slice(0,8);
+  if(!hs.length){document.getElementById('hitos').innerHTML='';return;}
+  document.getElementById('hitos').innerHTML=`
+    <div class="sec__t"><h2 class="d3">Se vienen los <em>hitos</em></h2>
+    <span class="meta">Contenido para anticipar, no para enterarse después</span></div>
+    <div class="hitos__l">${hs.map(h=>{
+      const ya=h.partido?(h.partido.f-HOY)/864e5<=7:h.falta<=10;
+      const ctx=h.partido?`Sería en <b>${esc(h.partido.club)} vs ${esc(h.partido.rival)}</b><br>${etiquetaDia(h.partido.f)} · ${h.partido.hUY} UY`
+        :h.unidad==='dias'?`En <b>${h.falta} día${h.falta!==1?'s':''}</b>`
+        :`Le faltan <b>${h.falta}</b> — sin fecha definida`;
+      return `<button class="hito ${ya?'hito--ya':''}" data-jugh="${h.jug.id}">
+        <div class="hito__n">${h.objetivo}</div>
+        <div class="hito__q">${esc(h.jug.n)} — ${h.frase}</div>
+        <div class="hito__c">${ctx}</div></button>`;
+    }).join('')}</div>`;
+}
+
+function renderAnio(){
+  const y=mesVista.getFullYear(),pm=Array(12).fill(0);
+  PARTIDOS.forEach(p=>{if(p.f.getFullYear()===y)pm[p.f.getMonth()]++;});
+  const max=Math.max(...pm,1);
+  document.getElementById('anio').innerHTML=MESES_C.map((m,i)=>`
+    <button class="anio__m ${i===mesVista.getMonth()?'on':''}" data-mes="${i}">
+      <span>${m}</span><b>${pm[i]||'–'}</b>
+      <div class="anio__bar"><i style="width:${pm[i]/max*100}%"></i></div></button>`).join('');
+}
+
+function renderCal(){
+  document.getElementById('mes-t').textContent=`${MESES[mesVista.getMonth()]} ${mesVista.getFullYear()}`;
+  const primero=new Date(mesVista.getFullYear(),mesVista.getMonth(),1);
+  let off=primero.getDay()-1;if(off<0)off=6;
+  const inicio=new Date(primero);inicio.setDate(inicio.getDate()-off);
+  let html='';
+  for(let i=0;i<42;i++){
+    const d=new Date(inicio);d.setDate(d.getDate()+i);
+    const ps=PARTIDOS.filter(p=>mismoDia(p.f,d));
+    const evs=ps.map(p=>`<button class="ev ${esTentativo(p)?'ev--tent':''} ${LIGAS[p.liga].int?'ev--int':''}" data-id="${p.id}">
+      <b>${p.hUY}</b>${esc(p.club)} – ${esc(p.rival)}</button>`).join('');
+    html+=`<div class="celda ${ps.length?'celda--con':''} ${d.getMonth()!==mesVista.getMonth()?'celda--fuera':''} ${mismoDia(d,HOY)?'celda--hoy':''}">
+      <div class="celda__n">${d.getDate()}</div>${evs}</div>`;
+  }
+  document.getElementById('cal').innerHTML=html;
+}
+
+function renderPlantel(){
+  document.getElementById('plantel').innerHTML=JUGADORES.map(j=>{
+    const h=hitosDe(j)[0];const L=LIGAS[j.liga];
+    return `<button class="jug" data-jug="${j.id}">
+      <div class="jug__fb"></div>
+      <img class="jug__foto" src="${j.foto}" alt="" onerror="this.remove()">
+      <div class="jug__grad"></div>
+      <div class="jug__n">${j.num}</div>
+      ${h?`<div class="jug__hito">${h.frase}</div>`:`<div class="jug__pais">${L.pais}</div>`}
+      <div class="jug__txt"><b>${esc(j.n)}</b>
+        <span class="jug__club">${crest(j.club,'crest--sm')} ${esc(j.club)}</span>
+        <span class="jug__pos">${j.pos} · ${L.n}</span></div>
+      <div class="jug__stats">
+        <div><b>${j.car.pj}</b><span>Partidos</span></div>
+        <div><b>${j.car.a}</b><span>Asist.</span></div>
+        <div><b>${j.car.g}</b><span>Goles</span></div>
+      </div></button>`;
+  }).join('');
+}
+
+/* ══ PANELES ══ */
+function abrirPanelPartido(id){
+  const p=PARTIDOS.find(x=>x.id===id);if(!p)return;
+  panelTipo='partido';panelId=id;
+  document.getElementById('panel-t').textContent='Detalle del partido';
+  const L=LIGAS[p.liga],j=J[p.jug];
+  const hitos=hitosDe(j).filter(h=>h.partido&&h.partido.id===p.id);
+  document.getElementById('panel-b').innerHTML=`
+    <div class="compe ${L.int?'compe--int':''}" style="margin-bottom:14px"><span class="compe__c">${L.c}</span><span class="compe__n">${L.n} · ${L.pais}</span></div>
+    <div style="display:flex;align-items:center;gap:15px;margin-bottom:15px">
+      ${crest(p.club,'crest--lg')}<h2 class="d2" style="flex:1">${esc(p.club)}<br>vs ${esc(p.rival)}</h2>${crest(p.rival,'crest--lg')}</div>
+    <div class="linea" style="margin-bottom:32px">
+      <span>${ico('trofeo','ico ico--sm')}<b>${esc(p.ronda)}</b></span>
+      <span>${ico('calendario','ico ico--sm')}${p.es_local===false?'Visitante':'Local'}</span>
+      ${esTentativo(p)?`<span style="color:var(--accent);font-weight:600">${ico('alerta','ico ico--sm')}Fecha tentativa</span>`:''}</div>
+
+    <div class="bloque"><span class="label">Horario</span>
+      <div class="datos">
+        <div class="dato dato--a"><b>${p.hUY}</b><span>Hora Uruguay</span></div>
+        <div class="dato"><b>${p.hLoc}</b><span>Hora local (${p.tz})</span></div>
+      </div>
+      ${p.hUY!==p.hLoc?`<div class="aviso" style="margin-top:12px">${ico('alerta','ico ico--sm')}<span>Diferencia horaria con ${L.pais}. El equipo trabaja con la hora de Uruguay.</span></div>`:''}
+    </div>
+
+    <div class="bloque"><span class="label">Sede</span>
+      <div class="linea">
+        <span>${ico('pin','ico ico--sm')}<b>${esc(p.estadio)}</b></span>
+        <span>${ico('globo','ico ico--sm')}${esc(p.ciudad)}</span>
+        <span>${ico('calendario','ico ico--sm')}${etiquetaDia(p.f)}</span>
+      </div></div>
+
+    ${hitos.length?`<div class="bloque"><span class="label">Hitos en este partido</span>
+      <div class="filas">${hitos.map(h=>`<div class="filaht filaht--ya">
+        <div class="filaht__n">${h.objetivo}</div>
+        <div class="filaht__t"><b>${esc(h.jug.n)}</b><span>${h.frase}</span></div>
+        <div class="filaht__d">faltan ${h.falta}</div></div>`).join('')}</div></div>`:''}
+
+    <div class="bloque"><span class="label">Jugador a cubrir</span>
+      <div class="lst"><button class="pm" data-jug="${j.id}">${av(j,'')}<b>${esc(j.n)}</b>
+        <span>${j.pos}${ico('chevron','ico ico--sm')}</span></button></div>
+    </div>`;
+  mostrarPanel();
+}
+
+function abrirPanelJugador(id){
+  const j=J[id];if(!j)return;
+  panelTipo='jugador';panelId=id;
+  document.getElementById('panel-t').textContent='Ficha del jugador';
+  const L=LIGAS[j.liga];
+  const hs=hitosDe(j),prox=proximosDe(id).slice(0,5);
+  const nac=new Date(j.nac);
+  const edad=Math.floor((Date.now()-nac)/(365.25*864e5));
+  const cumple=new Intl.DateTimeFormat('es-UY',{day:'numeric',month:'long'}).format(nac);
+  const enClub=((Date.now()-new Date(j.fichaje))/(365.25*864e5)).toFixed(1);
+  const anosCarrera=((Date.now()-new Date(j.debut))/(365.25*864e5)).toFixed(0);
+  const mpp=j.car.pj?Math.round(j.car.min/j.car.pj):0;
+
+  document.getElementById('panel-b').innerHTML=`
+    <div style="display:flex;align-items:center;gap:15px;margin-bottom:15px">
+      ${crest(j.club,'crest--lg')}<h2 class="d2" style="flex:1">${esc(j.n)}</h2></div>
+    <div class="linea" style="margin-bottom:32px">
+      <span><b>${esc(j.club)}</b></span><span>${L.n}</span><span>${L.pais}</span>
+      <span>${j.pos}</span><span>#${j.num}</span></div>
+
+    ${hs.length?`<div class="bloque"><span class="label">Hitos por alcanzar</span>
+      <div class="filas">${hs.map(h=>`<div class="filaht ${(h.partido&&(h.partido.f-HOY)/864e5<=7)||(h.unidad==='dias'&&h.falta<=10)?'filaht--ya':''}">
+        <div class="filaht__n">${h.objetivo}</div>
+        <div class="filaht__t"><b>${h.frase}</b><span>${h.partido?`${esc(h.partido.club)} vs ${esc(h.partido.rival)} · ${etiquetaDia(h.partido.f)}`
+          :h.unidad==='dias'?'Fecha fija del calendario':'Sin fecha — depende del rendimiento'}</span></div>
+        <div class="filaht__d">${h.unidad==='dias'?`en ${h.falta} d`:`faltan ${h.falta}`}</div></div>`).join('')}</div></div>`
+    :`<div class="bloque"><span class="label">Hitos por alcanzar</span>
+      <div class="sinDato">${ico('alerta')}<span>Sin hitos cerca. El próximo aparece solo cuando entre en el rango de aviso de su escala.</span></div></div>`}
+
+    <div class="bloque"><span class="label">Temporada actual</span>
+      ${j.temp?`<div class="datos">
+        <div class="dato"><b>${j.temp.pj}</b><span>Partidos</span></div>
+        <div class="dato"><b>${j.temp.min}</b><span>Minutos</span></div>
+        <div class="dato"><b>${j.temp.a}</b><span>Asistencias</span></div>
+        <div class="dato"><b>${j.temp.g}</b><span>Goles</span></div>
+        <div class="dato"><b>${j.temp.am}</b><span>Amarillas</span></div>
+        <div class="dato"><b>${j.temp.rating}</b><span>Rating</span></div>
+      </div>`
+      :`<div class="sinDato">${ico('base')}<span><b style="color:var(--accent)">Sin datos de temporada.</b><br>
+        ${L.n} no tiene cobertura de estadísticas de jugador confirmada en la API.
+        Verificar con <code>GET /leagues</code> antes de prometer este dato.</span></div>`}
+    </div>
+
+    <div class="bloque"><span class="label">Carrera</span>
+      <div class="datos">
+        <div class="dato dato--a"><b>${j.car.pj}</b><span>Partidos</span></div>
+        <div class="dato"><b>${(j.car.min/1000).toFixed(1)} k</b><span>Minutos</span></div>
+        <div class="dato"><b>${j.car.a}</b><span>Asistencias</span></div>
+        <div class="dato"><b>${j.car.g}</b><span>Goles</span></div>
+        <div class="dato"><b>${mpp}′</b><span>Min. por partido</span></div>
+      </div></div>
+
+    ${j.seleccion?`<div class="bloque"><span class="label">Selección de ${j.seleccion}</span>
+      <div class="datos">
+        <div class="dato dato--a"><b>${j.sel.pj}</b><span>Partidos</span></div>
+        <div class="dato"><b>${j.sel.g}</b><span>Goles</span></div>
+      </div></div>`:''}
+
+    <div class="bloque"><span class="label">Datos para contenido</span>
+      <div class="datos">
+        <div class="dato"><b>${edad}</b><span>Años</span></div>
+        <div class="dato"><b>${enClub}</b><span>Años en el club</span></div>
+        <div class="dato"><b>${anosCarrera}</b><span>Años de carrera</span></div>
+      </div>
+      <div class="linea" style="margin-top:14px">
+        <span>${ico('torta','ico ico--sm')}Cumpleaños: <b>${cumple}</b></span>
+        <span>${ico('globo','ico ico--sm')}${j.nacionalidad}</span>
+      </div>
+      <div class="redes" style="margin-top:14px">
+        <span class="red">${ico('ig','ico ico--sm')}${j.ig}</span>
+      </div>
+    </div>
+
+    ${prox.length?`<div class="bloque"><span class="label">Próximos partidos</span>
+      <div class="lst">${prox.map(p=>`<button class="pm" data-id="${p.id}">${crest(p.rival,'crest--sm')}<b>${esc(p.rival)}</b>
+        <span>${LIGAS[p.liga].c} · ${etiquetaDia(p.f)}${ico('chevron','ico ico--sm')}</span></button>`).join('')}</div></div>`:''}`;
+  mostrarPanel();
+}
+
+/* ══ PERFIL ══ */
+const PERFIL={nombre:'Alexis',email:'alexis@first.uy',rol:'Diseñador',foto:null,
+  avisos:{hitos:true,partidos:true,resumen:true}};
+function renderPerfilTop(){
+  document.getElementById('who-av').innerHTML=PERFIL.foto?`<img src="${PERFIL.foto}" alt="">`:PERFIL.nombre[0];
+  document.querySelector('.who__t').innerHTML=`<b>${esc(PERFIL.nombre)}</b><span>${PERFIL.rol}</span>`;
+  document.getElementById('drop-h').innerHTML=`
+    ${PERFIL.foto?`<img src="${PERFIL.foto}" alt="">`:`<span class="av">${PERFIL.nombre[0]}</span>`}
+    <div><b>${esc(PERFIL.nombre)}</b><span>${PERFIL.email}</span><span class="drop__rol">${PERFIL.rol}</span></div>`;
+}
+function abrirPerfil(sec='datos'){
+  panelTipo='perfil';panelId=null;
+  document.getElementById('panel-t').textContent='Mi cuenta';
+  const L=t=>`<label style="display:block;font-size:var(--t-sm);font-weight:600;color:var(--text-2);margin-bottom:8px">${t}</label>`;
+  const cuerpo={
+    datos:`<div class="bloque"><span class="label">Foto de perfil</span>
+      <div class="fotoedit">
+        ${PERFIL.foto?`<img class="fotoedit__img" src="${PERFIL.foto}" alt="">`:`<div class="fotoedit__img">${PERFIL.nombre[0]}</div>`}
+        <div><button class="btn btn--g btn--sm" id="subir-foto">Cambiar foto</button>
+        ${PERFIL.foto?`<button class="btn btn--g btn--sm" id="quitar-foto">Quitar</button>`:''}</div></div></div>
+      <div class="bloque"><span class="label">Datos</span>
+      <div class="campo">${L('Nombre')}<input type="text" id="p-nombre" value="${esc(PERFIL.nombre)}"></div>
+      <div class="campo">${L('Correo')}<input type="email" value="${PERFIL.email}" disabled></div>
+      <div class="campo">${L('Rol')}<input type="text" value="${PERFIL.rol}" disabled></div>
+      <div class="aviso">${ico('alerta','ico ico--sm')}<span>El correo y el rol los cambia un administrador. Si el diseñador pudiera editarse el rol, todo el sistema de permisos no valdría nada.</span></div>
+      <button class="btn btn--a" style="width:100%;margin-top:18px" id="guardar-perfil">Guardar cambios</button></div>`,
+    clave:`<div class="bloque"><span class="label">Cambiar contraseña</span>
+      <div class="campo">${L('Contraseña actual')}<input type="password" placeholder="••••••••"></div>
+      <div class="campo">${L('Nueva contraseña')}<input type="password" id="p-nueva" placeholder="Mínimo 8 caracteres"></div>
+      <div class="campo">${L('Repetir nueva')}<input type="password" id="p-rep" placeholder="••••••••"></div>
+      <div class="aviso">${ico('alerta','ico ico--sm')}<span>Al cambiarla se cierran las demás sesiones abiertas.</span></div>
+      <button class="btn btn--a" style="width:100%;margin-top:18px" id="guardar-clave">Actualizar contraseña</button></div>`,
+    avisos:`<div class="bloque"><span class="label">Avisarme cuando</span><div class="switches">
+      ${[['hitos','Un jugador esté cerca de un hito','Con la anticipación de cada escala'],
+         ['partidos','Falten 24 horas para un partido','Con hora de Uruguay y hora local'],
+         ['resumen','Resumen semanal','Lunes 8:00, los partidos de los próximos siete días']]
+        .map(([k,t,d])=>`<div class="switch"><div><b>${t}</b><span>${d}</span></div>
+          <button class="${PERFIL.avisos[k]?'on':''}" data-sw="${k}" aria-pressed="${PERFIL.avisos[k]}" aria-label="${t}"></button></div>`).join('')}
+      </div></div>`,
+  }[sec];
+  document.getElementById('panel-b').innerHTML=`
+    <div class="barra" style="margin-bottom:28px">
+      ${[['datos','Datos'],['clave','Contraseña'],['avisos','Notificaciones']]
+        .map(([k,t])=>`<button class="chip ${k===sec?'on':''}" data-ptab="${k}">${t}</button>`).join('')}
+    </div>${cuerpo}`;
+  mostrarPanel();
+}
+
+let ultimoFoco=null;
+function mostrarPanel(){
+  if(!document.getElementById('panel').classList.contains('on'))ultimoFoco=document.activeElement;
+  document.getElementById('panel').classList.add('on');
+  document.getElementById('velo').classList.add('on');
+  document.getElementById('panel').scrollTop=0;
+  document.getElementById('panel-x').focus();
+}
+function cerrarPanel(){
+  document.getElementById('panel').classList.remove('on');
+  document.getElementById('velo').classList.remove('on');
+  panelTipo=null;panelId=null;
+  if(ultimoFoco&&document.contains(ultimoFoco))ultimoFoco.focus();
+}
+
+/* ══ BUSCADOR ══ */
+const norm=s=>s.normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase();
+function marcar(txt,q){
+  if(!q)return esc(txt);
+  const i=norm(txt).indexOf(norm(q));if(i<0)return esc(txt);
+  return esc(txt.slice(0,i))+'<em>'+esc(txt.slice(i,i+q.length))+'</em>'+esc(txt.slice(i+q.length));
+}
+function filaPartidoRes(p,q){
+  return `<button class="res" data-id="${p.id}" data-cierra>${crest(p.club)}
+    <div><b>${marcar(p.club,q)} vs ${marcar(p.rival,q)}</b>
+    <span>${marcar(LIGAS[p.liga].n,q)} · ${etiquetaDia(p.f)} · ${p.hUY} UY</span></div>
+    ${ico('chevron','ico ico--sm')}</button>`;
+}
+function buscar(q){
+  const r=document.getElementById('busca-r');
+  if(!q.trim()){
+    r.innerHTML=`<div class="busca__g">Próximos partidos</div>`+
+      [...PARTIDOS].sort((a,b)=>a.f-b.f).slice(0,5).map(p=>filaPartidoRes(p,'')).join('');
+    return;
+  }
+  const n=norm(q);
+  const js=JUGADORES.filter(j=>norm(j.n).includes(n)||norm(j.club).includes(n)||norm(j.pos).includes(n)||norm(LIGAS[j.liga].pais).includes(n));
+  const ps=PARTIDOS.filter(p=>norm(p.club).includes(n)||norm(p.rival).includes(n)||
+    norm(LIGAS[p.liga].n).includes(n)||norm(LIGAS[p.liga].pais).includes(n)||norm(p.estadio).includes(n)||norm(p.ciudad).includes(n));
+  if(!js.length&&!ps.length){r.innerHTML='<div class="busca__v">Nada coincide con esa búsqueda.</div>';return;}
+  r.innerHTML=
+    (js.length?`<div class="busca__g">Jugadores (${js.length})</div>`+js.map(j=>`
+      <button class="res" data-jug="${j.id}" data-cierra>${av(j,'')}
+        <div><b>${marcar(j.n,q)}</b><span>${marcar(j.club,q)} · ${marcar(LIGAS[j.liga].pais,q)}</span></div>
+        ${ico('chevron','ico ico--sm')}</button>`).join(''):'')+
+    (ps.length?`<div class="busca__g">Partidos (${ps.length})</div>`+ps.slice(0,8).map(p=>filaPartidoRes(p,q)).join(''):'');
+}
+function abrirBusca(){
+  document.getElementById('busca').classList.add('on');
+  const i=document.getElementById('busca-i');i.value='';buscar('');i.focus();
+}
+function cerrarBusca(){document.getElementById('busca').classList.remove('on');}
+
+/* ══ EVENTOS ══ */
+function refrescar(){renderHero();renderKpis();renderHitos();renderPartidos();renderAnio();renderCal();renderPlantel();}
+function irA(v){
+  document.querySelectorAll('#nav button').forEach(x=>x.classList.remove('on'));
+  document.querySelector(`[data-v="${v}"]`).classList.add('on');
+  document.querySelectorAll('.vista').forEach(x=>x.classList.remove('on'));
+  document.getElementById('v-'+v).classList.add('on');
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+document.getElementById('form').addEventListener('submit',e=>{
+  e.preventDefault();
+  document.getElementById('login').classList.add('off');
+  document.getElementById('app').classList.add('on');
+  renderPerfilTop();refrescar();
+});
+document.getElementById('nav').addEventListener('click',e=>{const b=e.target.closest('button');if(b)irA(b.dataset.v);});
+document.getElementById('filtros').addEventListener('click',e=>{
+  const c=e.target.closest('.chip');if(!c)return;
+  document.querySelectorAll('#filtros .chip').forEach(x=>x.classList.remove('on'));
+  c.classList.add('on');filtro=c.dataset.f;filtroJugador=null;renderPartidos();
+});
+document.getElementById('tema').addEventListener('click',()=>{
+  const h=document.documentElement;
+  h.dataset.theme=h.dataset.theme==='dark'?'light':'dark';
+  toast(h.dataset.theme==='dark'?'Modo oscuro':'Modo claro');
+});
+document.getElementById('abrir-busca').addEventListener('click',abrirBusca);
+document.getElementById('busca-i').addEventListener('input',e=>buscar(e.target.value));
+document.getElementById('busca').addEventListener('click',e=>{if(e.target.id==='busca')cerrarBusca();});
+document.getElementById('who-btn').addEventListener('click',e=>{
+  e.stopPropagation();
+  const d=document.getElementById('drop');d.classList.toggle('on');
+  e.currentTarget.setAttribute('aria-expanded',d.classList.contains('on'));
+});
+document.getElementById('drop').addEventListener('click',e=>{
+  const b=e.target.closest('[data-perfil]');
+  if(b){document.getElementById('drop').classList.remove('on');abrirPerfil(b.dataset.perfil);}
+});
+document.getElementById('salir').addEventListener('click',()=>{
+  document.getElementById('drop').classList.remove('on');cerrarPanel();
+  document.getElementById('app').classList.remove('on');
+  document.getElementById('login').classList.remove('off');
+});
+const fotoInput=document.createElement('input');
+fotoInput.type='file';fotoInput.accept='image/*';
+fotoInput.addEventListener('change',()=>{
+  const f=fotoInput.files[0];if(!f)return;
+  PERFIL.foto=URL.createObjectURL(f);renderPerfilTop();abrirPerfil('datos');
+});
+
+document.addEventListener('click',e=>{
+  const ptab=e.target.closest('[data-ptab]');if(ptab){abrirPerfil(ptab.dataset.ptab);return;}
+  if(e.target.closest('#subir-foto')){fotoInput.value='';fotoInput.click();return;}
+  if(e.target.closest('#quitar-foto')){PERFIL.foto=null;renderPerfilTop();abrirPerfil('datos');return;}
+  if(e.target.closest('#guardar-perfil')){
+    const v=document.getElementById('p-nombre').value.trim();if(v)PERFIL.nombre=v;
+    renderPerfilTop();toast('Perfil guardado');return;}
+  if(e.target.closest('#guardar-clave')){
+    const a=document.getElementById('p-nueva').value,b=document.getElementById('p-rep').value;
+    const bien=a&&a.length>=8&&a===b;
+    toast((!a||a.length<8)?'La contraseña necesita 8 caracteres':(a!==b)?'Las contraseñas no coinciden':'Contraseña actualizada',bien?'check':'alerta');
+    return;}
+  const sw=e.target.closest('[data-sw]');
+  if(sw){const k=sw.dataset.sw;PERFIL.avisos[k]=!PERFIL.avisos[k];sw.classList.toggle('on');sw.setAttribute('aria-pressed',PERFIL.avisos[k]);return;}
+  if(!e.target.closest('.who'))document.getElementById('drop').classList.remove('on');
+
+  const cierra=e.target.closest('[data-cierra]');if(cierra)cerrarBusca();
+  const hj=e.target.closest('[data-jugh]');if(hj){abrirPanelJugador(hj.dataset.jugh);return;}
+  const jg=e.target.closest('[data-jug]');if(jg){abrirPanelJugador(jg.dataset.jug);return;}
+  const card=e.target.closest('.match, .ev, .hero, [data-id]');
+  if(card&&card.dataset.id){abrirPanelPartido(+card.dataset.id);return;}
+});
+
+document.addEventListener('keydown',e=>{
+  if((e.metaKey||e.ctrlKey)&&e.key.toLowerCase()==='k'){e.preventDefault();abrirBusca();return;}
+  if(e.key==='Escape'){
+    if(document.getElementById('busca').classList.contains('on')){cerrarBusca();return;}
+    cerrarPanel();return;
+  }
+  if((e.key==='Enter'||e.key===' ')&&e.target.classList.contains('match')){
+    e.preventDefault();abrirPanelPartido(+e.target.dataset.id);
+  }
+});
+document.getElementById('mes-prev').addEventListener('click',()=>{mesVista.setMonth(mesVista.getMonth()-1);renderAnio();renderCal();});
+document.getElementById('mes-next').addEventListener('click',()=>{mesVista.setMonth(mesVista.getMonth()+1);renderAnio();renderCal();});
+document.getElementById('anio').addEventListener('click',e=>{
+  const b=e.target.closest('[data-mes]');if(!b)return;
+  mesVista.setMonth(+b.dataset.mes);renderAnio();renderCal();
+});
+document.getElementById('panel-x').addEventListener('click',cerrarPanel);
+document.getElementById('velo').addEventListener('click',cerrarPanel);
+
+const fh=new Intl.DateTimeFormat('es-UY',{weekday:'long',day:'numeric',month:'long',year:'numeric',timeZone:'America/Montevideo'}).format(new Date());
+document.getElementById('fecha-hoy').textContent=fh[0].toUpperCase()+fh.slice(1);
+</script>
+</body>
+</html>

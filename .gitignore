@@ -1,0 +1,42 @@
+# Dependencias
+/node_modules
+/.pnp
+.pnp.js
+
+# Next.js
+/.next/
+/out/
+/build
+next-env.d.ts
+
+# Producción
+/dist
+
+# Variables de entorno (NUNCA subir claves)
+.env
+.env.local
+.env*.local
+.env.development.local
+.env.production.local
+
+# Supabase CLI
+/supabase/.branches
+/supabase/.temp
+/supabase/.env
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Editor / SO
+.DS_Store
+Thumbs.db
+.vscode/*
+!.vscode/extensions.json
+.idea/
+
+# Datos manuales sensibles (el Excel se maneja aparte, no versionado)
+/scripts/*.xlsx
+*.xlsx
