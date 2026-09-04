@@ -10,7 +10,9 @@
     "lint": "next lint",
     "migracion": "node scripts/aplicar-migracion.mjs",
     "tipos:db": "node scripts/generar-tipos.mjs",
-    "seed:usuarios": "node scripts/seed-usuarios.mjs"
+    "seed:usuarios": "node scripts/seed-usuarios.mjs",
+    "seed:competencias": "node scripts/seed-competencias.mjs",
+    "consultar:ligas": "node scripts/consultar-ligas.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.5.2",

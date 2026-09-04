@@ -18,12 +18,12 @@ En Claude Code **no hay memoria entre sesiones**, así que este protocolo es obl
 3. Rutina de cierre Git: `git add . && git commit -m "Sesión N: ..." && git push`.
 4. La sesión no se cierra hasta que `git push` terminó OK.
 
-**Última actualización:** 2026-09-04 (Sesión 2, cont.: vista `partidos`)
-**Estado general:** auth completa (Sesión 2) + **vista `partidos` conectada a datos reales**
-(`proximos_partidos`, repositorio, hero/KPIs/filtros/lista). Verificado con datos de prueba
-insertados y borrados en vivo: renderiza bien, filtros andan, 0 errores de consola. Hoy la BD
-real está vacía (sin sync ni Excel importado) → la vista muestra "Sin datos" en todos lados,
-que es lo correcto. Falta: motor de hitos, Edge Functions de sync, resto de vistas.
+**Última actualización:** 2026-09-04 (Sesión 2, cont.: API-Football + `competencias`)
+**Estado general:** auth completa + vista `partidos` conectada a datos reales (Sesión 2) +
+**`API_FOOTBALL_KEY` conseguida y verificada** (plan free, activa) + **`competencias` cargada**
+(15 filas: 6 ligas/copas domésticas de la cartera + 5 continentales + eliminatorias, IDs
+confirmados contra `GET /leagues` real). Sigue sin partidos/jugadores reales (falta el Excel
+y las Edge Functions de sync) → la vista muestra "Sin datos", que es lo correcto hoy.
 
 ---
 
@@ -84,10 +84,37 @@ diseñador → Community Manager.
 | `components/layout/BarraSuperior.tsx` · `Nav.tsx` | Barra superior + nav (marca/nav OK; **menú de usuario real + cerrar sesión OK S2**; buscador/tema stub) | ✅ |
 | `supabase/functions/sync-*` | Edge Functions de sincronización | ⬜ |
 | `scripts/seed-usuarios.mjs` | 4 cuentas (`service_role`), idempotente | ✅ creado y corrido S2 |
+| `scripts/consultar-ligas.mjs` | Solo lectura: consulta `GET /leagues` por país + búsquedas de continentales | ✅ creado S2 |
+| `scripts/seed-competencias.mjs` | Carga las 15 competencias confirmadas (upsert manual por `id_externo`, índice único parcial) | ✅ creado y corrido S2 |
 | `scripts/importar-datos-manuales.ts` | Importa el Excel (falta el archivo) | ⬜ |
 | `lib/motor-hitos/`, `components/{calendario,jugadores,paneles}/*` | Lógica y componentes con datos | ⬜ |
 
 ## 4. Hecho (por fecha, más reciente primero)
+
+### 2026-09-04 — Sesión 2 (cont.: API-Football key + `competencias`)
+- **`API_FOOTBALL_KEY`** conseguida por Gerardo (dashboard.api-football.com, plan free) y puesta
+  directo en `.secretos/.env` — nunca pasó por el chat ni por ningún archivo visible. Verificada
+  contra `GET /status`: plan Free, cuenta activa, 0/100 peticiones usadas — sin imprimir la key
+  en ningún momento (solo longitud y datos de la cuenta).
+- **`scripts/consultar-ligas.mjs`** (solo lectura, permanente): pega contra `GET /leagues` por
+  país (Arabia Saudita, México, Brasil, Chile, Bélgica) y por búsqueda (Libertadores,
+  Sudamericana, Europa League, AFC Champions, eliminatorias CONMEBOL), con la cobertura de la
+  temporada más reciente de cada una.
+- **Confirmado contra la API real** (no contra la demo): Liga de Expansión MX (id `263`)
+  efectivamente NO tiene estadística por jugador — la demo ya lo adelantaba como advertencia y
+  quedó verificado. La Copa de Bélgica (`Beker van België`, id `147`) tiene cobertura CERO (ni
+  fixtures) — Gerardo decidió no cargarla por ahora. Copa MX / Copa por México aparecen
+  discontinuadas (última temporada 2019/2022) — no hay copa doméstica activa en México hoy.
+- **`scripts/seed-competencias.mjs`** — carga 15 competencias con `id_externo` real: las 6
+  ligas/copas domésticas de la cartera (Pro League, Liga MX, Liga de Expansión MX, Serie A,
+  Primera División, Jupiler Pro League, King's Cup, Copa do Brasil, Copa Chile — 9 en realidad,
+  contando ligas y copas) + 5 continentales (Libertadores, Sudamericana, Europa League, AFC
+  Champions League Elite/Two) + eliminatorias sudamericanas. `cobertura` = si la API da
+  estadística por jugador para esa competencia (no si da fixtures — eso casi siempre viene).
+  El índice único de `id_externo` es parcial (`where id_externo is not null`), así que el
+  upsert normal de PostgREST no lo infiere — el script busca por `id_externo` y hace
+  insert/update a mano (mismo criterio que `seed-usuarios.mjs`). **Corrido dos veces**: la
+  primera crea las 15, la segunda las detecta y actualiza sin duplicar.
 
 ### 2026-09-04 — Sesión 2 (cont.: vista `partidos` conectada a datos reales)
 - **`lib/repositorios/tipos.ts`** reescrito: `PartidoProximo` pasa a ser 1:1 con las columnas
@@ -240,15 +267,21 @@ diseñador → Community Manager.
 - [x] ~~`scripts/seed-usuarios.ts`~~ — hecho 2026-09-04 como `.mjs` (ver §4 Sesión 2 y §10).
 - [ ] Paneles de "Mi perfil" / "Cambiar contraseña" / "Notificaciones" (hoy `disabled` en el
       menú de usuario). — media
-- [ ] Confirmar contra `GET /leagues` los IDs de ligas/copas/continentales; cargar `competencias`
-      con su `cobertura`. — media
+- [x] ~~Confirmar contra `GET /leagues` los IDs de ligas/copas/continentales; cargar `competencias`
+      con su `cobertura`~~ — hecho 2026-09-04 (ver §4 Sesión 2 cont.: 15 competencias cargadas).
 - [x] ~~Conectar vista `partidos` a `proximos_partidos`~~ — hecho 2026-09-04 (ver §4 Sesión 2
       cont.). Sin datos reales todavía (BD vacía hasta que corra la sync o se importe el Excel).
 - [ ] `lib/motor-hitos` leyendo `escalas_hito`; sección "se vienen los hitos" + badges + KPI +
       tag en la tarjeta + tie-break del hero (todo quedó deliberadamente afuera en la Sesión 2). — media
 - [ ] Wirear el click de `TarjetaPartido`/`HeroPartidoDelDia` para abrir el panel de detalle
       (hoy no son clicables — paneles, junto con el resto del panel lateral). — media
-- [ ] `supabase/functions/sync-partidos` (+ `sync-estadisticas`, `sync-agenda`); activar `pg_cron`. — media
+- [ ] `supabase/functions/sync-partidos` (+ `sync-estadisticas`, `sync-agenda`); activar `pg_cron`.
+      Ya hay `API_FOOTBALL_KEY` real y `competencias` cargada — el bloqueo que faltaba. — alta
+- [ ] Confirmar si Al-Qadsiah juega la AFC Champions League **Elite** o **Two** esta temporada
+      (se cargaron las dos, ver §4 Sesión 2 cont. — la que no aplique no va a tener partidos,
+      no hace falta decidir ahora, la sync lo resuelve solo). — baja
+- [ ] Copa de Bélgica: no se cargó en `competencias` (cero cobertura en la API). Revisar de tanto
+      en tanto con `npm run consultar:ligas` por si la API empieza a cubrirla. — baja
 - [ ] Toggle de tema claro/oscuro (persistir preferencia) — Gerardo probó el botón y confirmó
       que quedaba deshabilitado a propósito (Sesión 2); no es bug, es esta tarea pendiente. — media
 - [ ] Cablear buscador ⌘K y paneles laterales. — media
@@ -311,8 +344,10 @@ diseñador → Community Manager.
     público, conviene **rotarlos** en el dashboard antes de cargar datos reales (el anon key no
     importa: es público por diseño, lo protege la RLS). Recordatorio en `.secretos/notas.md`.
 - `SUPABASE_ACCESS_TOKEN` (`sbp_…`) en `.secretos/.env`. **Vence 2026-12-31** — renovar antes.
-- API key de API-Football (plan free): **falta**. Va en `.secretos/.env` (`API_FOOTBALL_KEY`) y
-  luego en variable de entorno de la Edge Function. Nunca en el repo ni en el cliente.
+- API key de API-Football (plan free): **conseguida y verificada** 2026-09-04, en
+  `.secretos/.env` (`API_FOOTBALL_KEY`) — Gerardo la puso directo en el archivo, nunca pasó por
+  el chat. Falta ponerla también como variable de entorno de la Edge Function cuando se escriba
+  `sync-partidos`. Nunca en el repo ni en el cliente.
 - Contraseña de las 4 cuentas demo: **`demo1234`** (confirmada). Compartida SOLO para demo cerrado;
   antes de uso real, credenciales individuales fuertes.
 
