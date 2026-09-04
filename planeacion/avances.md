@@ -18,10 +18,10 @@ En Claude Code **no hay memoria entre sesiones**, así que este protocolo es obl
 3. Rutina de cierre Git: `git add . && git commit -m "Sesión N: ..." && git push`.
 4. La sesión no se cierra hasta que `git push` terminó OK.
 
-**Última actualización:** 2026-09-03 (Sesión 1 + continuación)
-**Estado general:** andamiaje Next.js compila y corre · **migración `0001` APLICADA y verificada**
-en Supabase (16 tablas, 2 vistas, RLS, 17 políticas, seed) · `lib/supabase/tipos-db.ts` generado.
-Secretos en `.secretos/` (gitignored). Falta: auth y lógica de datos.
+**Última actualización:** 2026-09-04 (Sesión 2)
+**Estado general:** **auth cableada y verificada de punta a punta** — 4 cuentas creadas, login real,
+middleware protegiendo rutas, menú de usuario con "cerrar sesión" funcional. `npm run build` OK.
+Falta: conectar datos reales (repositorios, motor de hitos, Edge Functions de sync).
 
 ---
 
@@ -61,23 +61,56 @@ diseñador → Community Manager.
 | `supabase/migrations/0001_esquema_inicial.sql` | Enums + 11 tablas dominio + CRM F2 (solo estructura) + RLS + vistas `proximos_partidos` / `agenda_anual` + seed `escalas_hito` + jobs `pg_cron` comentados | ✅ **APLICADA** en Supabase (PG17) y verificada |
 | `.env.local` | Secretos: URL + anon + service_role + DB password de Supabase | ✅ creado — **gitignored**, nunca se sube |
 | `scripts/aplicar-migracion.mjs` | Runner de migraciones (conexión directa `pg`, lee `.env.local`) | ✅ `npm run migracion <archivo.sql>` |
-| `lib/supabase/tipos-db.ts` | Tipos generados de la BD | ⬜ pendiente — `supabase gen types` necesita Docker o `SUPABASE_ACCESS_TOKEN` |
+| `lib/supabase/tipos-db.ts` | Tipos generados de la BD | ✅ generado S1 |
+| `middleware.ts` | Refresca la sesión en cookies + redirige `/login`↔rutas privadas | ✅ creado S2 |
 | `app/layout.tsx` | HTML/body, CSS, fuentes por `<link>`, `<symbol id="ff">` | ✅ |
-| `app/(app)/layout.tsx` | Shell `.app on` + `BarraSuperior` + overlays (velo/panel/toast) | ✅ |
+| `app/(app)/layout.tsx` | Shell `.app on` + `BarraSuperior` + overlays (velo/panel/toast) + **guard de sesión server-side** | ✅ guard S2 |
 | `app/(app)/{partidos,calendario,jugadores}/page.tsx` + `jugadores/[jugadorId]` | Vistas: esqueleto con clases de la demo + `EstadoSinDatos` | ✅ |
-| `app/(auth)/login/page.tsx` | Marcado `.login` de la demo, form deshabilitado | ✅ |
+| `app/(auth)/login/page.tsx` + `components/auth/FormularioLogin.tsx` | Marcado `.login` de la demo + form real (`signInWithPassword`, errores humanos) | ✅ cableado S2 |
 | `app/page.tsx` | Redirige `/` → `/partidos` | ✅ |
 | `lib/fechas/zonas.ts` | `ZONA_AGENCIA`, `aInstanteUtc`, `horaEnUruguay`, `horaEnSede`, `diaEnUruguay`, `ZONAS_CARTERA` | ✅ |
 | `lib/formato/valores.ts` | `mostrar(v) => v ?? 'Sin datos'`, `SIN_DATOS`, `esVacio` | ✅ |
 | `lib/supabase/{cliente-navegador,cliente-servidor}.ts` | Clientes `@supabase/ssr` (anon key) | ✅ |
 | `lib/repositorios/tipos.ts` | Interfaz `RepositorioPartidos` + tipo `PartidoProximo` (patrón repositorio) | ✅ stub |
-| `components/comunes/Ico.tsx` · `EstadoSinDatos.tsx` | Íconos (paths de la demo) · componente `.sinDato` | ✅ |
-| `components/layout/BarraSuperior.tsx` · `Nav.tsx` | Barra superior + nav (marca y nav funcionan; buscador/tema/menú stub) | ✅ |
+| `components/comunes/Ico.tsx` · `EstadoSinDatos.tsx` | Íconos (paths de la demo, + 4 del menú de usuario S2) · componente `.sinDato` | ✅ |
+| `components/layout/BarraSuperior.tsx` · `Nav.tsx` | Barra superior + nav (marca/nav OK; **menú de usuario real + cerrar sesión OK S2**; buscador/tema stub) | ✅ |
 | `supabase/functions/sync-*` | Edge Functions de sincronización | ⬜ |
-| `scripts/` | `seed-usuarios.ts`, `importar-datos-manuales.ts` | ⬜ |
+| `scripts/seed-usuarios.mjs` | 4 cuentas (`service_role`), idempotente | ✅ creado y corrido S2 |
+| `scripts/importar-datos-manuales.ts` | Importa el Excel (falta el archivo) | ⬜ |
 | `lib/motor-hitos/`, `components/{partidos,calendario,jugadores,paneles}/*` | Lógica y componentes con datos | ⬜ |
 
 ## 4. Hecho (por fecha, más reciente primero)
+
+### 2026-09-04 — Sesión 2 (auth)
+- **`scripts/seed-usuarios.mjs`** (no `.ts` — ver §10): crea las 4 cuentas fijas con
+  `admin.auth.admin.createUser` (`service_role`, `email_confirm:true`) y fija `nombre_completo`/`cargo`
+  en `perfiles` (el trigger `handle_new_user` ya inserta la fila con nombre; acá se completa `cargo`).
+  Idempotente: si el correo ya existe, lo busca con `listUsers` y solo actualiza el perfil.
+  **Corrido dos veces contra el Supabase real** del proyecto: 1ª vez crea las 4, 2ª vez detecta
+  que ya existían sin duplicar ni fallar. Cuentas: `maxi`/Diseñador, `pedro`/Community Manager,
+  `felipe`/Administrador, `alexis`/Prueba — las 4 con contraseña `demo1234` (decisión S1).
+- **`middleware.ts`** (patrón oficial `@supabase/ssr`): refresca el JWT en cookies en cada
+  request, valida con `getUser()` (no `getSession()`, que no re-verifica el token), redirige
+  a `/login` si no hay sesión y a `/partidos` si hay sesión y se pide `/login`. `matcher` excluye
+  estáticos.
+- **Guard en `app/(app)/layout.tsx`**: además del middleware, cada Server Component bajo `(app)`
+  vuelve a chequear `auth.getUser()` (defensa en profundidad, mismo criterio que RLS) y trae
+  `nombre_completo`/`cargo` de `perfiles` para pasárselo a `BarraSuperior`.
+- **Login real**: `app/(auth)/login/page.tsx` (Server Component, mantiene `metadata`) delega el
+  formulario a `components/auth/FormularioLogin.tsx` (Client Component): arma el correo
+  `usuario@footballfirst.uy`, llama `signInWithPassword`, muestra estado "Ingresando…" y errores
+  en lenguaje humano (`.aviso` de la demo, sin clases nuevas) — "Usuario o contraseña incorrectos."
+  en vez del mensaje crudo de Supabase.
+- **`BarraSuperior.tsx`** pasa a Client Component: `.who__btn` muestra nombre/cargo reales y la
+  inicial; el desplegable `.drop` abre/cierra (click afuera + Escape, iguala el comportamiento de
+  la demo) y "Cerrar sesión" llama `signOut()` + redirige a `/login`. "Mi perfil"/"Cambiar
+  contraseña"/"Notificaciones" quedan `disabled` (paneles, sesión aparte). 4 íconos nuevos en
+  `Ico.tsx` (`persona`, `candado`, `campana`, `salir`), copiados 1:1 del dropdown de la demo.
+- **Verificado end-to-end** (no solo `npm run build`): `signInWithPassword` con la clave **anon**
+  (mismo camino que el navegador) para las 4 cuentas + lectura de su propia fila de `perfiles`
+  bajo RLS — las 4 devuelven `nombre_completo`/`cargo` correctos. Middleware probado con `curl`:
+  `/partidos` sin sesión → 307 a `/login`; `/login` → 200. Script de verificación temporal, no
+  quedó en el repo.
 
 ### 2026-09-03 — Sesión 1
 - Claude leyó `planeacion/contexto.md` y creó esta bitácora.
@@ -143,9 +176,11 @@ diseñador → Community Manager.
 
 - [x] ~~Ejecutar y validar la migración `0001`~~ — hecho 2026-09-03 (ver §4 continuación).
 - [x] ~~`lib/supabase/tipos-db.ts`~~ — generado 2026-09-03 (`npm run tipos:db`). Regenerar tras cada migración.
-- [ ] Sesión **auth**: middleware de sesión, `signInWithPassword`, guard en `(app)/layout.tsx`,
-      cablear form de login (usuario + `@footballfirst.uy`), menú de usuario y "cerrar sesión". — alta
-- [ ] `scripts/seed-usuarios.ts` (4 cuentas, `service_role`, contraseña `demo1234`). — alta
+- [x] ~~Sesión auth~~ — hecho 2026-09-04 (ver §4 Sesión 2): middleware, guard, login real, menú de
+      usuario + cerrar sesión. Verificado de punta a punta con las 4 cuentas.
+- [x] ~~`scripts/seed-usuarios.ts`~~ — hecho 2026-09-04 como `.mjs` (ver §4 Sesión 2 y §10).
+- [ ] Paneles de "Mi perfil" / "Cambiar contraseña" / "Notificaciones" (hoy `disabled` en el
+      menú de usuario). — media
 - [ ] Confirmar contra `GET /leagues` los IDs de ligas/copas/continentales; cargar `competencias`
       con su `cobertura`. — media
 - [ ] Conectar vista `partidos` a `proximos_partidos` (repositorio + componentes reales:
@@ -256,6 +291,21 @@ diseñador → Community Manager.
   Windows, `spawnSync(bin, args, { shell: process.platform === 'win32' })` con args literales.
 - El `<section class="vista on">` de cada page lleva `on` porque en Next cada ruta renderiza su
   propia vista (en la demo era un tab-switch con una sola `.vista.on` a la vez).
+- **`seed-usuarios` quedó en `.mjs`, no `.ts`** (el plan original decía `.ts`): correrlo con
+  `node` directo hubiera pedido `ts-node`/`tsx` como dependencia nueva solo para un script de un
+  uso. Mismo criterio que `aplicar-migracion.mjs`/`generar-tipos.mjs` — KISS.
+- **`admin.auth.admin` no tiene "buscar por correo"**: para el camino idempotente hay que
+  `listUsers({ perPage })` y filtrar por `.email` en el resultado.
+- **Middleware de Supabase: usar `getUser()`, no `getSession()`.** `getSession()` solo lee la
+  cookie sin validarla contra el servidor de Auth; `getUser()` sí revalida el JWT — es la única
+  forma correcta de proteger rutas en el middleware (lo dice la propia doc de Supabase).
+- **Un script `.mjs` fuera de la carpeta del proyecto no resuelve `node_modules`** (probado con
+  un script de verificación en el scratchpad de la sesión): `node` busca el árbol de módulos
+  desde la ubicación del archivo hacia arriba. Cualquier script que importe dependencias del
+  proyecto tiene que vivir (aunque sea temporalmente) adentro del repo.
+- **Server Component que lee cookies (`auth.getUser()`) vuelve la ruta dinámica** (`ƒ` en vez de
+  `○` en el build de Next) — es lo esperado: no se puede pre-renderizar algo que depende de la
+  sesión de cada visitante.
 
 ## 11. Dudas abiertas (de `contexto.md` §12)
 

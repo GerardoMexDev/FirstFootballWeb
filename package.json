@@ -9,7 +9,8 @@
     "start": "next start",
     "lint": "next lint",
     "migracion": "node scripts/aplicar-migracion.mjs",
-    "tipos:db": "node scripts/generar-tipos.mjs"
+    "tipos:db": "node scripts/generar-tipos.mjs",
+    "seed:usuarios": "node scripts/seed-usuarios.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.5.2",

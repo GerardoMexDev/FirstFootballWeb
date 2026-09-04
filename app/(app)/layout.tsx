@@ -3,19 +3,42 @@
  * <div class="app on"> con la barra superior + <main class="wrap"> + los contenedores
  * fijos de overlay (velo, panel lateral, toast, buscador).
  *
- * ANDAMIAJE: acá va, en la sesión de auth, la verificación de sesión (redirigir a /login
- * si no hay usuario). Por ahora renderiza el shell para poder ver las vistas.
+ * Guarda de sesión: sin usuario, redirige a /login. El middleware ya lo hace primero
+ * (ver middleware.ts), pero esta verificación server-side es la que de verdad protege
+ * los Server Components de acá para abajo (no solo la navegación) — mismo criterio que
+ * cualquier política RLS: sin chequeo propio, no se confía solo en la capa de arriba.
  */
+import { redirect } from 'next/navigation';
 import { BarraSuperior } from '@/components/layout/BarraSuperior';
+import { crearClienteServidor } from '@/lib/supabase/cliente-servidor';
 
-export default function AppLayout({ children }: { children: React.ReactNode }) {
+export default async function AppLayout({ children }: { children: React.ReactNode }) {
+  const supabase = crearClienteServidor();
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) redirect('/login');
+
+  const { data: perfil } = await supabase
+    .from('perfiles')
+    .select('nombre_completo, cargo')
+    .eq('id', user.id)
+    .single();
+
   return (
     <>
       <a className="saltar" href="#v-partidos">
         Saltar al contenido
       </a>
       <div className="app on" id="app">
-        <BarraSuperior />
+        <BarraSuperior
+          perfil={{
+            nombreCompleto: perfil?.nombre_completo || '',
+            cargo: perfil?.cargo || 'Prueba',
+            email: user.email ?? '',
+          }}
+        />
         <main className="wrap">{children}</main>
       </div>
 
