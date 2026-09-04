@@ -1,7 +1,6 @@
 /**
  * Aplica un archivo .sql de supabase/migrations/ contra la base del proyecto.
- * Conexión directa (Postgres 17, IPv6/SSL). Lee la contraseña de SUPABASE_DB_PASSWORD
- * y la URL de NEXT_PUBLIC_SUPABASE_URL en .env.local.
+ * Conexión directa (Postgres 17, SSL). Lee las credenciales de .secretos/.env.
  *
  * Uso:  node scripts/aplicar-migracion.mjs supabase/migrations/0001_esquema_inicial.sql
  *
@@ -11,19 +10,10 @@
 import { readFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 
+process.loadEnvFile('.secretos/.env');
+
 const require = createRequire(import.meta.url);
 const { Client } = require('pg');
-
-// --- cargar .env.local (sin dependencias) ---
-const env = Object.fromEntries(
-  readFileSync(new URL('../.env.local', import.meta.url), 'utf8')
-    .split('\n')
-    .filter((l) => l.trim() && !l.trim().startsWith('#') && l.includes('='))
-    .map((l) => {
-      const i = l.indexOf('=');
-      return [l.slice(0, i).trim(), l.slice(i + 1).trim()];
-    }),
-);
 
 const archivo = process.argv[2];
 if (!archivo) {
@@ -31,16 +21,17 @@ if (!archivo) {
   process.exit(1);
 }
 
-const ref = new URL(env.NEXT_PUBLIC_SUPABASE_URL).hostname.split('.')[0];
-const password = env.SUPABASE_DB_PASSWORD;
-if (!password) {
-  console.error('Falta SUPABASE_DB_PASSWORD en .env.local');
+const { NEXT_PUBLIC_SUPABASE_URL, SUPABASE_DB_PASSWORD } = process.env;
+if (!SUPABASE_DB_PASSWORD) {
+  console.error('Falta SUPABASE_DB_PASSWORD en .secretos/.env');
   process.exit(1);
 }
 
+const ref = new URL(NEXT_PUBLIC_SUPABASE_URL).hostname.split('.')[0];
 const sql = readFileSync(new URL(`../${archivo}`, import.meta.url), 'utf8');
+
 const client = new Client({
-  connectionString: `postgresql://postgres:${encodeURIComponent(password)}@db.${ref}.supabase.co:5432/postgres`,
+  connectionString: `postgresql://postgres:${encodeURIComponent(SUPABASE_DB_PASSWORD)}@db.${ref}.supabase.co:5432/postgres`,
   ssl: { rejectUnauthorized: false },
   connectionTimeoutMillis: 15000,
 });

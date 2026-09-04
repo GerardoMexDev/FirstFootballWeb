@@ -9,7 +9,7 @@
     "start": "next start",
     "lint": "next lint",
     "migracion": "node scripts/aplicar-migracion.mjs",
-    "tipos:db": "supabase gen types typescript --project-id thplgzufenxrzegwfxkg --schema public > lib/supabase/tipos-db.ts"
+    "tipos:db": "node scripts/generar-tipos.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.5.2",

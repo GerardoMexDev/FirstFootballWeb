@@ -15,12 +15,16 @@ y hitos de los jugadores representados, siempre en hora de Uruguay.
 
 ```bash
 npm install
-cp .env.local.example .env.local   # completar con las claves de Supabase
-npm run dev                        # http://localhost:3000
+mkdir .secretos && cp .env.local.example .secretos/.env   # completar con las claves reales
+npm run dev                                                # http://localhost:3000
 ```
 
-Sin `.env.local` la app levanta y muestra las tres vistas con el marcado de la demo y
-`EstadoSinDatos` donde faltan los datos.
+La carpeta `.secretos/` está en `.gitignore`; la cargan `next.config.mjs` y los scripts con
+`process.loadEnvFile`. Sin ese archivo la app igual levanta y muestra las tres vistas con el
+marcado de la demo y `EstadoSinDatos` donde faltan los datos.
+
+Scripts: `npm run migracion supabase/migrations/0001_esquema_inicial.sql` aplica una migración ·
+`npm run tipos:db` regenera `lib/supabase/tipos-db.ts`.
 
 ## Documentación del proyecto
 

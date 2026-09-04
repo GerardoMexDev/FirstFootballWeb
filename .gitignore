@@ -12,6 +12,9 @@ next-env.d.ts
 # Producción
 /dist
 
+# Secretos: carpeta entera fuera del repo (credenciales, keys, planillas sensibles)
+/.secretos/
+
 # Variables de entorno (NUNCA subir claves)
 .env
 .env.local

@@ -20,8 +20,8 @@ En Claude Code **no hay memoria entre sesiones**, así que este protocolo es obl
 
 **Última actualización:** 2026-09-03 (Sesión 1 + continuación)
 **Estado general:** andamiaje Next.js compila y corre · **migración `0001` APLICADA y verificada**
-en el proyecto Supabase real (16 tablas, 2 vistas, RLS en todas, 17 políticas, seed OK).
-Falta: `lib/supabase/tipos-db.ts` (necesita access token de Supabase), auth, lógica de datos.
+en Supabase (16 tablas, 2 vistas, RLS, 17 políticas, seed) · `lib/supabase/tipos-db.ts` generado.
+Secretos en `.secretos/` (gitignored). Falta: auth y lógica de datos.
 
 ---
 
@@ -121,20 +121,28 @@ diseñador → Community Manager.
   - RLS activa en **todas** las tablas de `public`; 17 políticas.
   - 10 enums propios creados; `security_invoker` y `unique nulls not distinct` OK (Postgres 17.6).
   - `escalas_hito` con las 5 escalas de la demo.
-- `lib/supabase/tipos-db.ts` **no generado**: `supabase gen types` en CLI 2.116 pide un runtime
-  de contenedores (Docker) con `--db-url`, y `--project-id` pide `SUPABASE_ACCESS_TOKEN`.
-  Pendiente para la próxima (1 min de Gerardo: crear token en dashboard/account/tokens).
 - Decisión: contraseña de las 4 cuentas = **`demo1234`** (confirmada por Gerardo).
 - APIs etapa 1 = planes **free**. Única key a conseguir: **API-Football free**
-  (dashboard.api-football.com, 100 req/día) → `API_FOOTBALL_KEY` en `.env.local`. ESPN,
-  TheSportsDB y Wikidata no requieren key. No urge (se usa en la sync, Sesión 3).
+  (dashboard.api-football.com, 100 req/día) → `API_FOOTBALL_KEY`. ESPN, TheSportsDB y
+  Wikidata no requieren key. No urge (se usa en la sync, Sesión 3).
+
+### 2026-09-03 — Sesión 1 (continuación: secretos + tipos-db)
+- **Los secretos se movieron a `.secretos/`** (carpeta dot, ignorada entera por `.gitignore`
+  con `/.secretos/`). Contiene `.env` (todas las variables) y `notas.md` (recordatorios de
+  rotación/vencimiento). Ya no hay `.env.local`.
+- `next.config.mjs` y los scripts cargan las variables con **`process.loadEnvFile('.secretos/.env')`**
+  (Node ≥ 20.12, sin dependencia). `try/catch` en el config para que Vercel (sin archivo) no falle.
+- Gerardo pasó un **`SUPABASE_ACCESS_TOKEN`** (`sbp_…`, vence **2026-12-31**). Con eso:
+  `scripts/generar-tipos.mjs` (`npm run tipos:db`) genera **`lib/supabase/tipos-db.ts`**
+  (~39,6 KB) vía `supabase gen types --project-id … --schema public`, sin Docker.
+- Verificado: `npm run build` OK con el nuevo config; `process.loadEnvFile` carga las 6+
+  variables; conexión directa a la BD OK.
+- `.env.local.example` y `README.md` actualizados para apuntar a `.secretos/.env`.
 
 ## 5. Pendiente / próximos pasos
 
 - [x] ~~Ejecutar y validar la migración `0001`~~ — hecho 2026-09-03 (ver §4 continuación).
-- [ ] `lib/supabase/tipos-db.ts` — pedir a Gerardo un **access token** de Supabase
-      (dashboard/account/tokens) → ponerlo en `.env.local` como `SUPABASE_ACCESS_TOKEN` →
-      `npm run tipos:db`. — prioridad: alta
+- [x] ~~`lib/supabase/tipos-db.ts`~~ — generado 2026-09-03 (`npm run tipos:db`). Regenerar tras cada migración.
 - [ ] Sesión **auth**: middleware de sesión, `signInWithPassword`, guard en `(app)/layout.tsx`,
       cablear form de login (usuario + `@footballfirst.uy`), menú de usuario y "cerrar sesión". — alta
 - [ ] `scripts/seed-usuarios.ts` (4 cuentas, `service_role`, contraseña `demo1234`). — alta
@@ -191,15 +199,15 @@ diseñador → Community Manager.
 ## 8. Credenciales / accesos (SOLO referencias, nunca valores reales)
 
 - `gh` CLI autenticado como `GerardoMexDev` (scopes: repo, read:org, gist).
-- **Proyecto Supabase `thplgzufenxrzegwfxkg`.** URL + anon key + service_role + DB password
-  están en **`.env.local`** (gitignored, verificado). El mismo set va en variables de entorno
-  de Vercel y de las Edge Functions cuando toque — nunca en el repo.
+- **Proyecto Supabase `thplgzufenxrzegwfxkg`.** URL + anon key + service_role + DB password +
+  access token están en **`.secretos/.env`** (carpeta gitignored entera). El mismo set va en
+  variables de entorno de Vercel y de las Edge Functions cuando toque — nunca en el repo.
   - ⚠️ El service_role y el DB password se compartieron en texto plano en el chat. Con el repo
     público, conviene **rotarlos** en el dashboard antes de cargar datos reales (el anon key no
-    importa: es público por diseño, lo protege la RLS).
-- `SUPABASE_ACCESS_TOKEN`: **falta**. Necesario para `supabase gen types` sin Docker.
-- API key de API-Football (plan free): **falta**. Va en `.env.local` (`API_FOOTBALL_KEY`) y luego
-  en variable de entorno de la Edge Function. Nunca en el repo ni en el cliente.
+    importa: es público por diseño, lo protege la RLS). Recordatorio en `.secretos/notas.md`.
+- `SUPABASE_ACCESS_TOKEN` (`sbp_…`) en `.secretos/.env`. **Vence 2026-12-31** — renovar antes.
+- API key de API-Football (plan free): **falta**. Va en `.secretos/.env` (`API_FOOTBALL_KEY`) y
+  luego en variable de entorno de la Edge Function. Nunca en el repo ni en el cliente.
 - Contraseña de las 4 cuentas demo: **`demo1234`** (confirmada). Compartida SOLO para demo cerrado;
   antes de uso real, credenciales individuales fuertes.
 
@@ -239,7 +247,13 @@ diseñador → Community Manager.
   funcionó sin más (esta máquina resuelve IPv6). Postgres **17.6** → `security_invoker` y
   `unique nulls not distinct` disponibles.
 - **`supabase gen types`** en CLI 2.116: con `--db-url` exige un runtime de contenedores (Docker);
-  con `--project-id` exige `SUPABASE_ACCESS_TOKEN`. Sin Docker, el camino es el access token.
+  con `--project-id` exige `SUPABASE_ACCESS_TOKEN`. Sin Docker, el camino es el access token
+  (ver `scripts/generar-tipos.mjs`).
+- **Secretos en `.secretos/` + `process.loadEnvFile('.secretos/.env')`** (Node ≥ 20.12) en
+  `next.config.mjs` y en cada script — no hace falta `dotenv`. El config lo envuelve en
+  `try/catch` para que el build de Vercel (sin el archivo) no rompa.
+- **Node no ejecuta un `.cmd` sin `shell:true`** (`EINVAL`). Para llamar al CLI de Supabase en
+  Windows, `spawnSync(bin, args, { shell: process.platform === 'win32' })` con args literales.
 - El `<section class="vista on">` de cada page lleva `on` porque en Next cada ruta renderiza su
   propia vista (en la demo era un tab-switch con una sola `.vista.on` a la vez).
 
