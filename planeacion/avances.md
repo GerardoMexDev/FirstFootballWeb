@@ -115,6 +115,15 @@ diseñador → Community Manager.
   upsert normal de PostgREST no lo infiere — el script busca por `id_externo` y hace
   insert/update a mano (mismo criterio que `seed-usuarios.mjs`). **Corrido dos veces**: la
   primera crea las 15, la segunda las detecta y actualiza sin duplicar.
+- **Dos correcciones de Gerardo tras revisar lo anterior** (ver §9 para la de Atlante):
+  - La Copa de Bélgica **sí tiene cobertura en API-Football — pero en el plan Pro**, no en el
+    Free que se está usando. No era "cobertura cero para siempre", era "cobertura cero en
+    nuestro plan actual". Sigue sin cargarse en `competencias` (no se justifica pagar el Pro
+    solo por esto todavía), pero la razón documentada estaba mal — corregida acá y en el
+    comentario de `seed-competencias.mjs`.
+  - **Atlante (Martín Fernández) ya no juega Liga de Expansión MX: ascendió y este torneo
+    juega Liga MX**, igual que Toluca. Liga de Expansión MX queda cargada en `competencias`
+    igual (no molesta y puede volver a hacer falta), pero deja de ser prioridad.
 
 ### 2026-09-04 — Sesión 2 (cont.: vista `partidos` conectada a datos reales)
 - **`lib/repositorios/tipos.ts`** reescrito: `PartidoProximo` pasa a ser 1:1 con las columnas
@@ -280,8 +289,12 @@ diseñador → Community Manager.
 - [ ] Confirmar si Al-Qadsiah juega la AFC Champions League **Elite** o **Two** esta temporada
       (se cargaron las dos, ver §4 Sesión 2 cont. — la que no aplique no va a tener partidos,
       no hace falta decidir ahora, la sync lo resuelve solo). — baja
-- [ ] Copa de Bélgica: no se cargó en `competencias` (cero cobertura en la API). Revisar de tanto
-      en tanto con `npm run consultar:ligas` por si la API empieza a cubrirla. — baja
+- [ ] Copa de Bélgica: no se cargó en `competencias` — tiene cobertura en API-Football, pero
+      solo en el **plan Pro** (el free no la trae). Si algún día se sube de plan, cargarla con
+      `npm run seed:competencias` (agregar la fila) y listo. — baja
+- [ ] Liga de Expansión MX dejó de ser prioridad: Atlante (Martín Fernández) ascendió y juega
+      Liga MX esta temporada — los dos clubes mexicanos de la cartera están en la misma
+      competencia. Ver §9. — baja
 - [ ] Toggle de tema claro/oscuro (persistir preferencia) — Gerardo probó el botón y confirmó
       que quedaba deshabilitado a propósito (Sesión 2); no es bug, es esta tarea pendiente. — media
 - [ ] Cablear buscador ⌘K y paneles laterales. — media
@@ -362,12 +375,19 @@ diseñador → Community Manager.
 - Cartera Fase 1 (6 jugadores / 6 clubes / 6 países): Nahitan (Al-Qadsiah, Arabia), Fede Pereira (Toluca, México),
   Nacho Sosa (Red Bull Bragantino, Brasil), Javi Mendez (Colo-Colo, Chile), Kevin Amaro (KRC Genk, Bélgica),
   Martin Fernandez (Atlante, México). Cumpleaños y fundación de club vienen del Excel (`origen='manual'`).
+- **Atlante (Martín Fernández) juega Liga MX esta temporada, NO Liga de Expansión MX** — ascendió
+  y su torneo actual es el de Primera División (confirmado por Gerardo 2026-09-04). Con esto, los
+  dos clubes mexicanos de la cartera (Toluca y Atlante) están en la **misma** competencia (`id_externo`
+  `262`, Liga MX). `contexto.md` (§ arquitectura, escrito antes de este ascenso) todavía habla de
+  "6 ligas + Liga de Expansión MX" como si fueran competencias separadas de la cartera — esta nota
+  la corrige; no se reescribió `contexto.md`. `competencias` ya tiene cargada Liga de Expansión MX
+  (`id_externo` `263`) igual, por si el roster vuelve a tocarla — **no es prioridad** por ahora.
 - Zonas IANA de la cartera: `Asia/Riyadh`, `Europe/Brussels`, `America/Mexico_City`, `America/Sao_Paulo`,
   `America/Santiago`, `America/Montevideo`.
 - Registro público de Auth deshabilitado. Confirmación de email desactivada. Login acepta el nombre y la app
   le agrega el dominio `@footballfirst.uy`.
 - Huecos conocidos donde se muestra "Sin datos" (nunca inventar): pre-listas de convocatoria, juveniles/reservas,
-  rendimiento individual en copas poco cubiertas y Liga de Expansión MX, lesiones con detalle.
+  rendimiento individual en copas poco cubiertas, lesiones con detalle.
 
 ## 10. Lecciones técnicas aprendidas (se acumulan, no se borran)
 

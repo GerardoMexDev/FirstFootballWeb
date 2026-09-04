@@ -7,9 +7,13 @@
  * competencia (fixtures casi siempre vienen; lo que no siempre viene son las stats) — es lo
  * que dice el comentario de la columna: "la UI no debe prometer estadística".
  *
- * Quedaron afuera a propósito (ver avances.md §4):
+ * Quedaron afuera a propósito (ver avances.md §4 y §9):
  * - Copa MX / Copa por México: discontinuadas (última temporada 2019 y 2022).
- * - Copa de Bélgica ("Beker van België", id 147): cero cobertura en la API (ni fixtures).
+ * - Copa de Bélgica ("Beker van België", id 147): SÍ tiene cobertura en API-Football, pero
+ *   solo en el plan Pro — en el plan free (el que se usa hoy) da cero (ni fixtures). Si se
+ *   sube de plan, agregarla acá y volver a correr el script.
+ * - Liga de Expansión MX (id 263) sigue cargada (Atlante podría volver a jugarla), pero dejó
+ *   de ser prioridad: esta temporada Atlante ascendió y juega Liga MX.
  *
  * Uso: node scripts/seed-competencias.mjs   (o: npm run seed:competencias)
  */
@@ -33,7 +37,9 @@ const COMPETENCIAS = [
   { nombre: 'Pro League', pais: 'Arabia Saudita', tipo: 'liga', codigo: 'SPL', id_externo: '307', cobertura: true },
   { nombre: 'Liga MX', pais: 'México', tipo: 'liga', codigo: 'MX', id_externo: '262', cobertura: true },
   // Liga de Expansión MX: la API confirma que NO da estadística por jugador — igual que
-  // ya adelantaba la demo ("cobertura sin verificar → sin datos, nunca ceros").
+  // ya adelantaba la demo ("cobertura sin verificar → sin datos, nunca ceros"). Se carga
+  // igual por si algún jugador de la cartera vuelve a jugarla, pero HOY no es prioridad:
+  // Atlante (Martín Fernández) ascendió y juega Liga MX esta temporada.
   { nombre: 'Liga de Expansión MX', pais: 'México', tipo: 'liga', codigo: 'EXP', id_externo: '263', cobertura: false },
   { nombre: 'Serie A', pais: 'Brasil', tipo: 'liga', codigo: 'BSA', id_externo: '71', cobertura: true },
   { nombre: 'Primera División', pais: 'Chile', tipo: 'liga', codigo: 'CHI', id_externo: '265', cobertura: true },
