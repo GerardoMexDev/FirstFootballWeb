@@ -197,7 +197,9 @@ diseñador → Community Manager.
       `HeroPartidoDelDia`, `TarjetasKpi`, `ListaPartidos`, `TarjetaPartido`). — media
 - [ ] `lib/motor-hitos` leyendo `escalas_hito`; sección "se vienen los hitos" + badges. — media
 - [ ] `supabase/functions/sync-partidos` (+ `sync-estadisticas`, `sync-agenda`); activar `pg_cron`. — media
-- [ ] Cablear buscador ⌘K, toggle de tema (persistir), paneles laterales. — media
+- [ ] Toggle de tema claro/oscuro (persistir preferencia) — Gerardo probó el botón y confirmó
+      que quedaba deshabilitado a propósito (Sesión 2); no es bug, es esta tarea pendiente. — media
+- [ ] Cablear buscador ⌘K y paneles laterales. — media
 - [ ] `scripts/importar-datos-manuales.ts` (Excel — falta el archivo en el repo). — media
 - [ ] Vista `calendario` (`DensidadAnual`, `GrillaMes`) contra `agenda_anual`. — baja
 - [ ] Tests de zona horaria en fines de semana de cambio de hora. — media
