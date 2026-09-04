@@ -27,6 +27,7 @@ export function FormularioLogin() {
   const router = useRouter();
   const [usuario, setUsuario] = useState('');
   const [clave, setClave] = useState('');
+  const [claveVisible, setClaveVisible] = useState(false);
   const [enviando, setEnviando] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -77,16 +78,28 @@ export function FormularioLogin() {
       </div>
       <div className="campo">
         <label htmlFor="pass">Contraseña</label>
-        <input
-          type="password"
-          id="pass"
-          name="pass"
-          autoComplete="current-password"
-          required
-          disabled={enviando}
-          value={clave}
-          onChange={(evento) => setClave(evento.target.value)}
-        />
+        <div className="campo__envoltorio">
+          <input
+            type={claveVisible ? 'text' : 'password'}
+            id="pass"
+            name="pass"
+            autoComplete="current-password"
+            required
+            disabled={enviando}
+            value={clave}
+            onChange={(evento) => setClave(evento.target.value)}
+          />
+          <button
+            type="button"
+            className="campo__ojo"
+            disabled={enviando}
+            onClick={() => setClaveVisible((valor) => !valor)}
+            aria-label={claveVisible ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+            aria-pressed={claveVisible}
+          >
+            <Ico nombre={claveVisible ? 'ojoCerrado' : 'ojo'} clase="ico ico--sm" />
+          </button>
+        </div>
       </div>
 
       {error && (

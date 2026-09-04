@@ -66,7 +66,8 @@ diseñador → Community Manager.
 | `app/layout.tsx` | HTML/body, CSS, fuentes por `<link>`, `<symbol id="ff">` | ✅ |
 | `app/(app)/layout.tsx` | Shell `.app on` + `BarraSuperior` + overlays (velo/panel/toast) + **guard de sesión server-side** | ✅ guard S2 |
 | `app/(app)/{partidos,calendario,jugadores}/page.tsx` + `jugadores/[jugadorId]` | Vistas: esqueleto con clases de la demo + `EstadoSinDatos` | ✅ |
-| `app/(auth)/login/page.tsx` + `components/auth/FormularioLogin.tsx` | Marcado `.login` de la demo + form real (`signInWithPassword`, errores humanos) | ✅ cableado S2 |
+| `app/(auth)/login/page.tsx` + `components/auth/FormularioLogin.tsx` | Marcado `.login` de la demo + form real (`signInWithPassword`, errores humanos, botón mostrar/ocultar contraseña) | ✅ cableado S2 |
+| `styles/app.css` | CSS de componentes que la demo no tenía (hoy: botón de ojo). Mismos tokens, no toca `demo.css` | ✅ creado S2 |
 | `app/page.tsx` | Redirige `/` → `/partidos` | ✅ |
 | `lib/fechas/zonas.ts` | `ZONA_AGENCIA`, `aInstanteUtc`, `horaEnUruguay`, `horaEnSede`, `diaEnUruguay`, `ZONAS_CARTERA` | ✅ |
 | `lib/formato/valores.ts` | `mostrar(v) => v ?? 'Sin datos'`, `SIN_DATOS`, `esVacio` | ✅ |
@@ -111,6 +112,15 @@ diseñador → Community Manager.
   bajo RLS — las 4 devuelven `nombre_completo`/`cargo` correctos. Middleware probado con `curl`:
   `/partidos` sin sesión → 307 a `/login`; `/login` → 200. Script de verificación temporal, no
   quedó en el repo.
+- **Feedback de Gerardo tras probar el login** → se agregó el botón de "mostrar/ocultar
+  contraseña" en `FormularioLogin.tsx` (íconos `ojo`/`ojoCerrado`, nuevos, no vienen de la demo).
+  Como la demo no tenía este estado, el CSS nuevo (`.campo__envoltorio`, `.campo__ojo`) se puso en
+  **`styles/app.css`** (archivo nuevo, mismos tokens) en vez de tocar `styles/demo.css` — así
+  `demo.css` sigue siendo la copia bit a bit de la maqueta. Se confirmó con Gerardo que el menú de
+  usuario (Mi perfil/Cambiar contraseña/Notificaciones) y el botón de tema siguen deshabilitados
+  **a propósito** (sesiones aparte, ya en el pendiente §5) — no son bugs.
+  Verificado con `browser-automation`: click alterna `#pass` entre `type="password"`/`"text"`, 0
+  errores de consola, screenshot del formulario OK.
 
 ### 2026-09-03 — Sesión 1
 - Claude leyó `planeacion/contexto.md` y creó esta bitácora.

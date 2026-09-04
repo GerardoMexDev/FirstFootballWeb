@@ -1,0 +1,25 @@
+/* ============================================================
+   Football First — CSS propio de la app (post-demo)
+   Para componentes que la demo no tenía (la demo es una maqueta con datos mock:
+   no cubre estados como "mostrar contraseña"). Usa los mismos tokens de tokens.css;
+   NO toca ni redefine ninguna clase de demo.css.
+   ============================================================ */
+
+/* Botón de "ver contraseña" dentro de un <div class="campo"> — FormularioLogin. */
+.campo__envoltorio { position: relative; }
+.campo__envoltorio input { padding-right: 44px; }
+.campo__ojo {
+  position: absolute;
+  top: 50%;
+  right: 4px;
+  transform: translateY(-50%);
+  width: 32px;
+  height: 32px;
+  display: grid;
+  place-items: center;
+  border-radius: var(--r-xs);
+  color: var(--text-3);
+  transition: background 0.2s, color 0.2s;
+}
+.campo__ojo:hover { background: var(--surface-2); color: var(--text-2); }
+.campo__ojo:disabled { opacity: 0.5; cursor: not-allowed; }

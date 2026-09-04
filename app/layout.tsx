@@ -2,14 +2,16 @@
  * Layout raíz de Football First.
  * - <html>/<body> con el mismo `lang` y `data-theme` de la demo.
  * - Carga los tokens y el CSS de la demo SIN modificar (styles/tokens.css, styles/demo.css).
+ * - styles/app.css: solo componentes que la demo no tenía (p.ej. mostrar/ocultar contraseña),
+ *   con los mismos tokens — nunca redefine una clase de demo.css.
  * - Fuentes Anton + Archivo por <link> a Google Fonts, idéntico a la demo (así tokens.css
  *   queda intacto: --display:'Anton' / --ui:'Archivo').
  * - Monta una sola vez el <symbol id="ff"> del logo, para <use href="#ff"/>.
- * - El provider de sesión se agrega en la sesión de auth.
  */
 import type { Metadata, Viewport } from 'next';
 import '@/styles/tokens.css';
 import '@/styles/demo.css';
+import '@/styles/app.css';
 
 export const metadata: Metadata = {
   title: 'Football First — Fase 1',
