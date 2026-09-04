@@ -56,6 +56,11 @@ export function horaCortaEnUruguay(inicioUtc: string): string {
   return DateTime.fromISO(inicioUtc, { zone: 'utc' }).setZone(ZONA_AGENCIA).toFormat('HH:mm');
 }
 
+/** Solo la hora (HH:mm) en la sede — para mostrar junto a "hora local", sin sigla de zona. */
+export function horaCortaEnSede(inicioUtc: string, zonaSede: string): string {
+  return DateTime.fromISO(inicioUtc, { zone: 'utc' }).setZone(zonaSede).toFormat('HH:mm');
+}
+
 /**
  * Día calendario (YYYY-MM-DD) en zona de Uruguay al que pertenece el instante.
  * Es la clave con la que se agrupan los partidos por día en la vista `partidos`
@@ -63,4 +68,31 @@ export function horaCortaEnUruguay(inicioUtc: string): string {
  */
 export function diaEnUruguay(inicioUtc: string): string {
   return DateTime.fromISO(inicioUtc, { zone: 'utc' }).setZone(ZONA_AGENCIA).toISODate() ?? '';
+}
+
+/**
+ * Cuántos días faltan (en Uruguay) desde hoy hasta `diaUy` (YYYY-MM-DD). Negativo si ya pasó.
+ * Es la base para "Hoy"/"Mañana"/agrupar por cercanía — nunca aritmética sobre `new Date()`.
+ */
+export function diasDesdeHoyUy(diaUy: string): number {
+  const hoy = DateTime.now().setZone(ZONA_AGENCIA).startOf('day');
+  const dia = DateTime.fromISO(diaUy, { zone: ZONA_AGENCIA }).startOf('day');
+  return Math.round(dia.diff(hoy, 'days').days);
+}
+
+/**
+ * Etiqueta legible de un día en Uruguay: "Hoy", "Mañana", el nombre del día si es esta
+ * semana, o "día d de mes" si es más lejos. Para el encabezado de cada grupo de la lista.
+ */
+export function etiquetaDiaUy(diaUy: string): string {
+  const dt = DateTime.fromISO(diaUy, { zone: ZONA_AGENCIA }).setLocale('es');
+  const dias = diasDesdeHoyUy(diaUy);
+  if (dias === 0) return 'Hoy';
+  if (dias === 1) return 'Mañana';
+  if (dias > 1 && dias < 7) return capitalizar(dt.toFormat('cccc'));
+  return capitalizar(dt.toFormat("cccc d 'de' LLLL"));
+}
+
+function capitalizar(texto: string): string {
+  return texto.charAt(0).toUpperCase() + texto.slice(1);
 }

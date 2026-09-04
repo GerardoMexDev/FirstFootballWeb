@@ -1,31 +1,30 @@
 /**
- * Vista `partidos` — hero del partido del día, KPIs, "se vienen los hitos",
- * filtros y lista de partidos agrupada por día.
+ * Vista `partidos` — hero del partido del día, KPIs, filtros y lista agrupada por día,
+ * todo sobre la vista `proximos_partidos` (Supabase). Server Component: la trae en el
+ * servidor, la sección de filtros vive en un Client Component aparte (SeccionPartidos)
+ * para poder filtrar sin ir al servidor.
  *
- * ANDAMIAJE: emite el esqueleto con las clases y contenedores de la demo. Los datos
- * (hero, KPIs, hitos, lista) se conectan a la vista `proximos_partidos` de Supabase y
- * al motor de hitos en la sesión siguiente. Hasta entonces se muestra EstadoSinDatos.
+ * "Se vienen los hitos" queda pendiente (lib/motor-hitos, sesión aparte): no se fabrica
+ * una sección vacía en su lugar.
  */
 import { DateTime } from 'luxon';
-import { EstadoSinDatos } from '@/components/comunes/EstadoSinDatos';
+import { HeroPartidoDelDia } from '@/components/partidos/HeroPartidoDelDia';
+import { TarjetasKpi } from '@/components/partidos/TarjetasKpi';
+import { SeccionPartidos } from '@/components/partidos/SeccionPartidos';
+import { RepositorioPartidosSupabase } from '@/lib/repositorios/repositorio-partidos';
+import { crearClienteServidor } from '@/lib/supabase/cliente-servidor';
 import { ZONA_AGENCIA } from '@/lib/fechas/zonas';
 
-// Filtros de la barra — mismos `data-f` y textos que la demo.
-const FILTROS = [
-  { f: 'todos', etiqueta: 'Todos' },
-  { f: 'hoy', etiqueta: 'Hoy' },
-  { f: 'semana', etiqueta: 'Esta semana' },
-  { f: 'int', etiqueta: 'Internacional' },
-  { f: 'hito', etiqueta: 'Con hito' },
-] as const;
-
-export default function PaginaPartidos() {
+export default async function PaginaPartidos() {
   // Fecha de hoy en hora de Uruguay (lo que la demo pone en #fecha-hoy).
   const hoyUy = DateTime.now()
     .setZone(ZONA_AGENCIA)
     .setLocale('es')
     .toFormat("cccc d 'de' LLLL 'de' yyyy");
   const fechaHoy = hoyUy.charAt(0).toUpperCase() + hoyUy.slice(1);
+
+  const supabase = crearClienteServidor();
+  const partidos = await new RepositorioPartidosSupabase(supabase).listarProximos();
 
   return (
     <section className="vista on" id="v-partidos" tabIndex={-1}>
@@ -40,30 +39,9 @@ export default function PaginaPartidos() {
         </p>
       </div>
 
-      {/* Hero del partido del día — pendiente conectar a proximos_partidos */}
-      <div id="hero" />
-
-      {/* KPIs — pendiente */}
-      <div className="kpis" id="kpis" />
-
-      {/* "Se vienen los hitos" — pendiente motor de hitos */}
-      <div className="sec" id="hitos" />
-
-      <div className="barra" id="filtros">
-        {FILTROS.map(({ f, etiqueta }, i) => (
-          <button key={f} className={i === 0 ? 'chip on' : 'chip'} data-f={f} disabled>
-            {etiqueta}
-          </button>
-        ))}
-        <span className="cuenta" id="cuenta" />
-      </div>
-
-      <div id="lista">
-        <EstadoSinDatos>
-          Todavía no está conectada la base de datos. Acá va la lista de partidos agrupada por día
-          (vista <code>proximos_partidos</code>), en hora de Uruguay.
-        </EstadoSinDatos>
-      </div>
+      <HeroPartidoDelDia partidos={partidos} />
+      <TarjetasKpi partidos={partidos} />
+      <SeccionPartidos partidos={partidos} />
     </section>
   );
 }

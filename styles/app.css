@@ -23,3 +23,14 @@
 }
 .campo__ojo:hover { background: var(--surface-2); color: var(--text-2); }
 .campo__ojo:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* Iniciales de respaldo para <CaraJugador> cuando no hay foto (o falla la carga).
+   demo.css define `.cara` solo para <img>; acá se completa para el <span> de iniciales. */
+.cara.ph {
+  display: grid;
+  place-items: center;
+  background: var(--surface-3);
+  color: var(--text-3);
+  font-size: 10px;
+  font-weight: 700;
+}

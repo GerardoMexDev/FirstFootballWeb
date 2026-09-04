@@ -11,6 +11,9 @@
 import { redirect } from 'next/navigation';
 import { BarraSuperior } from '@/components/layout/BarraSuperior';
 import { crearClienteServidor } from '@/lib/supabase/cliente-servidor';
+import type { Database } from '@/lib/supabase/tipos-db';
+
+type PerfilFilas = Pick<Database['public']['Tables']['perfiles']['Row'], 'nombre_completo' | 'cargo'>;
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const supabase = crearClienteServidor();
@@ -24,6 +27,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
     .from('perfiles')
     .select('nombre_completo, cargo')
     .eq('id', user.id)
+    .returns<PerfilFilas[]>()
     .single();
 
   return (

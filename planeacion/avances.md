@@ -18,10 +18,12 @@ En Claude Code **no hay memoria entre sesiones**, así que este protocolo es obl
 3. Rutina de cierre Git: `git add . && git commit -m "Sesión N: ..." && git push`.
 4. La sesión no se cierra hasta que `git push` terminó OK.
 
-**Última actualización:** 2026-09-04 (Sesión 2)
-**Estado general:** **auth cableada y verificada de punta a punta** — 4 cuentas creadas, login real,
-middleware protegiendo rutas, menú de usuario con "cerrar sesión" funcional. `npm run build` OK.
-Falta: conectar datos reales (repositorios, motor de hitos, Edge Functions de sync).
+**Última actualización:** 2026-09-04 (Sesión 2, cont.: vista `partidos`)
+**Estado general:** auth completa (Sesión 2) + **vista `partidos` conectada a datos reales**
+(`proximos_partidos`, repositorio, hero/KPIs/filtros/lista). Verificado con datos de prueba
+insertados y borrados en vivo: renderiza bien, filtros andan, 0 errores de consola. Hoy la BD
+real está vacía (sin sync ni Excel importado) → la vista muestra "Sin datos" en todos lados,
+que es lo correcto. Falta: motor de hitos, Edge Functions de sync, resto de vistas.
 
 ---
 
@@ -65,22 +67,69 @@ diseñador → Community Manager.
 | `middleware.ts` | Refresca la sesión en cookies + redirige `/login`↔rutas privadas | ✅ creado S2 |
 | `app/layout.tsx` | HTML/body, CSS, fuentes por `<link>`, `<symbol id="ff">` | ✅ |
 | `app/(app)/layout.tsx` | Shell `.app on` + `BarraSuperior` + overlays (velo/panel/toast) + **guard de sesión server-side** | ✅ guard S2 |
-| `app/(app)/{partidos,calendario,jugadores}/page.tsx` + `jugadores/[jugadorId]` | Vistas: esqueleto con clases de la demo + `EstadoSinDatos` | ✅ |
+| `app/(app)/partidos/page.tsx` | Vista `partidos` **conectada a datos reales**: hero, KPIs, filtros, lista agrupada por día | ✅ conectada S2 |
+| `app/(app)/{calendario,jugadores}/page.tsx` + `jugadores/[jugadorId]` | Vistas: esqueleto con clases de la demo + `EstadoSinDatos` | ✅ esqueleto |
+| `lib/repositorios/repositorio-partidos.ts` | `RepositorioPartidosSupabase`: lee `proximos_partidos`, filtra `estado != 'finalizado'`, mapea a `PartidoProximo` | ✅ creado S2 |
+| `lib/partidos/utilidades.ts` | `pesoPartido`, `claseTarjeta`, `filtrarPartidos`, `agruparPorDia` (reglas puras, sin JSX) | ✅ creado S2 |
+| `components/partidos/{HeroPartidoDelDia,TarjetasKpi,BarraFiltros,SeccionPartidos,ListaPartidos,TarjetaPartido}.tsx` | Vista `partidos` completa sobre datos reales | ✅ creados S2 |
+| `components/comunes/{Escudo,CaraJugador}.tsx` | Escudo de club / cara de jugador, con fallback a iniciales (hash de color igual a la demo) si no hay imagen o falla | ✅ creados S2 |
 | `app/(auth)/login/page.tsx` + `components/auth/FormularioLogin.tsx` | Marcado `.login` de la demo + form real (`signInWithPassword`, errores humanos, botón mostrar/ocultar contraseña) | ✅ cableado S2 |
 | `styles/app.css` | CSS de componentes que la demo no tenía (hoy: botón de ojo). Mismos tokens, no toca `demo.css` | ✅ creado S2 |
 | `app/page.tsx` | Redirige `/` → `/partidos` | ✅ |
 | `lib/fechas/zonas.ts` | `ZONA_AGENCIA`, `aInstanteUtc`, `horaEnUruguay`, `horaEnSede`, `diaEnUruguay`, `ZONAS_CARTERA` | ✅ |
 | `lib/formato/valores.ts` | `mostrar(v) => v ?? 'Sin datos'`, `SIN_DATOS`, `esVacio` | ✅ |
 | `lib/supabase/{cliente-navegador,cliente-servidor}.ts` | Clientes `@supabase/ssr` (anon key) | ✅ |
-| `lib/repositorios/tipos.ts` | Interfaz `RepositorioPartidos` + tipo `PartidoProximo` (patrón repositorio) | ✅ stub |
+| `lib/repositorios/tipos.ts` | Interfaz `RepositorioPartidos` + tipo `PartidoProximo` (1:1 con columnas de `proximos_partidos`) | ✅ actualizado S2 |
 | `components/comunes/Ico.tsx` · `EstadoSinDatos.tsx` | Íconos (paths de la demo, + 4 del menú de usuario S2) · componente `.sinDato` | ✅ |
 | `components/layout/BarraSuperior.tsx` · `Nav.tsx` | Barra superior + nav (marca/nav OK; **menú de usuario real + cerrar sesión OK S2**; buscador/tema stub) | ✅ |
 | `supabase/functions/sync-*` | Edge Functions de sincronización | ⬜ |
 | `scripts/seed-usuarios.mjs` | 4 cuentas (`service_role`), idempotente | ✅ creado y corrido S2 |
 | `scripts/importar-datos-manuales.ts` | Importa el Excel (falta el archivo) | ⬜ |
-| `lib/motor-hitos/`, `components/{partidos,calendario,jugadores,paneles}/*` | Lógica y componentes con datos | ⬜ |
+| `lib/motor-hitos/`, `components/{calendario,jugadores,paneles}/*` | Lógica y componentes con datos | ⬜ |
 
 ## 4. Hecho (por fecha, más reciente primero)
+
+### 2026-09-04 — Sesión 2 (cont.: vista `partidos` conectada a datos reales)
+- **`lib/repositorios/tipos.ts`** reescrito: `PartidoProximo` pasa a ser 1:1 con las columnas
+  reales de la vista `proximos_partidos` (antes era un stub con nombres inventados).
+- **`lib/repositorios/repositorio-partidos.ts`** — `RepositorioPartidosSupabase implements
+  RepositorioPartidos`: `listarProximos()`/`listarPorJugador()` leen la vista, filtran
+  `estado != 'finalizado'` (la vista en sí no filtra por fecha/estado — es un JOIN de todos los
+  partidos de cada representado; "próximos" se aplica acá, no se tocó el esquema) y mapean
+  snake_case → camelCase descartando filas sin `partido_id`/`jugador_id`/`jugador_nombre`.
+- **Tipado de punta a punta**: `crearClienteServidor`/`crearClienteNavegador` pasan a
+  `createServerClient<Database>`/`createBrowserClient<Database>`. El repositorio tipa su cliente
+  como `ReturnType<typeof crearClienteServidor>` en vez de reconstruir `SupabaseClient<Database>`
+  a mano (ver §10 — no calzaban estructuralmente con la versión instalada de supabase-js).
+- **`lib/partidos/utilidades.ts`**: `pesoPartido`, `claseTarjeta`, `filtrarPartidos`,
+  `agruparPorDia` — mismas reglas que la demo (`peso`, `claseP`, `filtrar`), pero sobre `diaUy`
+  (ya calculado por la vista en zona de Uruguay) en vez de aritmética sobre `new Date()`.
+- **`lib/fechas/zonas.ts`**: + `diasDesdeHoyUy`, `etiquetaDiaUy` (Hoy/Mañana/día de la semana/
+  fecha completa) y `horaCortaEnSede` (hora en la sede sin sigla de zona — la demo usaba
+  CEST/BRT/…, prohibido en producción, ver arquitectura-fase1.html §3).
+- **`lib/formato/valores.ts`**: + `iniciales(nombre)` para el fallback de escudo/cara.
+- **`components/comunes/Escudo.tsx` y `CaraJugador.tsx`** (nuevos): imagen si hay URL, si no
+  (o si falla la carga) iniciales con el mismo hash de color que `crest()` en la demo. `.cara.ph`
+  (fallback de cara) se agregó a `styles/app.css` — la demo solo estilaba esa clase en `.pm`/`.res`.
+- **`components/partidos/{HeroPartidoDelDia,TarjetasKpi,BarraFiltros,SeccionPartidos,
+  ListaPartidos,TarjetaPartido}.tsx`** (nuevos) — la vista completa sobre datos reales.
+  Diferencias documentadas frente a la demo (todas en comentarios de cabecera de cada archivo):
+  sin sigla de zona horaria (solo "hora local"), sin "· país" en la competencia (la vista no lo
+  expone), sin tag de "Hito" ni KPI de "Hitos por alcanzar" (motor de hitos, sesión aparte — no
+  se fabrica un 0 en su lugar), sin foto de fondo del hero (no hay foto real del partido), y las
+  tarjetas/hero no son cliclinks todavía (paneles, sesión aparte) — no llevan `role="button"`.
+- **`EstadoSinDatos`** acepta `style` opcional (mismo patrón que la demo, que ajusta ese
+  componente con estilos puntuales según dónde aparece).
+- **Verificado con datos reales, no solo con la BD vacía**: se insertó una cadena de prueba
+  completa (competencia, 2 clubes, 1 jugador, 2 partidos — uno hoy, uno internacional en 2 días)
+  con `service_role`, se entró como `alexis` de verdad, se comprobó con screenshot que el hero
+  elige el partido de mayor peso, los KPIs cuentan bien, la lista agrupa por día en hora de
+  Uruguay, y el filtro "Internacional" reduce a 1 resultado — y se borró todo al terminar
+  (0 filas en `partidos`/`jugadores`/`clubes`/`competencias` al cerrar, verificado con conteo).
+  0 errores de consola en ambos casos (BD vacía y con datos). Nombres de prueba largos
+  (`[QA] Club de Prueba`) sí solapaban el hero con el badge superior — se repitió la prueba con
+  nombres de largo realista (`Toluca QA`) y no solapa: era un artefacto del dato de prueba, no
+  un bug del layout.
 
 ### 2026-09-04 — Sesión 2 (auth)
 - **`scripts/seed-usuarios.mjs`** (no `.ts` — ver §10): crea las 4 cuentas fijas con
@@ -193,9 +242,12 @@ diseñador → Community Manager.
       menú de usuario). — media
 - [ ] Confirmar contra `GET /leagues` los IDs de ligas/copas/continentales; cargar `competencias`
       con su `cobertura`. — media
-- [ ] Conectar vista `partidos` a `proximos_partidos` (repositorio + componentes reales:
-      `HeroPartidoDelDia`, `TarjetasKpi`, `ListaPartidos`, `TarjetaPartido`). — media
-- [ ] `lib/motor-hitos` leyendo `escalas_hito`; sección "se vienen los hitos" + badges. — media
+- [x] ~~Conectar vista `partidos` a `proximos_partidos`~~ — hecho 2026-09-04 (ver §4 Sesión 2
+      cont.). Sin datos reales todavía (BD vacía hasta que corra la sync o se importe el Excel).
+- [ ] `lib/motor-hitos` leyendo `escalas_hito`; sección "se vienen los hitos" + badges + KPI +
+      tag en la tarjeta + tie-break del hero (todo quedó deliberadamente afuera en la Sesión 2). — media
+- [ ] Wirear el click de `TarjetaPartido`/`HeroPartidoDelDia` para abrir el panel de detalle
+      (hoy no son clicables — paneles, junto con el resto del panel lateral). — media
 - [ ] `supabase/functions/sync-partidos` (+ `sync-estadisticas`, `sync-agenda`); activar `pg_cron`. — media
 - [ ] Toggle de tema claro/oscuro (persistir preferencia) — Gerardo probó el botón y confirmó
       que quedaba deshabilitado a propósito (Sesión 2); no es bug, es esta tarea pendiente. — media
@@ -212,6 +264,12 @@ diseñador → Community Manager.
   applied 0001` (o renombrar a timestamp) para que no intente re-aplicar 0001.
 - `agenda_anual` proyecta cumpleaños/aniversarios en una ventana de años **[-1, +2]** respecto de
   hoy; si el calendario navega más lejos, ampliar el `generate_series` de la vista.
+- **`proximos_partidos` no filtra por fecha ni por estado** (es un JOIN plano de `partidos`).
+  El repositorio (`repositorio-partidos.ts`) filtra `estado != 'finalizado'` en la consulta —
+  si se necesita el histórico completo alguna vez, es un método nuevo, no tocar `listarProximos`.
+- La vista `proximos_partidos` no expone el país de la competencia (`competencias.pais`) — las
+  tarjetas de partido muestran solo el nombre, sin "· país" como la demo. Si hace falta, es
+  agregar la columna a la vista (migración nueva), no algo que se resuelva en el frontend.
 - **`.gitignore` ignora `*.xlsx`** (el Excel de datos manuales no se versiona). Si en algún
   momento se quiere versionar un ejemplo anonimizado, ajustar la regla.
 - **`.gitignore` ignora `*.xlsx`** (el Excel de datos manuales no se versiona). Si en algún
@@ -318,6 +376,16 @@ diseñador → Community Manager.
 - **Server Component que lee cookies (`auth.getUser()`) vuelve la ruta dinámica** (`ƒ` en vez de
   `○` en el build de Next) — es lo esperado: no se puede pre-renderizar algo que depende de la
   sesión de cada visitante.
+- **`SupabaseClient<Database>` armado a mano no calza con el que devuelve `createServerClient`
+  de `@supabase/ssr`** en esta versión instalada (supabase-js 2.115 agrega un parámetro de tipo
+  extra para detectar la versión de PostgREST desde `Database.__InternalSupabase`). Un repositorio
+  que recibe el cliente como `SupabaseClient<Database>` typeaba las filas como `never`. Solución:
+  tipar el parámetro del repositorio como `ReturnType<typeof crearClienteServidor>` en vez de
+  reconstruir el tipo del cliente.
+- **`.select('col1, col2').single()` puede typear el resultado como `never`** con esta combinación
+  de versiones, incluso con el cliente bien tipado. `.returns<T[]>()` **antes** de `.single()`
+  (no después: `.single()` ya fija el tipo final) fuerza la forma correcta sin pelear con la
+  inferencia automática de postgrest-js.
 
 ## 11. Dudas abiertas (de `contexto.md` §12)
 

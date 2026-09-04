@@ -19,3 +19,18 @@ export function mostrar<T>(v: T | null | undefined): T | string {
 export function esVacio(v: unknown): boolean {
   return v === null || v === undefined;
 }
+
+/**
+ * Iniciales de un nombre (hasta 2), para el avatar/escudo de respaldo cuando no hay foto/
+ * escudo subido. Mismo criterio que `ini()` en la demo.
+ * @example iniciales('Nahitan Nández')  // 'NN'
+ */
+export function iniciales(nombre: string): string {
+  return nombre
+    .split(' ')
+    .filter(Boolean)
+    .map((parte) => parte[0])
+    .slice(0, 2)
+    .join('')
+    .toUpperCase();
+}

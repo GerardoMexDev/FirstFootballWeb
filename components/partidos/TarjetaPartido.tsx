@@ -1,0 +1,93 @@
+/**
+ * Tarjeta de un partido: `.match` de la demo (`cardPartido()`). Adaptaciones frente a la
+ * demo (datos reales, no mock):
+ * - Sin sigla de zona (CEST/BRT/…): la hora en la sede se muestra sola, con la etiqueta
+ *   "hora local" (regla de zonas horarias — ver arquitectura-fase1.html §3).
+ * - Sin "· país" en la competencia: la vista `proximos_partidos` no expone el país de la
+ *   competencia (no se le agregó esa columna); si hace falta, es un cambio de vista, no de acá.
+ * - Sin el tag "Hito": depende del motor de hitos, todavía no conectado (sesión aparte).
+ * - Todavía no abre el panel de detalle al hacer click (paneles, sesión aparte) — por eso no
+ *   lleva `role="button"`/`tabIndex` como la demo: no se anuncia una interacción que no existe.
+ */
+import { Ico } from '@/components/comunes/Ico';
+import { Escudo } from '@/components/comunes/Escudo';
+import { CaraJugador } from '@/components/comunes/CaraJugador';
+import { horaCortaEnUruguay, horaCortaEnSede } from '@/lib/fechas/zonas';
+import { mostrar } from '@/lib/formato/valores';
+import { esHoyUy, claseTarjeta } from '@/lib/partidos/utilidades';
+import type { PartidoProximo } from '@/lib/repositorios/tipos';
+
+export function TarjetaPartido({ partido: p }: { partido: PartidoProximo }) {
+  const hoy = esHoyUy(p);
+  const tieneHorario = p.inicioUtc !== null;
+  const tieneSede = tieneHorario && p.zonaHorariaEvento !== null;
+  const horaUy = tieneHorario ? horaCortaEnUruguay(p.inicioUtc!) : null;
+  const horaSede = tieneSede ? horaCortaEnSede(p.inicioUtc!, p.zonaHorariaEvento!) : null;
+  const mismaHora = horaSede !== null && horaSede === horaUy;
+
+  return (
+    <article
+      className={`match ${claseTarjeta(p)} ${hoy ? 'match--hoy' : ''} ${p.tentativo ? 'match--tent' : ''} ${p.esInternacional ? 'match--int' : ''}`}
+      data-id={p.partidoId}
+    >
+      <div className="hora">
+        <b>{horaUy ?? '—'}</b>
+        <div className={`uy ${p.tentativo ? 'tent' : ''}`}>
+          {p.tentativo ? (
+            <>
+              <Ico nombre="alerta" clase="ico ico--sm" />
+              Tentativa
+            </>
+          ) : tieneHorario ? (
+            'Hora Uruguay'
+          ) : (
+            'Sin horario confirmado'
+          )}
+        </div>
+        {tieneSede && !mismaHora && (
+          <div className="loc">
+            <Ico nombre="pin" clase="ico ico--sm" />
+            <b>{horaSede}</b> hora local
+          </div>
+        )}
+      </div>
+
+      <div className="mid">
+        <div className={`compe ${p.esInternacional ? 'compe--int' : ''}`}>
+          <span className="compe__c">{mostrar(p.competenciaCodigo)}</span>
+          <span className="compe__n">{mostrar(p.competenciaNombre)}</span>
+        </div>
+        <div className="duelo">
+          <Escudo nombre={p.clubNombre ?? '?'} url={p.clubEscudoUrl} />
+          {mostrar(p.clubNombre)}
+          <span className="vs">vs</span>
+          <Escudo nombre={p.rivalNombre ?? '?'} url={p.rivalEscudoUrl} />
+          {mostrar(p.rivalNombre)}
+        </div>
+        <div className="linea">
+          <span>
+            <Ico nombre="trofeo" clase="ico ico--sm" />
+            <b>{mostrar(p.ronda)}</b>
+          </span>
+          <span>
+            <Ico nombre="pin" clase="ico ico--sm" />
+            {p.estadio || p.ciudad ? `${mostrar(p.estadio)}, ${mostrar(p.ciudad)}` : 'Sin datos'}
+          </span>
+        </div>
+        <div className="caras">
+          <div className="caras__pila">
+            <CaraJugador nombre={p.jugadorNombre} fotoUrl={p.jugadorFotoUrl} />
+          </div>
+          <small>
+            {p.jugadorApodo || p.jugadorNombre}
+            {p.conSeleccion ? ' · con la selección' : ''}
+          </small>
+        </div>
+      </div>
+
+      <div className="der">
+        <Ico nombre="chevron" />
+      </div>
+    </article>
+  );
+}
