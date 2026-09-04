@@ -18,9 +18,10 @@ En Claude Code **no hay memoria entre sesiones**, así que este protocolo es obl
 3. Rutina de cierre Git: `git add . && git commit -m "Sesión N: ..." && git push`.
 4. La sesión no se cierra hasta que `git push` terminó OK.
 
-**Última actualización:** 2026-09-03 (Sesión 1)
-**Estado general:** andamiaje listo — Next.js compila y corre, migración `0001` escrita
-(sin ejecutar aún: falta el proyecto Supabase). Sin lógica de datos todavía.
+**Última actualización:** 2026-09-03 (Sesión 1 + continuación)
+**Estado general:** andamiaje Next.js compila y corre · **migración `0001` APLICADA y verificada**
+en el proyecto Supabase real (16 tablas, 2 vistas, RLS en todas, 17 políticas, seed OK).
+Falta: `lib/supabase/tipos-db.ts` (necesita access token de Supabase), auth, lógica de datos.
 
 ---
 
@@ -57,7 +58,10 @@ diseñador → Community Manager.
 | `planeacion/demo-fase1.html` | UI/UX cerrada, fuente de todo el CSS (UTF-8, ~83 KB, 1229 líneas) | ✅ en el repo |
 | `styles/tokens.css` | `:root` + `[data-theme="dark"]` de la demo (líneas 11–39), intacto | ✅ extraído S1 |
 | `styles/demo.css` | Resto del `<style>` de la demo (líneas 40–411), intacto | ✅ extraído S1 |
-| `supabase/migrations/0001_esquema_inicial.sql` | Enums + 11 tablas dominio + CRM F2 (solo estructura) + RLS + vistas `proximos_partidos` / `agenda_anual` + seed `escalas_hito` + jobs `pg_cron` comentados | ✅ escrito S1 — ⚠️ sin ejecutar |
+| `supabase/migrations/0001_esquema_inicial.sql` | Enums + 11 tablas dominio + CRM F2 (solo estructura) + RLS + vistas `proximos_partidos` / `agenda_anual` + seed `escalas_hito` + jobs `pg_cron` comentados | ✅ **APLICADA** en Supabase (PG17) y verificada |
+| `.env.local` | Secretos: URL + anon + service_role + DB password de Supabase | ✅ creado — **gitignored**, nunca se sube |
+| `scripts/aplicar-migracion.mjs` | Runner de migraciones (conexión directa `pg`, lee `.env.local`) | ✅ `npm run migracion <archivo.sql>` |
+| `lib/supabase/tipos-db.ts` | Tipos generados de la BD | ⬜ pendiente — `supabase gen types` necesita Docker o `SUPABASE_ACCESS_TOKEN` |
 | `app/layout.tsx` | HTML/body, CSS, fuentes por `<link>`, `<symbol id="ff">` | ✅ |
 | `app/(app)/layout.tsx` | Shell `.app on` + `BarraSuperior` + overlays (velo/panel/toast) | ✅ |
 | `app/(app)/{partidos,calendario,jugadores}/page.tsx` + `jugadores/[jugadorId]` | Vistas: esqueleto con clases de la demo + `EstadoSinDatos` | ✅ |
@@ -69,7 +73,6 @@ diseñador → Community Manager.
 | `lib/repositorios/tipos.ts` | Interfaz `RepositorioPartidos` + tipo `PartidoProximo` (patrón repositorio) | ✅ stub |
 | `components/comunes/Ico.tsx` · `EstadoSinDatos.tsx` | Íconos (paths de la demo) · componente `.sinDato` | ✅ |
 | `components/layout/BarraSuperior.tsx` · `Nav.tsx` | Barra superior + nav (marca y nav funcionan; buscador/tema/menú stub) | ✅ |
-| `lib/supabase/tipos-db.ts` | Tipos generados de la BD | ⬜ tras crear Supabase + `npm run tipos:db` |
 | `supabase/functions/sync-*` | Edge Functions de sincronización | ⬜ |
 | `scripts/` | `seed-usuarios.ts`, `importar-datos-manuales.ts` | ⬜ |
 | `lib/motor-hitos/`, `components/{partidos,calendario,jugadores,paneles}/*` | Lógica y componentes con datos | ⬜ |
@@ -106,14 +109,35 @@ diseñador → Community Manager.
   `/partidos` 200 (renderiza `.d1` + fecha en hora UY + `.sinDato`), `/` 307→`/partidos`,
   `/login` 200. Nav y marca funcionan; buscador/tema/menú/form quedan como stub deshabilitado.
 
+### 2026-09-03 — Sesión 1 (continuación: Supabase)
+- Gerardo pasó las credenciales del proyecto Supabase ya creado (`thplgzufenxrzegwfxkg`).
+  Todo en **`.env.local`** (gitignored, verificado con `git check-ignore` y `git status`).
+- Se agregó `pg` y `supabase` (CLI) como devDependencies, y `scripts/aplicar-migracion.mjs`
+  (runner con conexión directa `db.<ref>.supabase.co:5432`, SSL, lee `.env.local`).
+- **Migración `0001` aplicada** con `npm run migracion supabase/migrations/0001_esquema_inicial.sql`.
+  Verificado contra la BD real:
+  - 16 tablas (11 dominio + 5 CRM Fase 2), 2 vistas (`proximos_partidos`, `agenda_anual`,
+    ambas consultables, 0 filas).
+  - RLS activa en **todas** las tablas de `public`; 17 políticas.
+  - 10 enums propios creados; `security_invoker` y `unique nulls not distinct` OK (Postgres 17.6).
+  - `escalas_hito` con las 5 escalas de la demo.
+- `lib/supabase/tipos-db.ts` **no generado**: `supabase gen types` en CLI 2.116 pide un runtime
+  de contenedores (Docker) con `--db-url`, y `--project-id` pide `SUPABASE_ACCESS_TOKEN`.
+  Pendiente para la próxima (1 min de Gerardo: crear token en dashboard/account/tokens).
+- Decisión: contraseña de las 4 cuentas = **`demo1234`** (confirmada por Gerardo).
+- APIs etapa 1 = planes **free**. Única key a conseguir: **API-Football free**
+  (dashboard.api-football.com, 100 req/día) → `API_FOOTBALL_KEY` en `.env.local`. ESPN,
+  TheSportsDB y Wikidata no requieren key. No urge (se usa en la sync, Sesión 3).
+
 ## 5. Pendiente / próximos pasos
 
-- [ ] **Ejecutar y validar la migración `0001`** al crear el proyecto Supabase (dry-run: revisar
-      `security_invoker`, `unique nulls not distinct` (PG15+), y las 2 vistas). — prioridad: alta
-- [ ] Crear proyecto Supabase, completar `.env.local`, `npm run tipos:db` → `lib/supabase/tipos-db.ts`. — alta
+- [x] ~~Ejecutar y validar la migración `0001`~~ — hecho 2026-09-03 (ver §4 continuación).
+- [ ] `lib/supabase/tipos-db.ts` — pedir a Gerardo un **access token** de Supabase
+      (dashboard/account/tokens) → ponerlo en `.env.local` como `SUPABASE_ACCESS_TOKEN` →
+      `npm run tipos:db`. — prioridad: alta
 - [ ] Sesión **auth**: middleware de sesión, `signInWithPassword`, guard en `(app)/layout.tsx`,
-      cablear form de login (nombre + `@footballfirst.uy`), menú de usuario y "cerrar sesión". — alta
-- [ ] `scripts/seed-usuarios.ts` (4 cuentas, `service_role`) — necesita la contraseña confirmada. — alta
+      cablear form de login (usuario + `@footballfirst.uy`), menú de usuario y "cerrar sesión". — alta
+- [ ] `scripts/seed-usuarios.ts` (4 cuentas, `service_role`, contraseña `demo1234`). — alta
 - [ ] Confirmar contra `GET /leagues` los IDs de ligas/copas/continentales; cargar `competencias`
       con su `cobertura`. — media
 - [ ] Conectar vista `partidos` a `proximos_partidos` (repositorio + componentes reales:
@@ -127,10 +151,14 @@ diseñador → Community Manager.
 
 ## 6. Bugs conocidos / cosas a vigilar
 
-- **Migración `0001` sin ejecutar.** Verificar al aplicarla contra Postgres real:
-  `create view ... with (security_invoker = true)` y `unique nulls not distinct` requieren
-  **PG15+** (Supabase nuevo = PG15/17, OK). La proyección de cumpleaños/aniversarios en
-  `agenda_anual` usa una ventana de años [-1, +2]; si el calendario navega más lejos, ampliar.
+- **Migración `0001` aplicada directo con `scripts/aplicar-migracion.mjs`, NO con el Supabase CLI.**
+  No quedó registrada en `supabase_migrations.schema_migrations`. Si más adelante se adopta
+  `supabase db push` para migraciones nuevas, hay que hacer `supabase migration repair --status
+  applied 0001` (o renombrar a timestamp) para que no intente re-aplicar 0001.
+- `agenda_anual` proyecta cumpleaños/aniversarios en una ventana de años **[-1, +2]** respecto de
+  hoy; si el calendario navega más lejos, ampliar el `generate_series` de la vista.
+- **`.gitignore` ignora `*.xlsx`** (el Excel de datos manuales no se versiona). Si en algún
+  momento se quiere versionar un ejemplo anonimizado, ajustar la regla.
 - **`.gitignore` ignora `*.xlsx`** (el Excel de datos manuales no se versiona). Si en algún
   momento se quiere versionar un ejemplo anonimizado, ajustar la regla.
 - Tests de zona horaria en los fines de semana de cambio de hora (marzo/octubre Europa,
@@ -163,11 +191,17 @@ diseñador → Community Manager.
 ## 8. Credenciales / accesos (SOLO referencias, nunca valores reales)
 
 - `gh` CLI autenticado como `GerardoMexDev` (scopes: repo, read:org, gist).
-- Proyecto Supabase: **sin crear todavía**. URL + anon key + service_role irán en `.env` local y en
-  variables de entorno de Vercel / Edge Functions — nunca en el repo.
-- API key de API-Football: irá en variable de entorno de la Edge Function. Nunca en el repo ni en el cliente.
-- Contraseña de las 4 cuentas demo: propuesta `demo1234` (Supabase Auth exige mínimo 6; `demo` no cumple).
-  Pendiente de confirmar con Gerardo. Compartida SOLO para demo cerrado.
+- **Proyecto Supabase `thplgzufenxrzegwfxkg`.** URL + anon key + service_role + DB password
+  están en **`.env.local`** (gitignored, verificado). El mismo set va en variables de entorno
+  de Vercel y de las Edge Functions cuando toque — nunca en el repo.
+  - ⚠️ El service_role y el DB password se compartieron en texto plano en el chat. Con el repo
+    público, conviene **rotarlos** en el dashboard antes de cargar datos reales (el anon key no
+    importa: es público por diseño, lo protege la RLS).
+- `SUPABASE_ACCESS_TOKEN`: **falta**. Necesario para `supabase gen types` sin Docker.
+- API key de API-Football (plan free): **falta**. Va en `.env.local` (`API_FOOTBALL_KEY`) y luego
+  en variable de entorno de la Edge Function. Nunca en el repo ni en el cliente.
+- Contraseña de las 4 cuentas demo: **`demo1234`** (confirmada). Compartida SOLO para demo cerrado;
+  antes de uso real, credenciales individuales fuertes.
 
 ## 9. Notas de contexto de negocio
 
@@ -200,16 +234,24 @@ diseñador → Community Manager.
   (`{ name; value; options: CookieOptions }[]`) o `next build` falla por `implicit any`.
 - **Extraer CSS con `sed -n '11,39p'` / `'40,411p'`** mantiene el archivo byte a byte; no copiar
   a mano bloques largos de la demo.
+- **Conexión a Postgres de Supabase:** el pooler IPv4 (`aws-...pooler.supabase.com`) necesita
+  saber la región; la conexión **directa** `db.<ref>.supabase.co:5432` con `ssl:{rejectUnauthorized:false}`
+  funcionó sin más (esta máquina resuelve IPv6). Postgres **17.6** → `security_invoker` y
+  `unique nulls not distinct` disponibles.
+- **`supabase gen types`** en CLI 2.116: con `--db-url` exige un runtime de contenedores (Docker);
+  con `--project-id` exige `SUPABASE_ACCESS_TOKEN`. Sin Docker, el camino es el access token.
 - El `<section class="vista on">` de cada page lleva `on` porque en Next cada ruta renderiza su
   propia vista (en la demo era un tab-switch con una sola `.vista.on` a la vez).
 
 ## 11. Dudas abiertas (de `contexto.md` §12)
 
-- Contraseña definitiva de las 4 cuentas demo (`demo1234` propuesto).
+- ~~Contraseña de las 4 cuentas~~ → resuelto: `demo1234`.
+- ~~Plan API-Football~~ → etapa 1 usa **planes free** (API-Football free + ESPN + TheSportsDB).
 - Divisiones/copas exactas a seguir por país además de la liga principal.
 - Fuente y frecuencia real de las correcciones manuales del Excel.
-- Plan final de API-Football (Pro ~USD 19 vs. Ultra ~USD 29).
 - Falta el Excel `Datos de jugadores y clubes.xlsx` (referenciado en contexto.md §9); `.gitignore`
   lo excluye a propósito.
+- Con el plan free de API-Football (100 req/día) hay que ver si alcanza para el fixture diario +
+  ventana de días de partido; si no, apoyarse más en ESPN o subir de plan.
 - ¿La preferencia de tema se persiste por usuario (`perfiles`) o solo en `localStorage` del dispositivo?
 - Versión de Next: se usó **14.2.x** (contexto.md pide "14+"). Migrar a 15 es opción, no urgencia.

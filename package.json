@@ -8,7 +8,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "tipos:db": "supabase gen types typescript --local > lib/supabase/tipos-db.ts"
+    "migracion": "node scripts/aplicar-migracion.mjs",
+    "tipos:db": "supabase gen types typescript --project-id thplgzufenxrzegwfxkg --schema public > lib/supabase/tipos-db.ts"
   },
   "dependencies": {
     "@supabase/ssr": "^0.5.2",
@@ -25,6 +26,8 @@
     "@types/react-dom": "^18.3.0",
     "eslint": "^8.57.1",
     "eslint-config-next": "^14.2.15",
+    "pg": "^8.23.0",
+    "supabase": "^2.116.0",
     "typescript": "^5.6.2"
   }
 }
