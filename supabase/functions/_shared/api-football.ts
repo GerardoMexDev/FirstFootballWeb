@@ -75,3 +75,57 @@ export async function obtenerFixturesDeVariosDias(
   }
   return { fixtures, diasOmitidos };
 }
+
+/** Espaciador para respetar el límite de 10 req/min del plan free. Lo usan los sync que iteran. */
+export function esperarEntreLlamadas(): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ESPERA_ENTRE_LLAMADAS_MS));
+}
+
+/** GET genérico que devuelve `response` o lanza si la API reporta `errors`. */
+async function getResponse(apiKey: string, ruta: string): Promise<unknown[]> {
+  const r = await fetch(`${BASE}${ruta}`, { headers: { 'x-apisports-key': apiKey } });
+  if (!r.ok) throw new Error(`API-Football HTTP ${r.status} en ${ruta}`);
+  const j = await r.json();
+  if (j.errors && Object.keys(j.errors).length) {
+    throw new Error(`API-Football (${ruta}): ${JSON.stringify(j.errors)}`);
+  }
+  return j.response ?? [];
+}
+
+/** Club identificado por su id de API-Football (string, como se guarda en `clubes.id_externo`). */
+export interface ClubExterno {
+  idExterno: string;
+  nombre: string;
+}
+
+/** Un movimiento de `GET /transfers`, normalizado para `_shared/roster.ts`. */
+export interface TraspasoExterno {
+  fecha: string;
+  tipo: string;
+  desde: ClubExterno | null;
+  hasta: ClubExterno | null;
+}
+
+// deno-lint-ignore no-explicit-any
+function aClubExterno(equipo: any): ClubExterno | null {
+  return equipo?.id ? { idExterno: String(equipo.id), nombre: String(equipo.name ?? '') } : null;
+}
+
+/**
+ * Traspaso más reciente del jugador según `GET /transfers?player=` — funciona en el plan
+ * free (verificado). El array `transfers` viene del más nuevo al más viejo.
+ * @returns el último movimiento, o null si no hay historial.
+ */
+export async function obtenerUltimoTraspaso(apiKey: string, jugadorIdExterno: string): Promise<TraspasoExterno | null> {
+  const response = await getResponse(apiKey, `/transfers?player=${jugadorIdExterno}`);
+  // deno-lint-ignore no-explicit-any
+  const movimientos = (response[0] as any)?.transfers ?? [];
+  const ultimo = movimientos[0];
+  if (!ultimo) return null;
+  return {
+    fecha: String(ultimo.date ?? ''),
+    tipo: String(ultimo.type ?? ''),
+    desde: aClubExterno(ultimo.teams?.out),
+    hasta: aClubExterno(ultimo.teams?.in),
+  };
+}

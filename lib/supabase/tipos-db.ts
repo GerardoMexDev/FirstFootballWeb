@@ -460,6 +460,7 @@ export type Database = {
           club_actual_id: string | null
           creado_en: string
           debut: string | null
+          debut_seleccion: string | null
           dorsal: number | null
           fecha_nacimiento: string | null
           fichaje: string | null
@@ -491,6 +492,7 @@ export type Database = {
           club_actual_id?: string | null
           creado_en?: string
           debut?: string | null
+          debut_seleccion?: string | null
           dorsal?: number | null
           fecha_nacimiento?: string | null
           fichaje?: string | null
@@ -522,6 +524,7 @@ export type Database = {
           club_actual_id?: string | null
           creado_en?: string
           debut?: string | null
+          debut_seleccion?: string | null
           dorsal?: number | null
           fecha_nacimiento?: string | null
           fichaje?: string | null

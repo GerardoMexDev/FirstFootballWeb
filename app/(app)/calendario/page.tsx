@@ -1,12 +1,23 @@
 /**
  * Vista `calendario` — densidad anual (12 meses) + grilla del mes + leyenda.
  *
- * ANDAMIAJE: esqueleto con las clases de la demo. La densidad y los eventos salen de la
- * vista `agenda_anual` de Supabase; se conectan en una sesión siguiente.
+ * ANDAMIAJE: la densidad y la grilla mensual (de `agenda_anual`) se conectan en una sesión
+ * siguiente. Ya conectado: "Fechas señaladas" — notas que avisan con 7-10 días de
+ * anticipación de cumpleaños y aniversarios, para que los diseñadores preparen el arte.
  */
+import { DateTime } from 'luxon';
 import { EstadoSinDatos } from '@/components/comunes/EstadoSinDatos';
+import { NotasAgenda } from '@/components/agenda/NotasAgenda';
+import { notasProximas } from '@/lib/agenda/notas-proximas';
+import { RepositorioAgendaSupabase } from '@/lib/repositorios/repositorio-agenda';
+import { crearClienteServidor } from '@/lib/supabase/cliente-servidor';
+import { ZONA_AGENCIA } from '@/lib/fechas/zonas';
 
-export default function PaginaCalendario() {
+export default async function PaginaCalendario() {
+  const hoyUy = DateTime.now().setZone(ZONA_AGENCIA).toISODate() ?? '';
+  const eventosAgenda = await new RepositorioAgendaSupabase(crearClienteServidor()).listarEventosParaNotas(hoyUy);
+  const notas = notasProximas(eventosAgenda, hoyUy);
+
   return (
     <section className="vista on" id="v-calendario" tabIndex={-1}>
       <div className="head">
@@ -20,6 +31,8 @@ export default function PaginaCalendario() {
           semestre y los horarios los mueve la TV.
         </p>
       </div>
+
+      <NotasAgenda notas={notas} />
 
       <div className="anio" id="anio" />
 

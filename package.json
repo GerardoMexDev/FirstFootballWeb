@@ -8,6 +8,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
+    "test": "node --test \"lib/**/*.test.ts\" \"supabase/functions/**/*.test.ts\"",
     "migracion": "node scripts/aplicar-migracion.mjs",
     "tipos:db": "node scripts/generar-tipos.mjs",
     "seed:usuarios": "node scripts/seed-usuarios.mjs",
@@ -15,7 +16,10 @@
     "consultar:ligas": "node scripts/consultar-ligas.mjs",
     "consultar:clubes": "node scripts/consultar-clubes-jugadores.mjs",
     "seed:roster": "node scripts/seed-clubes-jugadores.mjs",
-    "vault:cron": "node scripts/configurar-vault-cron.mjs"
+    "seed:base-hitos": "node scripts/seed-base-hitos.mjs",
+    "seed:datos-manuales": "node scripts/seed-datos-manuales.mjs",
+    "vault:cron": "node scripts/configurar-vault-cron.mjs",
+    "deploy:funcion": "node scripts/desplegar-funcion.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.5.2",

@@ -18,15 +18,16 @@ En Claude Code **no hay memoria entre sesiones**, así que este protocolo es obl
 3. Rutina de cierre Git: `git add . && git commit -m "Sesión N: ..." && git push`.
 4. La sesión no se cierra hasta que `git push` terminó OK.
 
-**Última actualización:** 2026-09-05 (Sesión 2, cont.: motor de hitos — esqueleto listo)
-**Estado general:** vista `partidos` con partidos reales (`sync-partidos` + `pg_cron`, ver
-entrada anterior) **+ motor de hitos armado y probado**, esperando que Gerardo pase los
-números base de cada jugador (partidos/goles/asistencias de carrera y selección — no hay
-forma de reconstruir el historial completo desde la API). Mientras tanto no rompe nada: sin
-base cargada, "Se vienen los hitos" no aparece y el KPI da 0 (el conteo real, no un relleno).
-Probado con un valor de prueba: el hito, el resaltado, el KPI y el filtro "Con hito"
-funcionan — se restauró a NULL después. Pendiente de Gerardo también: lista de APIs
-alternativas a evaluar antes de considerar subir de plan en API-Football (ventana de ~3 días).
+**Última actualización:** 2026-09-05 (Sesión 3: base de hitos cargada + "Fechas señaladas" + cambio de club automático)
+**Estado general:** vista `partidos` con partidos reales (`sync-partidos` + `pg_cron`) +
+**motor de hitos con la base real cargada** (números de carrera/selección de los 6, corte
+2026-08-29 — de Transfermarkt vía Excel). Hoy da 0 hitos porque nadie está en ventana de
+aviso (el más cerca: Nahitan a 4 del partido 75 con la selección, aviso 3). **Nuevo:**
+"Fechas señaladas" (notas que avisan 7-10 días antes de cumpleaños / aniversarios de club /
+aniversario de debut en selección) en calendario y partidos; y **`sync-roster`** (Edge
+Function + cron semanal) que detecta cambios de club por `/transfers` y mueve al jugador +
+crea el hito de traspaso. Pendiente de Gerardo: las 8 fotos del hero (2 por tipo de
+competencia) y la lista de APIs alternativas.
 
 ---
 
@@ -75,6 +76,17 @@ diseñador → Community Manager.
 | `lib/repositorios/repositorio-partidos.ts` | `RepositorioPartidosSupabase`: lee `proximos_partidos`, filtra `estado != 'finalizado'`, mapea a `PartidoProximo` | ✅ creado S2 |
 | `lib/partidos/utilidades.ts` | `pesoPartido`, `claseTarjeta`, `filtrarPartidos`, `agruparPorDia`, `agruparPorJugador` (reglas puras, sin JSX) | ✅ creado S2 |
 | `supabase/migrations/0003_motor_hitos.sql` | Columnas `jugadores.*_base` (manual) + vista `totales_jugador` (base + lo que sume la sync) | ✅ aplicada S2 |
+| `supabase/migrations/0004_debut_seleccion_agenda.sql` | `jugadores.debut_seleccion` + `agenda_anual` con bloque `aniversario_seleccion` | ✅ aplicada S3 |
+| `supabase/migrations/0005_cron_sync_roster.sql` | `recurso_sync` += `roster` + `pg_cron` semanal para `sync-roster` | ✅ aplicada S3 |
+| `scripts/seed-base-hitos.mjs` | Carga `jugadores.*_base` + `debut_seleccion` del Excel (corte 2026-08-29). `npm run seed:base-hitos` | ✅ creado y corrido S3 |
+| `scripts/seed-datos-manuales.mjs` | Carga 6 cumpleaños + 6 fundaciones del Excel (interino del importador del .xlsx). `npm run seed:datos-manuales` | ✅ creado y corrido S3 |
+| `scripts/consultar-traspasos.mjs` | Spike de solo lectura: `/transfers` + `/players/squads` + `/players/profiles` en el plan free | ✅ creado S3 |
+| `scripts/desplegar-funcion.mjs` | Wrapper del CLI de Supabase para deployar una Edge Function sin Docker. `npm run deploy:funcion -- <n>` | ✅ creado S3 |
+| `lib/agenda/notas-proximas.ts` (+ `.test.ts`) | "Fechas señaladas" — puro, ventana 10/7 días, 8 tests `node --test` | ✅ creado S3 |
+| `lib/repositorios/repositorio-agenda.ts` | Lee `agenda_anual` filtrado a las 3 fuentes de fecha fija + ventana | ✅ creado S3 |
+| `components/agenda/NotasAgenda.tsx` | Sección "Fechas señaladas" (clases `.sec`/`.hito` de la demo). En calendario y partidos | ✅ creado S3 |
+| `supabase/functions/_shared/roster.ts` (+ `.test.ts`) | Detección pura de cambio de club (solo `/transfers` + guardas), 9 tests | ✅ creado S3 |
+| `supabase/functions/sync-roster/index.ts` | Edge Function: cambio de club → mueve jugador + hito `traspaso`. **Desplegada + cron semanal** | ✅ S3 |
 | `lib/motor-hitos/{tipos,index}.ts` | Cálculo puro de hitos (`calcularHitos`, `ordenarHitos`, `partidosConHito`) — mismo criterio que `ESCALAS`/`hitosDe()` de la demo | ✅ creado y probado S2 |
 | `lib/repositorios/repositorio-hitos.ts` | `RepositorioHitosSupabase`: trae `escalas_hito` + `totales_jugador` + jugadores activos | ✅ creado S2 |
 | `components/partidos/SeccionHitos.tsx` | "Se vienen los hitos" — no se renderiza si no hay ninguno (igual que la demo) | ✅ creado S2 |
@@ -97,10 +109,69 @@ diseñador → Community Manager.
 | `scripts/seed-competencias.mjs` | Carga las 15 competencias confirmadas (upsert manual por `id_externo`, índice único parcial) | ✅ creado y corrido S2 |
 | `scripts/consultar-clubes-jugadores.mjs` | Solo lectura: `GET /teams` + `GET /players/squads` para ubicar a la cartera real | ✅ creado S2 |
 | `scripts/seed-clubes-jugadores.mjs` | Carga los 6 clubes + 6 jugadores reales con IDs de API-Football (upsert por `proveedor_externo`+`id_externo`) | ✅ creado y corrido S2 |
-| `scripts/importar-datos-manuales.ts` | Importa el Excel (falta el archivo) | ⬜ |
-| `lib/motor-hitos/`, `components/{calendario,jugadores,paneles}/*` | Lógica y componentes con datos | ⬜ |
+| `scripts/importar-datos-manuales.ts` | Importador del .xlsx con diff. El archivo ya llegó (S3); por ahora se usa `seed-datos-manuales.mjs` (valores fijos) | ⬜ (interino cubierto) |
+| `components/{calendario,jugadores,paneles}/*` | Grilla mensual del calendario, fichas de jugador, paneles laterales — con datos | ⬜ |
 
 ## 4. Hecho (por fecha, más reciente primero)
+
+### 2026-09-05 — Sesión 3 (base de hitos + "Fechas señaladas" + cambio de club automático)
+
+- **Excel actualizado por Gerardo** (`FirstUY/Datos de jugadores y clubes.xlsx`, fuera del
+  repo por `.gitignore`): hoja "Hitos" con estadísticas de carrera / selección / temporada
+  actual de los 6 (fuente **Transfermarkt**, corte **2026-08-29**, próxima 2026-09-05); hoja
+  "Hoja2" con 7 APIs candidatas (Transfermarkt, footballdata.io, TheSportsDB, FBref,
+  thestatsapi, ESPN unofficial, Yahoo unofficial). Evaluación en §11.
+- **`scripts/seed-base-hitos.mjs`** (`npm run seed:base-hitos`): carga `jugadores.*_base`
+  (carrera pj/g/a + selección pj/g) y `debut_seleccion` desde esos números. Corte en
+  `base_actualizada_en = 2026-08-29`: `sync-estadisticas` (cuando exista) solo debe sumar
+  partidos posteriores para no doble-contar. Verificado: `totales_jugador` propaga bien, y
+  el motor da **0 hitos hoy** (confirmado replicando la fórmula de `lib/motor-hitos`).
+- **`scripts/seed-datos-manuales.mjs`** (`npm run seed:datos-manuales`): carga los 6
+  cumpleaños (`jugadores.fecha_nacimiento`) y las 6 fundaciones de club
+  (`clubes.fecha_fundacion`) de la hoja 1 del Excel (valores fijos, ya confirmados en
+  contexto.md §9). Interino hasta que exista el importador del .xlsx.
+- **Migración `0004`**: `jugadores.debut_seleccion date` (distinta de `debut`, que queda
+  para el debut profesional) + `agenda_anual` gana el bloque **`aniversario_seleccion`**
+  (proyección anual, mismo patrón que cumpleaños/aniversario_club). `create or replace view`
+  (no cambia columnas). Cargados: Nahitan 2015-09-18, Kevin Amaro 2025-09-09.
+- **"Fechas señaladas"** — avisa con **10 días** de anticipación y marca `urgente` a **≤7**
+  ("entre 10 y 7", pedido de Gerardo). Va en **calendario y partidos** (para que los
+  diseñadores preparen el arte).
+  - `lib/agenda/notas-proximas.ts` — puro y determinista (recibe eventos + hoy en UY), con
+    test `node --test` (`npm test`, 8 casos). `DIAS_AVISO_AGENDA=10`, `DIAS_AVISO_URGENTE=7`.
+  - `lib/repositorios/repositorio-agenda.ts` — lee `agenda_anual` filtrando a las 3 fuentes
+    de fecha fija y a la ventana.
+  - `components/agenda/NotasAgenda.tsx` — reusa `.sec`/`.hito`/`.hito--ya` de la demo (mismo
+    look que "Se vienen los hitos"). No se renderiza si no hay ninguna.
+  - Verificado con `browser-automation` (login real como `alexis`): la sección aparece en
+    ambas vistas con la tarjeta de Kevin Amaro (debut selección, "Faltan 4 días", urgente),
+    0 errores de consola.
+- **Cambio de club automático — `sync-roster`** (Edge Function nueva + cron semanal):
+  - **Spike previo** (`scripts/consultar-traspasos.mjs`): `GET /transfers?player=` y
+    `GET /players/squads?player=` **funcionan en el plan free**; `GET /players/profiles` no
+    trae el club en free. → API-Football alcanza, no hace falta Transfermarkt para esto.
+  - **Solo `/transfers`** (no `/players/squads`): en ventana de partidos de estrellas,
+    `/players/squads` devolvió "Liga MX All-Stars" como club de Fede Pereira — falso
+    positivo real, detectado al probar. Un all-star no genera un "transfer".
+  - `_shared/roster.ts` (puro, 9 tests): auto-aplica solo si el traspaso más reciente es
+    **reciente** (≤200 días) y el destino **no parece representativo** (`/all-stars?|selecci|
+    xi/i`). Lo demás → `revisar` (se registra en `sincronizaciones.parametros.sospechas`,
+    **no toca el dato**). Nunca deja `club_actual_id` en NULL.
+  - `sync-roster/index.ts`: por cada jugador activo, `/transfers` → si aplica: upsert del
+    club nuevo + `update jugadores.club_actual_id` + upsert `hito` tipo `traspaso`
+    (`origen='derivado'`, idempotente por la clave natural). `proximos_partidos` resuelve el
+    club desde el jugador, así que los fixtures lo siguen solos.
+  - Migración `0005`: `recurso_sync` += `'roster'` (para la bitácora) + `cron.schedule`
+    `sync-roster-semanal` lunes 04:00 UTC (después del sync diario), `timeout 120000`.
+  - `scripts/desplegar-funcion.mjs` (`npm run deploy:funcion -- <nombre>`) — wrapper del CLI
+    de Supabase para deployar con `--no-verify-jwt` sin Docker.
+  - **Verificado de punta a punta** (deploy real + curl con `x-sync-secret`): baseline = 0
+    cambios / 0 falsos positivos; desviar a Kevin Amaro a Toluca → corrige a Genk + crea
+    "Fichaje a Genk (desde Liverpool Montevideo)" fechado 2026-08-17; 2ª corrida no duplica
+    el hito. Datos restaurados (los 6 en su club, 0 hitos).
+  - **Sospechas conocidas** (no es bug, ver §6): API-Football no tiene el traspaso reciente
+    de Nacho / Javi / Martín a Bragantino/Colo-Colo/Atlante — su último `/transfers` apunta
+    a un club uruguayo viejo. `sync-roster` los flaggea `revisar` cada semana sin tocar nada.
 
 ### 2026-09-05 — Sesión 2 (cont.: motor de hitos — esqueleto completo, esperando números base)
 - Gerardo decidió: **espera su lista de ~20 APIs candidatas** (algunas no cubren las ligas de
@@ -386,27 +457,61 @@ diseñador → Community Manager.
       con su `cobertura`~~ — hecho 2026-09-04 (ver §4 Sesión 2 cont.: 15 competencias cargadas).
 - [x] ~~Conectar vista `partidos` a `proximos_partidos`~~ — hecho 2026-09-04 (ver §4 Sesión 2
       cont.). Sin datos reales todavía (BD vacía hasta que corra la sync o se importe el Excel).
-- [x] ~~`lib/motor-hitos` leyendo `escalas_hito`; sección "se vienen los hitos" + badges + KPI +
-      tag en la tarjeta + tie-break del hero~~ — hecho 2026-09-05 (ver §4). **Esqueleto completo,
-      pero no muestra nada hasta que Gerardo pase los números base** (partidos/goles/asistencias
-      de carrera y selección, a HOY, de cada uno de los 6 — no se puede reconstruir desde la
-      API). Cuando los tenga: cargarlos en `jugadores.*_base` (columna por columna, o pedirle a
-      Claude que arme un script puntual con esos 6×5 números) y listo, el resto ya funciona. — alta
+- [x] ~~`lib/motor-hitos` + sección "se vienen los hitos" + KPI + tag + tie-break del hero~~ —
+      hecho 2026-09-05 (Sesión 2). **Base real cargada 2026-09-05 (Sesión 3)** con
+      `seed-base-hitos.mjs` (corte 2026-08-29). Da 0 hitos hoy (nadie en ventana). Se
+      refresca con el Excel del 5-sep (volver a correr el script con los números nuevos y
+      subir `base_actualizada_en`) y, hacia adelante, con `sync-estadisticas`.
+- [ ] **Refrescar la base con el Excel del 2026-09-05** (Gerardo lo actualiza semanalmente):
+      editar los números en `scripts/seed-base-hitos.mjs`, subir `CORTE`, correr. — alta
 - [ ] Wirear el click de `TarjetaPartido`/`HeroPartidoDelDia` para abrir el panel de detalle
       (hoy no son clicables — paneles, junto con el resto del panel lateral). — media
 - [x] ~~`supabase/functions/sync-partidos`; activar `pg_cron`~~ — hecho 2026-09-04/05 (ver §4):
       desplegada, corriendo con datos reales, cron diario probado de punta a punta.
-- [ ] `sync-estadisticas` (minutos/goles/asistencias por partido) y `sync-agenda` (cumpleaños,
-      fundaciones, hitos derivados) — mismo patrón que `sync-partidos`, todavía no escritas. — alta
+- [ ] `sync-estadisticas` (minutos/goles/asistencias por partido) — mismo patrón que
+      `sync-partidos`. Solo debe sumar partidos con fecha > `jugadores.base_actualizada_en`
+      (hoy 2026-08-29) para no doble-contar la base del Excel. — alta
+- [ ] `sync-agenda` — ya NO hace falta para cumpleaños/fundaciones/aniversario-selección
+      (esos son manuales, cargados, y `agenda_anual` los proyecta). Quedaría solo para hitos
+      derivados que no cubra ni el motor de hitos ni `sync-roster`. — baja
+- [ ] **Reconciliación Transfermarkt** (opción D de la charla de Sesión 3): script/servicio
+      periódico contra `felipeall/transfermarkt-api` (self-host o instancia pública) para
+      refrescar totales de carrera/selección y tapar lo que API-Football no cubre. Su
+      `/players/{id}/transfers` además tiene el historial completo que a API-Football le
+      falta para Nacho/Javi/Martín (ver §6). — media
 - [ ] `estado='parcial'`/`'error'` de `sincronizaciones` no dispara ningún aviso visible todavía
       en la UI (contexto.md: badge "Datos actualizados el {fecha}. No pudimos contactar la
       fuente."). Por ahora solo queda en la bitácora de la tabla. — media
 - [ ] Revisar cada tanto si el plan free amplía la ventana de fechas de `GET /fixtures?date=`
       (hoy ~3 días) — afecta cuánto por delante puede ver "próximos partidos". — baja
-- [ ] **Esperando a Gerardo**: lista de ~20 APIs de fútbol gratis que está evaluando como
-      alternativa/complemento a API-Football (algunas no cubren las ligas de la cartera; ESPN
-      ya es candidato natural, ya documentado como respaldo). Cuando la pase, evaluar cuáles
-      cubren las 6 ligas + copas + continentales antes de registrarse a ninguna. — media
+- [x] ~~lista de APIs alternativas~~ — Gerardo pasó 7 (hoja 2 del Excel), evaluadas en
+      Sesión 3 (ver §11). Conclusión: nada reemplaza a API-Football como primaria; lo que
+      suma es **Transfermarkt** (totales de carrera en todas las ligas, Arabia incluida) y
+      confirmar **ESPN + TheSportsDB** como cascada de respaldo (ya en el plan).
+- [ ] **Fotos del hero de partidos** (Gerardo las consigue): 8 imágenes horizontales
+      ≥1600×900, 2 por tipo de competencia (liga/copa/continental/selección), sin
+      estadio/escudo/sponsor reconocible, algo oscuras. Cuando lleguen: optimizar a WebP,
+      `public/heroes/`, elegir por `competencia.tipo` con fallback a degradado. Opción C
+      (escudo difuminado) queda para cuando haya escudos de TheSportsDB. — media
+- [ ] **Estadio sin nombre** (caso Brasil): agregar `clubes.estadio` + `clubes.ciudad`,
+      enriquecer una vez desde `GET /teams` (`venue.name`), usar como fallback cuando
+      `partidos.estadio` es NULL y nuestro club juega de local. Visitante → "Sin datos". — media
+- [ ] **Torneos adicionales en el calendario**: (a) cargar los que faltan — urgente
+      **Leagues Cup** (Toluca llegó a la final, no está en `competencias`); auditar con
+      `GET /leagues` por club. (b) `sync-partidos` que loguee "competencia desconocida X"
+      cuando el `league.id` no matchea (hoy queda `competencia_id` NULL en silencio). (c)
+      calendario/partidos agrupan/colorean por `competencia.tipo`. — media
+- [ ] **Partido aplazado/cancelado sin fecha**: separar `aplazado`/`cancelado` en el enum
+      `estado_partido` (hoy `PST`→`suspendido`, `CANC`→`sin_datos`), mapear bien en
+      `_shared/estado-partido.ts`, y mostrarlo explícito en la UI ("Aplazado — sin nueva
+      fecha") en vez de que el partido desaparezca. Caso real: Toluca vs Puebla se canceló
+      (Toluca juega la final de Leagues Cup). La ventana de re-chequeo se deja como la
+      permita el plan (~3 días) hasta que entre el pago. — media
+- [ ] **Convocado sí/no al partido** (charla Sesión 3, opciones A+C): A = `GET /fixtures/lineups`
+      post-hoc (XI+banco, ~40 min antes; estructurado, gratis). C = noticias (Google News
+      RSS) parseadas por LLM como señal suave "según prensa", etiquetada aparte. Necesita
+      esquema: `partidos_jugadores.convocatoria_origen` + nota + fuente, o tabla
+      `senales_convocatoria`. — media
 - [ ] Confirmar si Al-Qadsiah juega la AFC Champions League **Elite** o **Two** esta temporada
       (se cargaron las dos, ver §4 Sesión 2 cont. — la que no aplique no va a tener partidos,
       no hace falta decidir ahora, la sync lo resuelve solo). — baja
@@ -425,6 +530,19 @@ diseñador → Community Manager.
 
 ## 6. Bugs conocidos / cosas a vigilar
 
+- **`sync-roster` flaggea `revisar` a Nacho / Javi / Martín cada semana** (no toca datos):
+  API-Football no tiene su traspaso reciente a Bragantino / Colo-Colo / Atlante — su último
+  `/transfers` apunta a Peñarol / Boston River (viejo). La guarda de reciencia (200 días)
+  hace bien en no auto-aplicarlo, pero lo reporta en `sincronizaciones.parametros.sospechas`.
+  Se resuelve solo cuando API-Football sume esos traspasos, o con la reconciliación
+  Transfermarkt (§5), o suprimiéndolos a mano si molesta. Revisar la primera bitácora y
+  decidir.
+- **Migraciones `0004`/`0005` aplicadas directo con `scripts/aplicar-migracion.mjs`** (como
+  `0001`-`0003`), no con el CLI de Supabase — mismo apunte de abajo si algún día se adopta
+  `supabase db push`.
+- **`sync-roster` NO reasigna `partidos_jugadores` viejos** cuando un jugador cambia de club:
+  los partidos que ya estaban puenteados quedan como estaban (correcto — jugó ese partido
+  con el club anterior). Solo los fixtures futuros salen con el club nuevo (vía la vista).
 - **Migración `0001` aplicada directo con `scripts/aplicar-migracion.mjs`, NO con el Supabase CLI.**
   No quedó registrada en `supabase_migrations.schema_migrations`. Si más adelante se adopta
   `supabase db push` para migraciones nuevas, hay que hacer `supabase migration repair --status
@@ -606,15 +724,56 @@ diseñador → Community Manager.
   son nuestros) — la demo arma el contexto de un hito interpolando nombre de club dentro de un
   template string con `<b>`/`<br>`; al pasar a React eso se resuelve con JSX normal (un
   componente que devuelve fragmentos), no copiando el patrón de la demo literal.
+- **`GET /transfers` y `GET /players/squads` SÍ funcionan en el plan free de API-Football**
+  (spike Sesión 3, `scripts/consultar-traspasos.mjs`). `GET /players/profiles` responde pero
+  **sin el club actual** en free (solo nombre + nacimiento).
+- **`GET /players/squads?player=` mete equipos representativos como si fueran el club**: en la
+  ventana de partidos de estrellas devolvió "Liga MX All-Stars" para Fede Pereira. Falso
+  positivo real, detectado al probar `sync-roster`. Por eso la detección de cambio de club usa
+  **solo `/transfers`** (un all-star no genera un "transfer") + guarda por patrón de nombre
+  (`/all-stars?|selecci|xi/i`) + guarda de reciencia del traspaso.
+- **API-Football tiene el historial de `/transfers` incompleto para varios de la cartera**:
+  no registra el paso de Nacho/Javi/Martín a su club actual (su último traspaso listado es a
+  un club uruguayo, años atrás). Cualquier lógica sobre `/transfers` tiene que tolerar que el
+  "último" movimiento sea viejo y no signifique nada — nunca reescribir el club por un
+  traspaso fuera de ventana.
+- **`node --test` corre archivos `.ts` directo** (Node 22.6+, type-stripping) — no hace falta
+  vitest/jest. `npm test` = `node --test "lib/**/*.test.ts" "supabase/functions/**/*.test.ts"`.
+  Warning `MODULE_TYPELESS_PACKAGE_JSON` es ruido (no se agregó `"type":"module"` para no
+  tocar el resto). Para que sea testeable así, el módulo puro no importa con alias `@/` ni
+  nada Deno-only — solo `luxon` o cero deps.
+- **`create or replace view` sirve si NO cambian las columnas** (solo agregás filas por
+  `UNION`) — conserva permisos/RLS de la vista, no hace falta `drop`. Migración `0004` recreó
+  `agenda_anual` así.
+- **`ALTER TYPE ... ADD VALUE` va suelto, fuera del `begin/commit`** del resto de la
+  migración (PG lo permite en transacción en PG12+ pero es más limpio así). `add value if not
+  exists` para que sea idempotente. Migración `0005` agregó `'roster'` a `recurso_sync`.
+- **Los "0" de selección de Fede/Nacho/Javi/Martín se cargan como 0, no NULL**: son un dato
+  real de Transfermarkt (0 partidos con la mayor), no un relleno por defecto. La regla "cero
+  invenciones" es para cuando la fuente calla, no para cuando dice 0.
+- **Diferencia de días entre dos fechas civiles (YYYY-MM-DD) NO es la "aritmética sobre
+  `new Date()`" prohibida** (esa regla es para convertir instantes entre zonas). Anclás las
+  dos a medianoche UTC y restás — exacto, sin DST en juego. `lib/agenda/notas-proximas.ts` y
+  `_shared/roster.ts` lo hacen con un comentario que lo aclara.
 
 ## 11. Dudas abiertas (de `contexto.md` §12)
 
 - ~~Contraseña de las 4 cuentas~~ → resuelto: `demo1234`.
 - ~~Plan API-Football~~ → etapa 1 usa **planes free** (API-Football free + ESPN + TheSportsDB).
-- Divisiones/copas exactas a seguir por país además de la liga principal.
-- Fuente y frecuencia real de las correcciones manuales del Excel.
-- Falta el Excel `Datos de jugadores y clubes.xlsx` (referenciado en contexto.md §9); `.gitignore`
-  lo excluye a propósito.
+- Divisiones/copas exactas a seguir por país además de la liga principal. → parcialmente:
+  falta cargar **Leagues Cup** (§5). Auditar el resto con `GET /leagues` por club.
+- ~~Fuente y frecuencia real de las correcciones manuales del Excel~~ → Transfermarkt,
+  **semanal** (Gerardo actualiza el .xlsx; corte movible en `base_actualizada_en`).
+- ~~Falta el Excel~~ → lo pasó Gerardo 2026-09-05 (`FirstUY/Datos de jugadores y clubes.xlsx`,
+  fuera del repo por `.gitignore`). Hoja 1 = cumpleaños/fundaciones; hoja "Hitos" =
+  estadísticas; hoja 2 = APIs candidatas.
+- **Evaluación de las 7 APIs de la hoja 2** (Sesión 3): API-Football sigue siendo la
+  primaria. Transfermarkt (vía `felipeall/transfermarkt-api`, self-host) es el mejor
+  complemento — totales de carrera en todas las ligas (Arabia incluida) e historial de
+  traspasos completo. TheSportsDB = enriquecimiento (escudos/fotos). ESPN unofficial =
+  respaldo de fixtures. footballdata.io / thestatsapi / Yahoo = descartables para nuestro
+  caso (poca stat por jugador en nuestras ligas). FBref = lo mejor gratis por-stat pero
+  frágil (scraping, sin API) y flojo en Arabia — "para más adelante".
 - ~~Con el plan free de API-Football hay que ver si alcanza~~ → resuelto (parcialmente) 2026-09-05:
   el límite real no es el de 100 req/día sino que `GET /fixtures?date=` solo deja ver ~3 días
   alrededor de "hoy" (ver §4 y §10). `sync-partidos` ya lo tolera (salta el día que rechacen), pero
