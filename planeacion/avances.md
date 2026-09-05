@@ -117,6 +117,22 @@ diseñador → Community Manager.
 
 ## 4. Hecho (por fecha, más reciente primero)
 
+### 2026-09-05 — Sesión 3 (cont.: fotos del hero cableadas)
+
+- Gerardo pasó 8 fotos (Unsplash). Procesadas con ffmpeg a WebP 1920×1080 (recorte 16:9
+  anclado arriba, leve bajada de exposición), 2 por tipo de competencia, en `public/heroes/`
+  (`{liga|copa|continental|seleccion}-{1,2}.webp`). Ver `public/heroes/LEEME.md`.
+- **`lib/partidos/hero-imagen.ts`** (puro, 4 tests): `imagenHero(competenciaTipo, partidoId)`
+  → `/heroes/{tipo}-{1|2}.webp`, variante estable por hash del id; `null` si el tipo es
+  desconocido.
+- **`HeroPartidoDelDia.tsx`**: renderiza `<img className="hero__bg">` — **clase que la demo
+  YA estilizaba** (`grayscale(1) brightness(.46)` + `.hero__grad`), cero CSS nuevo. Al ir en
+  grises y oscurecida, cualquier estadio identificable queda genérico y el texto blanco se
+  lee. Sin tipo → queda el degradé `.hero__fb` (como antes).
+- Verificado con browser-automation: el hero de "RB Bragantino vs Bahia" (Serie A → `liga`)
+  carga `/heroes/liga-2.webp` (1920×1080), filtro de la demo aplicado, texto legible, 0
+  errores de consola.
+
 ### 2026-09-05 — Sesión 3 (cont.: `sync-estadisticas` — stats por partido automáticas)
 
 - **Spike**: `GET /fixtures/players?fixture=` y `GET /fixtures?id=` **funcionan en el plan
@@ -522,11 +538,11 @@ diseñador → Community Manager.
       Sesión 3 (ver §11). Conclusión: nada reemplaza a API-Football como primaria; lo que
       suma es **Transfermarkt** (totales de carrera en todas las ligas, Arabia incluida) y
       confirmar **ESPN + TheSportsDB** como cascada de respaldo (ya en el plan).
-- [ ] **Fotos del hero de partidos** (Gerardo las consigue): 8 imágenes horizontales
-      ≥1600×900, 2 por tipo de competencia (liga/copa/continental/selección), sin
-      estadio/escudo/sponsor reconocible, algo oscuras. Cuando lleguen: optimizar a WebP,
-      `public/heroes/`, elegir por `competencia.tipo` con fallback a degradado. Opción C
-      (escudo difuminado) queda para cuando haya escudos de TheSportsDB. — media
+- [x] ~~Fotos del hero de partidos~~ — hecho 2026-09-05 (Sesión 3): 8 WebP en
+      `public/heroes/`, `lib/partidos/hero-imagen.ts` las elige por `competenciaTipo`,
+      `HeroPartidoDelDia` las muestra en `.hero__bg` (estilo de la demo, cero CSS nuevo).
+      Los `.jpg` originales no se versionan; recambiar una = poner el original y avisar.
+      Opción C (escudo difuminado) sigue pendiente para cuando haya escudos de TheSportsDB.
 - [ ] **Estadio sin nombre** (caso Brasil): agregar `clubes.estadio` + `clubes.ciudad`,
       enriquecer una vez desde `GET /teams` (`venue.name`), usar como fallback cuando
       `partidos.estadio` es NULL y nuestro club juega de local. Visitante → "Sin datos". — media
