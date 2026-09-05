@@ -53,5 +53,5 @@ for (const { titulo, params } of consultas) {
   const ligas = await get('/leagues', params);
   console.log(`\n=== ${titulo} (${ligas.length} resultado/s) ===`);
   ligas.map(resumir).forEach((l) => console.log(l));
-  await new Promise((r) => setTimeout(r, 250)); // no golpear el rate limit del free
+  await new Promise((r) => setTimeout(r, 6500)); // no golpear el rate limit del free
 }

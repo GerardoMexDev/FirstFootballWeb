@@ -18,12 +18,13 @@ En Claude Code **no hay memoria entre sesiones**, así que este protocolo es obl
 3. Rutina de cierre Git: `git add . && git commit -m "Sesión N: ..." && git push`.
 4. La sesión no se cierra hasta que `git push` terminó OK.
 
-**Última actualización:** 2026-09-04 (Sesión 2, cont.: API-Football + `competencias`)
-**Estado general:** auth completa + vista `partidos` conectada a datos reales (Sesión 2) +
-**`API_FOOTBALL_KEY` conseguida y verificada** (plan free, activa) + **`competencias` cargada**
-(15 filas: 6 ligas/copas domésticas de la cartera + 5 continentales + eliminatorias, IDs
-confirmados contra `GET /leagues` real). Sigue sin partidos/jugadores reales (falta el Excel
-y las Edge Functions de sync) → la vista muestra "Sin datos", que es lo correcto hoy.
+**Última actualización:** 2026-09-04/05 (Sesión 2, cont.: sync-partidos EN VIVO)
+**Estado general:** **la vista `partidos` ya muestra partidos reales de la agencia**, traídos
+de verdad por `sync-partidos` (Edge Function desplegada) + `pg_cron` diario. Roster real
+cargado (`clubes`/`jugadores`, 6+6, con IDs de API-Football). Verificado con capturas de
+pantalla: Toluca vs Puebla, Bragantino vs Bahia, Atlante vs Atlas, Genk vs Anderlecht,
+Colo-Colo vs Huachipato — todo real, hoy. Falta: `estadisticas_partido`/`convocatorias`
+(otra Edge Function), motor de hitos, Excel de fechas manuales, resto de vistas.
 
 ---
 
@@ -82,14 +83,79 @@ diseñador → Community Manager.
 | `lib/repositorios/tipos.ts` | Interfaz `RepositorioPartidos` + tipo `PartidoProximo` (1:1 con columnas de `proximos_partidos`) | ✅ actualizado S2 |
 | `components/comunes/Ico.tsx` · `EstadoSinDatos.tsx` | Íconos (paths de la demo, + 4 del menú de usuario S2) · componente `.sinDato` | ✅ |
 | `components/layout/BarraSuperior.tsx` · `Nav.tsx` | Barra superior + nav (marca/nav OK; **menú de usuario real + cerrar sesión OK S2**; buscador/tema stub) | ✅ |
-| `supabase/functions/sync-*` | Edge Functions de sincronización | ⬜ |
+| `supabase/functions/sync-partidos/index.ts` + `_shared/{api-football,estado-partido}.ts` | Edge Function real: trae fixtures de la cartera y hace upsert en `partidos`/`partidos_jugadores`/`clubes` | ✅ **desplegada y corriendo** S2 |
+| `supabase/migrations/0002_cron_sync_partidos.sql` | `pg_cron` diario (03:00 UTC) → `pg_net` → `sync-partidos`, secreto vía Vault | ✅ aplicada y probada S2 |
+| `scripts/configurar-vault-cron.mjs` | Guarda/rota `sync_functions_secret` en Supabase Vault (consulta parametrizada) | ✅ creado y corrido S2 |
 | `scripts/seed-usuarios.mjs` | 4 cuentas (`service_role`), idempotente | ✅ creado y corrido S2 |
 | `scripts/consultar-ligas.mjs` | Solo lectura: consulta `GET /leagues` por país + búsquedas de continentales | ✅ creado S2 |
 | `scripts/seed-competencias.mjs` | Carga las 15 competencias confirmadas (upsert manual por `id_externo`, índice único parcial) | ✅ creado y corrido S2 |
+| `scripts/consultar-clubes-jugadores.mjs` | Solo lectura: `GET /teams` + `GET /players/squads` para ubicar a la cartera real | ✅ creado S2 |
+| `scripts/seed-clubes-jugadores.mjs` | Carga los 6 clubes + 6 jugadores reales con IDs de API-Football (upsert por `proveedor_externo`+`id_externo`) | ✅ creado y corrido S2 |
 | `scripts/importar-datos-manuales.ts` | Importa el Excel (falta el archivo) | ⬜ |
 | `lib/motor-hitos/`, `components/{calendario,jugadores,paneles}/*` | Lógica y componentes con datos | ⬜ |
 
 ## 4. Hecho (por fecha, más reciente primero)
+
+### 2026-09-04/05 — Sesión 2 (cont.: sync-partidos EN VIVO — Edge Function + roster real + cron)
+- **Roster real cargado** (`scripts/consultar-clubes-jugadores.mjs` + `scripts/seed-clubes-jugadores.mjs`):
+  6 clubes y 6 jugadores con sus IDs reales de API-Football, ubicados por plantel actual
+  (`GET /players/squads`, no por búsqueda de nombre suelto — evita homónimos). Al-Qadsiah
+  apareció en la API transliterado "Al-Qadisiyah FC" (el buscador de `/teams` además rechaza
+  guiones). Gerardo confirmó la tabla completa antes de cargar nada.
+- **Dos límites nuevos del plan free descubiertos probando de verdad** (no estaban en la
+  documentación previa, hay que sumarlos a §10):
+  1. `GET /fixtures` no acepta `season` reciente (solo 2022-2024) ni `next`/`last` por equipo.
+  2. `GET /fixtures?date=` sí funciona, pero solo para una ventana corta alrededor de "hoy"
+     (el mensaje de error del plan la indica exacta, ej. "2026-09-04 a 2026-09-06" — unos 3 días).
+  Por esto la sync itera día por día con `date=`, filtrando del lado nuestro por los clubes de
+  la cartera — más consultas que lo planeado en `contexto.md`, pero es lo único que el plan
+  free permite. Documentado en `supabase/functions/_shared/api-football.ts`.
+- **`lib/repositorios/externos/` no se usó como en `contexto.md`**: se optó por
+  `supabase/functions/_shared/` (patrón estándar de Supabase para código compartido entre
+  Edge Functions) para evitar depender de que el bundler de Deno resuelva imports relativos
+  que salen de `supabase/functions/` — funcionó al primer intento con este patrón.
+- **`supabase/functions/sync-partidos/index.ts`** — Edge Function real: trae jugadores activos
+  + su club (con `id_externo`/zona horaria), las competencias catalogadas, pide los fixtures
+  del día por una ventana de `SYNC_DIAS_ADELANTE` (o `?dias=` en la URL, para pruebas) días,
+  filtra a los que tocan un club de la cartera, y por cada uno hace upsert de: el club local Y
+  el visitante en `clubes` (aunque sean rivales recién descubiertos — la vista `proximos_partidos`
+  necesita esa fila para resolver `rival_nombre`), el `partido`, y un `partidos_jugadores` por
+  cada representado involucrado (puede haber 2, ej. Toluca vs Atlante). Idempotente por
+  `(proveedor_externo, id_externo)`, mismo patrón manual que los scripts de seed. Protegida por
+  header `x-sync-secret` (nunca pública) — deployada con `--no-verify-jwt` porque quien la llama
+  es `pg_cron`, no un usuario con sesión.
+- **`zona_horaria_evento` solo se completa cuando se conoce de verdad**: si nuestro club juega
+  de local, se usa la zona ya guardada; si juega de visitante y el rival es nuevo (recién
+  upserteado desde el fixture), esa zona queda `NULL` — nunca se inventa. Confirmado con datos
+  reales: de los 5 partidos de la primera corrida, 4 son de visitante (zona `NULL`, la tarjeta
+  no muestra "hora local") y 1 de local (Bragantino, zona conocida, pero coincide con la hora de
+  Uruguay porque Brasil no tiene horario de verano — tampoco se muestra la línea de "hora local",
+  correctamente, por ser redundante).
+- **Descubrimiento operativo**: el reloj real de la Edge Function (infraestructura de Supabase)
+  no coincide con el de esta sesión/máquina — iba ~1 día adelantado. En vez de perseguir el
+  desfasaje, `obtenerFixturesDeVariosDias` ahora atrapa el rechazo específico del plan
+  ("Free plans do not have access to...") por día y lo salta (`diasOmitidos`) en lugar de abortar
+  todo el sync — la corrida termina en `estado='ok'` aunque algún día puntual haya quedado fuera
+  de rango.
+- **`pg_net` tiene un timeout default de 5000&nbsp;ms** — muy corto para una función que espera
+  ~6,5&nbsp;s entre cada llamada a la API (límite de 10&nbsp;req/min). Se pasa
+  `timeout_milliseconds := 60000` en el `net.http_post` (migración 0002). Sin esto, `pg_cron`
+  cortaba la llamada antes de que la función terminara (`timed_out: true` en `net._http_response`).
+- **`supabase/migrations/0002_cron_sync_partidos.sql`**: agenda `sync-partidos-diario` a las
+  03:00 UTC. El secreto del header (`x-sync-secret`) se lee de **Supabase Vault**
+  (`vault.decrypted_secrets`), nunca queda en texto plano en la migración — lo carga
+  `scripts/configurar-vault-cron.mjs` con una consulta parametrizada (conexión directa, mismo
+  patrón que `aplicar-migracion.mjs`).
+- **`tsconfig.json`**: se excluyó `supabase/functions/**` — Next.js intentaba tipar los archivos
+  Deno (`npm:` specifiers, `Deno.serve`, `Deno.env`) con el `tsconfig` del proyecto y fallaba el
+  build. Deno los tipa aparte, al deployar.
+- **Verificado de punta a punta, con datos reales** (no de prueba): `sync-partidos` invocada
+  manualmente → `estado:"ok"`, 5 partidos reales insertados (Toluca vs Puebla, Bragantino vs
+  Bahia, Atlante vs Atlas, Genk vs Anderlecht, Colo-Colo vs Huachipato). Login real como `alexis`
+  + captura de pantalla de `/partidos`: hero elige el partido de mayor peso, KPIs correctos,
+  agrupado por día en hora de Uruguay, crests/caras con iniciales (sin fotos todavía, esperado).
+  Se probó también el disparo real de `pg_cron` → `pg_net` → Edge Function (no solo un curl
+  manual): `net._http_response` devolvió `status_code: 200` con el mismo resultado.
 
 ### 2026-09-04 — Sesión 2 (cont.: API-Football key + `competencias`)
 - **`API_FOOTBALL_KEY`** conseguida por Gerardo (dashboard.api-football.com, plan free) y puesta
@@ -284,8 +350,15 @@ diseñador → Community Manager.
       tag en la tarjeta + tie-break del hero (todo quedó deliberadamente afuera en la Sesión 2). — media
 - [ ] Wirear el click de `TarjetaPartido`/`HeroPartidoDelDia` para abrir el panel de detalle
       (hoy no son clicables — paneles, junto con el resto del panel lateral). — media
-- [ ] `supabase/functions/sync-partidos` (+ `sync-estadisticas`, `sync-agenda`); activar `pg_cron`.
-      Ya hay `API_FOOTBALL_KEY` real y `competencias` cargada — el bloqueo que faltaba. — alta
+- [x] ~~`supabase/functions/sync-partidos`; activar `pg_cron`~~ — hecho 2026-09-04/05 (ver §4):
+      desplegada, corriendo con datos reales, cron diario probado de punta a punta.
+- [ ] `sync-estadisticas` (minutos/goles/asistencias por partido) y `sync-agenda` (cumpleaños,
+      fundaciones, hitos derivados) — mismo patrón que `sync-partidos`, todavía no escritas. — alta
+- [ ] `estado='parcial'`/`'error'` de `sincronizaciones` no dispara ningún aviso visible todavía
+      en la UI (contexto.md: badge "Datos actualizados el {fecha}. No pudimos contactar la
+      fuente."). Por ahora solo queda en la bitácora de la tabla. — media
+- [ ] Revisar cada tanto si el plan free amplía la ventana de fechas de `GET /fixtures?date=`
+      (hoy ~3 días) — afecta cuánto por delante puede ver "próximos partidos". — baja
 - [ ] Confirmar si Al-Qadsiah juega la AFC Champions League **Elite** o **Two** esta temporada
       (se cargaron las dos, ver §4 Sesión 2 cont. — la que no aplique no va a tener partidos,
       no hace falta decidir ahora, la sync lo resuelve solo). — baja
@@ -357,10 +430,14 @@ diseñador → Community Manager.
     público, conviene **rotarlos** en el dashboard antes de cargar datos reales (el anon key no
     importa: es público por diseño, lo protege la RLS). Recordatorio en `.secretos/notas.md`.
 - `SUPABASE_ACCESS_TOKEN` (`sbp_…`) en `.secretos/.env`. **Vence 2026-12-31** — renovar antes.
-- API key de API-Football (plan free): **conseguida y verificada** 2026-09-04, en
+- API key de API-Football (plan free): **conseguida, verificada y ya en uso**. En
   `.secretos/.env` (`API_FOOTBALL_KEY`) — Gerardo la puso directo en el archivo, nunca pasó por
-  el chat. Falta ponerla también como variable de entorno de la Edge Function cuando se escriba
-  `sync-partidos`. Nunca en el repo ni en el cliente.
+  el chat — **y también como secret del proyecto Supabase** (`supabase secrets set`), que es
+  lo que lee `sync-partidos` en producción. Nunca en el repo ni en el cliente.
+- `SYNC_FUNCTIONS_SECRET`: generado en la Sesión 2, en `.secretos/.env` y como secret de
+  Supabase — autentica el header `x-sync-secret` de `sync-partidos`. También vive una copia en
+  **Supabase Vault** (`sync_functions_secret`, ver `scripts/configurar-vault-cron.mjs`) para que
+  `pg_cron` la use sin que quede en texto plano en ninguna migración.
 - Contraseña de las 4 cuentas demo: **`demo1234`** (confirmada). Compartida SOLO para demo cerrado;
   antes de uso real, credenciales individuales fuertes.
 
@@ -441,6 +518,36 @@ diseñador → Community Manager.
   de versiones, incluso con el cliente bien tipado. `.returns<T[]>()` **antes** de `.single()`
   (no después: `.single()` ya fija el tipo final) fuerza la forma correcta sin pelear con la
   inferencia automática de postgrest-js.
+- **API-Football, plan free — límites reales, no solo el de 100 req/día**: `GET /fixtures` NO
+  acepta `season` reciente (solo 2022-2024) ni `next`/`last` por equipo. `GET /fixtures?date=`
+  sí anda con la temporada actual, pero solo para una ventana corta de días alrededor de "hoy"
+  (~3 días — el mensaje de error trae el rango exacto). Cualquier diseño de sync sobre el plan
+  free tiene que iterar por fecha, no por equipo/temporada.
+- **El buscador de `GET /teams?search=` rechaza guiones y otros caracteres no alfanuméricos**
+  ("Al-Qadsiah" falla; hay que probar variantes sin guion o la transliteración que use la API,
+  en este caso "Qadisiyah"). `GET /players/squads?team=<id>` es más confiable que
+  `GET /players?search=` para ubicar a un jugador puntual: da el plantel actual completo y se
+  filtra por apellido ahí, sin choques de homónimos.
+- **El reloj de una Edge Function de Supabase corre en su propia infraestructura real** y puede
+  no coincidir con el de la máquina/sesión que la prueba (se vio ~1 día de diferencia). Un diseño
+  que itera "hoy + N días" no puede asumir cuál es exactamente "hoy" para el proveedor externo —
+  hay que seguir probando día por día y tolerar que alguno quede fuera de rango, en vez de calcular
+  la ventana exacta de antemano.
+- **`pg_net.http_post` tiene `timeout_milliseconds` default de 5000** — cualquier Edge Function
+  que tarde más (por rate-limit de una API externa, por ejemplo) necesita pasarlo explícito o
+  `pg_cron` corta la llamada a mitad de camino (`net._http_response.timed_out = true`).
+- **Índices únicos parciales y Vault, mismo patrón que ya se vio con `seed-competencias.mjs`**:
+  ni el `upsert` de PostgREST ni un `ON CONFLICT` simple sirven contra un índice `where ... is not
+  null` — hay que buscar y decidir insert/update a mano. Y un secreto que tiene que usarlo SQL
+  (acá, un job de `pg_cron`) no puede vivir en un archivo de migración versionado: va a
+  **Supabase Vault** por una conexión aparte con consulta parametrizada.
+- **Deno (Edge Functions) no comparte tipos con el `tsconfig` de Next.js**: hay que excluir
+  `supabase/functions/**` del `tsconfig.json` raíz o `next build` falla intentando tipar
+  `npm:` specifiers y globals de Deno (`Deno.serve`, `Deno.env`) que no existen en ese contexto.
+- **Compartir código entre Edge Functions**: mejor `supabase/functions/_shared/` (import relativo
+  simple, dentro del árbol que el CLI ya sabe empaquetar) que reusar `lib/` de la raíz del
+  proyecto — evita cualquier duda sobre si el bundler de Deno va a resolver una ruta que sale de
+  `supabase/functions/`. Funcionó al primer intento con `_shared/`.
 
 ## 11. Dudas abiertas (de `contexto.md` §12)
 
@@ -450,7 +557,11 @@ diseñador → Community Manager.
 - Fuente y frecuencia real de las correcciones manuales del Excel.
 - Falta el Excel `Datos de jugadores y clubes.xlsx` (referenciado en contexto.md §9); `.gitignore`
   lo excluye a propósito.
-- Con el plan free de API-Football (100 req/día) hay que ver si alcanza para el fixture diario +
-  ventana de días de partido; si no, apoyarse más en ESPN o subir de plan.
+- ~~Con el plan free de API-Football hay que ver si alcanza~~ → resuelto (parcialmente) 2026-09-05:
+  el límite real no es el de 100 req/día sino que `GET /fixtures?date=` solo deja ver ~3 días
+  alrededor de "hoy" (ver §4 y §10). `sync-partidos` ya lo tolera (salta el día que rechacen), pero
+  esto significa que "próximos partidos" en Fase 1, con este plan, en la práctica no va a poder
+  mostrar mucho más allá de esa ventana corta — para un horizonte de semanas hay que subir de plan
+  o apoyarse en ESPN como respaldo (todavía sin escribir).
 - ¿La preferencia de tema se persiste por usuario (`perfiles`) o solo en `localStorage` del dispositivo?
 - Versión de Next: se usó **14.2.x** (contexto.md pide "14+"). Migrar a 15 es opción, no urgencia.

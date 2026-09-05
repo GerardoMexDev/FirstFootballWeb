@@ -12,7 +12,10 @@
     "tipos:db": "node scripts/generar-tipos.mjs",
     "seed:usuarios": "node scripts/seed-usuarios.mjs",
     "seed:competencias": "node scripts/seed-competencias.mjs",
-    "consultar:ligas": "node scripts/consultar-ligas.mjs"
+    "consultar:ligas": "node scripts/consultar-ligas.mjs",
+    "consultar:clubes": "node scripts/consultar-clubes-jugadores.mjs",
+    "seed:roster": "node scripts/seed-clubes-jugadores.mjs",
+    "vault:cron": "node scripts/configurar-vault-cron.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.5.2",
