@@ -530,11 +530,15 @@ diseñador → Community Manager.
 - [ ] **Estadio sin nombre** (caso Brasil): agregar `clubes.estadio` + `clubes.ciudad`,
       enriquecer una vez desde `GET /teams` (`venue.name`), usar como fallback cuando
       `partidos.estadio` es NULL y nuestro club juega de local. Visitante → "Sin datos". — media
-- [ ] **Torneos adicionales en el calendario**: (a) cargar los que faltan — urgente
-      **Leagues Cup** (Toluca llegó a la final, no está en `competencias`); auditar con
-      `GET /leagues` por club. (b) `sync-partidos` que loguee "competencia desconocida X"
-      cuando el `league.id` no matchea (hoy queda `competencia_id` NULL en silencio). (c)
-      calendario/partidos agrupan/colorean por `competencia.tipo`. — media
+- [x] ~~(a) cargar los torneos que faltan~~ — hecho 2026-09-05 (Sesión 3): `competencias`
+      pasa a 19. Nuevas: Leagues Cup (772), CONCACAF Champions League (16), Saudi Super Cup
+      (826), Beker van België (147). Lista por país confirmada con Gerardo (ver cabecera de
+      `seed-competencias.mjs`). ⚠️ **Beker van België: API-Football no da ni fixture en el
+      plan free** → los partidos de copa de Genk no llegan solos (ESPN o manual).
+- [ ] **Torneos adicionales — lo que queda**: (b) `sync-partidos` que loguee "competencia
+      desconocida X" cuando el `league.id` no matchea ninguna de `competencias` (hoy queda
+      `competencia_id` NULL en silencio). (c) calendario/partidos agrupan/colorean por
+      `competencia.tipo`. — media
 - [ ] **Partido aplazado/cancelado sin fecha**: separar `aplazado`/`cancelado` en el enum
       `estado_partido` (hoy `PST`→`suspendido`, `CANC`→`sin_datos`), mapear bien en
       `_shared/estado-partido.ts`, y mostrarlo explícito en la UI ("Aplazado — sin nueva
@@ -547,11 +551,11 @@ diseñador → Community Manager.
       esquema: `partidos_jugadores.convocatoria_origen` + nota + fuente, o tabla
       `senales_convocatoria`. — media
 - [ ] Confirmar si Al-Qadsiah juega la AFC Champions League **Elite** o **Two** esta temporada
-      (se cargaron las dos, ver §4 Sesión 2 cont. — la que no aplique no va a tener partidos,
-      no hace falta decidir ahora, la sync lo resuelve solo). — baja
-- [ ] Copa de Bélgica: no se cargó en `competencias` — tiene cobertura en API-Football, pero
-      solo en el **plan Pro** (el free no la trae). Si algún día se sube de plan, cargarla con
-      `npm run seed:competencias` (agregar la fila) y listo. — baja
+      (se cargaron las dos — la que no aplique no va a tener partidos, la sync lo resuelve
+      solo). Gerardo confirmó que los clubes saudíes juegan la AFC, no la UEFA. — baja
+- [x] ~~Copa de Bélgica~~ — cargada 2026-09-05 (`Beker van België`, id 147, `cobertura=false`).
+      ⚠️ API-Football **no da ni el fixture** en el plan free: los partidos de copa de Genk no
+      llegan solos, harían falta ESPN o carga manual.
 - [ ] Liga de Expansión MX dejó de ser prioridad: Atlante (Martín Fernández) ascendió y juega
       Liga MX esta temporada — los dos clubes mexicanos de la cartera están en la misma
       competencia. Ver §9. — baja
@@ -809,8 +813,11 @@ diseñador → Community Manager.
 
 - ~~Contraseña de las 4 cuentas~~ → resuelto: `demo1234`.
 - ~~Plan API-Football~~ → etapa 1 usa **planes free** (API-Football free + ESPN + TheSportsDB).
-- Divisiones/copas exactas a seguir por país además de la liga principal. → parcialmente:
-  falta cargar **Leagues Cup** (§5). Auditar el resto con `GET /leagues` por club.
+- ~~Divisiones/copas exactas a seguir por país~~ → resuelto 2026-09-05 (Gerardo): México =
+  Liga MX + Leagues Cup + Concachampions; Chile = liga + Copa Chile + Libertadores +
+  Sudamericana; Bélgica = liga + copa belga; Arabia = Roshn Saudi League + King's Cup +
+  Supercopa + AFC (no UEFA); Brasil = Serie A + Copa do Brasil + Libertadores + Sudamericana.
+  Las 19 cargadas en `competencias`.
 - ~~Fuente y frecuencia real de las correcciones manuales del Excel~~ → Transfermarkt,
   **semanal** (Gerardo actualiza el .xlsx; corte movible en `base_actualizada_en`).
 - ~~Falta el Excel~~ → lo pasó Gerardo 2026-09-05 (`FirstUY/Datos de jugadores y clubes.xlsx`,

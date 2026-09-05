@@ -7,11 +7,20 @@
  * competencia (fixtures casi siempre vienen; lo que no siempre viene son las stats) — es lo
  * que dice el comentario de la columna: "la UI no debe prometer estadística".
  *
- * Quedaron afuera a propósito (ver avances.md §4 y §9):
- * - Copa MX / Copa por México: discontinuadas (última temporada 2019 y 2022).
- * - Copa de Bélgica ("Beker van België", id 147): SÍ tiene cobertura en API-Football, pero
- *   solo en el plan Pro — en el plan free (el que se usa hoy) da cero (ni fixtures). Si se
- *   sube de plan, agregarla acá y volver a correr el script.
+ * Torneos por seguir por país (confirmado con Gerardo, Sesión 3): México = Liga MX
+ * (Apertura/Clausura son la misma league, distinta temporada) + Leagues Cup + Concachampions;
+ * Chile = liga + Copa Chile + Libertadores + Sudamericana; Bélgica = liga + copa belga;
+ * Arabia = Roshn Saudi League + King's Cup + Supercopa (los clubes saudíes juegan la AFC, no
+ * la UEFA); Brasil = Serie A + Copa do Brasil + Libertadores + Sudamericana.
+ *
+ * Notas:
+ * - Copa de Bélgica ("Beker van België", id 147): se carga, pero API-Football NO da ni el
+ *   fixture en el plan free — los partidos de copa de Genk no van a aparecer solos (haría
+ *   falta ESPN o carga manual). `cobertura=false`.
+ * - Saudi Super Cup (id 826): fixtures sí, estadística por jugador no (`cobertura=false`).
+ * - UEFA Europa League (id 3): se deja cargada por si Genk clasifica a Europa, aunque no
+ *   estaba en la lista de Bélgica.
+ * - Copa MX / Copa por México: discontinuadas (última temporada 2019 y 2022) — no se cargan.
  * - Liga de Expansión MX (id 263) sigue cargada (Atlante podría volver a jugarla), pero dejó
  *   de ser prioridad: esta temporada Atlante ascendió y juega Liga MX.
  *
@@ -46,14 +55,20 @@ const COMPETENCIAS = [
   { nombre: 'Jupiler Pro League', pais: 'Bélgica', tipo: 'liga', codigo: 'JPL', id_externo: '144', cobertura: true },
 
   // --- Copas domésticas ---
-  // King's Cup: hay fixtures pero no estadística por jugador.
+  // King's Cup / Saudi Super Cup: hay fixtures pero no estadística por jugador.
   { nombre: "King's Cup", pais: 'Arabia Saudita', tipo: 'copa', codigo: 'KSA-C', id_externo: '504', cobertura: false },
+  { nombre: 'Saudi Super Cup', pais: 'Arabia Saudita', tipo: 'copa', codigo: 'KSA-SC', id_externo: '826', cobertura: false },
   { nombre: 'Copa do Brasil', pais: 'Brasil', tipo: 'copa', codigo: 'CDB', id_externo: '73', cobertura: true },
   { nombre: 'Copa Chile', pais: 'Chile', tipo: 'copa', codigo: 'CCH', id_externo: '267', cobertura: true },
+  // Beker van België: en el plan free NO llega ni el fixture — se carga igual (documentada,
+  // y funciona si se sube de plan), pero los partidos de copa de Genk no aparecen solos.
+  { nombre: 'Beker van België', pais: 'Bélgica', tipo: 'copa', codigo: 'BEK', id_externo: '147', cobertura: false },
 
   // --- Continentales (para cuando algún club clasifique) ---
   { nombre: 'CONMEBOL Libertadores', pais: 'Sudamérica', tipo: 'continental', codigo: 'LIB', id_externo: '13', cobertura: true },
   { nombre: 'CONMEBOL Sudamericana', pais: 'Sudamérica', tipo: 'continental', codigo: 'SUD', id_externo: '11', cobertura: true },
+  { nombre: 'Leagues Cup', pais: 'Norteamérica', tipo: 'continental', codigo: 'LCUP', id_externo: '772', cobertura: true },
+  { nombre: 'CONCACAF Champions League', pais: 'Norteamérica', tipo: 'continental', codigo: 'CONCA', id_externo: '16', cobertura: true },
   { nombre: 'UEFA Europa League', pais: 'Europa', tipo: 'continental', codigo: 'UEL', id_externo: '3', cobertura: true },
   // Dos niveles de AFC Champions League desde la reforma 2024 — se cargan los dos; el que
   // no aplique al club de turno simplemente no va a tener partidos.
