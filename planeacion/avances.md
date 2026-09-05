@@ -117,6 +117,28 @@ diseñador → Community Manager.
 
 ## 4. Hecho (por fecha, más reciente primero)
 
+### 2026-09-05 — Sesión 3 (cont.: vista `calendario` conectada a `agenda_anual`)
+
+- Gerardo reportó: el aniversario del debut de Kevin Amaro salía como nota pero NO marcado
+  en la grilla; faltaba la franja anual de meses y los partidos de la semana. Todo resuelto.
+- **`lib/calendario/eventos.ts`** (puro, 4 tests): `EventoCalendario` + `agruparPorDia`
+  (deduplica partidos por `refId` — la vista trae una fila por representado), `partidosPorMes`
+  (franja de densidad), `celdasDelMes` (42 celdas, semana lunes→domingo, igual que
+  `renderCal()` de la demo). Ojo: cumpleaños/aniversarios traen `cuando_utc` sintético
+  (mediodía), así que el orden "partidos primero" se decide por `fuente === 'partido'`.
+- **`repositorio-agenda.ts`** + `listarEventos(desde, hasta)` — trae todo lo fechado de
+  `agenda_anual` en un rango.
+- **`components/calendario/Calendario.tsx`** (Client): franja `.anio` + nav de mes + grilla
+  `.cal__grid` + leyenda, clases 1:1 con la demo. El server trae TODOS los eventos de la
+  ventana de proyección ([-1, +2] años) una sola vez; navegar meses/años no vuelve a pedir
+  nada. Los `.ev` son `<div>` (no clicables hasta la sesión de paneles).
+- `calendario/page.tsx`: reemplazado el esqueleto por `<Calendario>`. "Fechas señaladas"
+  sigue arriba.
+- **Verificado con browser-automation**: franja con Sep=5 marcado, grilla de Septiembre 2026
+  con los 5 partidos de la semana (Sep 4/5/6), Sep 5 = `celda--hoy`, **Sep 9 marca el
+  aniversario de Kevin Amaro** y Sep 18 el de Nahitan, cumpleaños de Nacho el 31/8. Nav
+  "mes siguiente" → Octubre 2026. 0 errores de consola.
+
 ### 2026-09-05 — Sesión 3 (cont.: fotos del hero cableadas)
 
 - Gerardo pasó 8 fotos (Unsplash). Procesadas con ffmpeg a WebP 1920×1080 (recorte 16:9
@@ -579,7 +601,9 @@ diseñador → Community Manager.
       que quedaba deshabilitado a propósito (Sesión 2); no es bug, es esta tarea pendiente. — media
 - [ ] Cablear buscador ⌘K y paneles laterales. — media
 - [ ] `scripts/importar-datos-manuales.ts` (Excel — falta el archivo en el repo). — media
-- [ ] Vista `calendario` (`DensidadAnual`, `GrillaMes`) contra `agenda_anual`. — baja
+- [x] ~~Vista `calendario` (`DensidadAnual`, `GrillaMes`) contra `agenda_anual`~~ — hecho
+      2026-09-05 (Sesión 3). Falta: los `.ev` clicables (paneles) y afinar la altura de las
+      celdas vacías (crecen con la fila más alta, igual que la demo).
 - [ ] Tests de zona horaria en fines de semana de cambio de hora. — media
 
 ## 6. Bugs conocidos / cosas a vigilar
