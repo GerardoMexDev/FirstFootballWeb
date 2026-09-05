@@ -1,8 +1,7 @@
 /**
  * Hero del partido del día: `renderHero()` de la demo. Candidatos = partidos entre hoy y
- * dentro de 3 días; gana el de mayor "peso" (internacional pesa más), y a igualdad, el más
- * cercano en el tiempo. La demo también priorizaba el que tuviera un hito encima — acá no,
- * hasta que exista el motor de hitos (sesión aparte).
+ * dentro de 3 días; gana el que tenga un hito encima (si hay), después el de mayor "peso"
+ * (internacional pesa más), y a igualdad, el más cercano en el tiempo — mismo orden que la demo.
  *
  * Sin foto de fondo real (la demo usaba una foto de stock genérica): no hay foto de portada
  * por partido en el esquema de Fase 1, y poner una imagen genérica sugeriría que es del
@@ -13,17 +12,25 @@ import { CaraJugador } from '@/components/comunes/CaraJugador';
 import { diasDesdeHoyUy, etiquetaDiaUy, horaCortaEnSede, horaCortaEnUruguay } from '@/lib/fechas/zonas';
 import { mostrar } from '@/lib/formato/valores';
 import { pesoPartido } from '@/lib/partidos/utilidades';
+import type { Hito } from '@/lib/motor-hitos/tipos';
 import type { PartidoProximo } from '@/lib/repositorios/tipos';
 
-export function HeroPartidoDelDia({ partidos }: { partidos: PartidoProximo[] }) {
+export function HeroPartidoDelDia({ partidos, hitos }: { partidos: PartidoProximo[]; hitos: Hito[] }) {
   const candidatos = partidos.filter(
     (p) => p.diaUy !== null && diasDesdeHoyUy(p.diaUy) >= 0 && diasDesdeHoyUy(p.diaUy) <= 3,
   );
   if (!candidatos.length) return null;
 
+  const partidosConHito = new Set(hitos.filter((h) => h.partido).map((h) => h.partido!.partidoId));
+
   const p = [...candidatos].sort(
-    (a, b) => pesoPartido(b) - pesoPartido(a) || (a.inicioUtc ?? '').localeCompare(b.inicioUtc ?? ''),
+    (a, b) =>
+      Number(partidosConHito.has(b.partidoId)) - Number(partidosConHito.has(a.partidoId)) ||
+      pesoPartido(b) - pesoPartido(a) ||
+      (a.inicioUtc ?? '').localeCompare(b.inicioUtc ?? ''),
   )[0];
+
+  const hitoDelPartido = hitos.find((h) => h.partido?.partidoId === p.partidoId) ?? null;
 
   const dias = diasDesdeHoyUy(p.diaUy!);
   const esHoy = dias === 0;
@@ -37,8 +44,8 @@ export function HeroPartidoDelDia({ partidos }: { partidos: PartidoProximo[] }) 
       <div className="hero__grad" />
       <div className="hero__top">
         <span className="hero__flag">
-          <Ico nombre="fuego" clase="ico ico--sm" />
-          Partido del día
+          <Ico nombre={hitoDelPartido ? 'medalla' : 'fuego'} clase="ico ico--sm" />
+          {hitoDelPartido ? 'Partido del día · con hito' : 'Partido del día'}
         </span>
         <div className="hero__cd">
           <b>{esHoy ? 'Hoy' : `${dias} día${dias > 1 ? 's' : ''}`}</b>
@@ -72,7 +79,10 @@ export function HeroPartidoDelDia({ partidos }: { partidos: PartidoProximo[] }) 
           <div className="caras__pila">
             <CaraJugador nombre={p.jugadorNombre} fotoUrl={p.jugadorFotoUrl} />
           </div>
-          <small>{p.jugadorApodo || p.jugadorNombre}</small>
+          <small>
+            {p.jugadorApodo || p.jugadorNombre}
+            {hitoDelPartido ? ` · ${hitoDelPartido.frase}` : ''}
+          </small>
         </div>
       </div>
     </div>

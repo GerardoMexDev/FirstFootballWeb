@@ -1,20 +1,15 @@
 /**
  * Tiras de KPI de la vista `partidos`: `renderKpis()` de la demo, sobre datos reales.
  *
- * La demo mostraba 5 tarjetas; acá van 4 — "Hitos por alcanzar" depende de `lib/motor-hitos`
- * (todavía sin conectar) y no se fabrica un cero en su lugar (contexto.md §10: cero
- * invenciones). Se agrega en la sesión del motor de hitos.
- *
- * "Jugadores con partido próximo" también difiere de la demo: la demo mostraba el tamaño
- * total del plantel (6, fijo). Acá solo se cuenta lo que sale de `proximos_partidos` — el
- * repositorio de jugadores todavía no está conectado, así que no hay forma de saber el
- * plantel completo desde esta vista sin fabricar el número.
+ * "Jugadores con partido próximo" difiere de la demo: la demo mostraba el tamaño total del
+ * plantel (6, fijo). Acá solo se cuenta lo que sale de `proximos_partidos` — el repositorio
+ * de jugadores completo (más allá de quién tiene partido) todavía no está conectado acá.
  */
 import { diasDesdeHoyUy } from '@/lib/fechas/zonas';
 import { esHoyUy } from '@/lib/partidos/utilidades';
 import type { PartidoProximo } from '@/lib/repositorios/tipos';
 
-export function TarjetasKpi({ partidos }: { partidos: PartidoProximo[] }) {
+export function TarjetasKpi({ partidos, cantidadHitos }: { partidos: PartidoProximo[]; cantidadHitos: number }) {
   const conFecha = partidos.filter((p) => p.diaUy !== null);
 
   const hoy = conFecha.filter(esHoyUy).length;
@@ -35,6 +30,10 @@ export function TarjetasKpi({ partidos }: { partidos: PartidoProximo[] }) {
       <div className="kpi">
         <b>{estaSemana}</b>
         <span>Esta semana</span>
+      </div>
+      <div className="kpi kpi--a">
+        <b>{cantidadHitos}</b>
+        <span>Hitos por alcanzar</span>
       </div>
       <div className="kpi">
         <b>{internacionales30}</b>

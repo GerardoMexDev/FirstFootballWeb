@@ -5,7 +5,6 @@
  *   "hora local" (regla de zonas horarias — ver arquitectura-fase1.html §3).
  * - Sin "· país" en la competencia: la vista `proximos_partidos` no expone el país de la
  *   competencia (no se le agregó esa columna); si hace falta, es un cambio de vista, no de acá.
- * - Sin el tag "Hito": depende del motor de hitos, todavía no conectado (sesión aparte).
  * - Todavía no abre el panel de detalle al hacer click (paneles, sesión aparte) — por eso no
  *   lleva `role="button"`/`tabIndex` como la demo: no se anuncia una interacción que no existe.
  */
@@ -17,7 +16,7 @@ import { mostrar } from '@/lib/formato/valores';
 import { esHoyUy, claseTarjeta } from '@/lib/partidos/utilidades';
 import type { PartidoProximo } from '@/lib/repositorios/tipos';
 
-export function TarjetaPartido({ partido: p }: { partido: PartidoProximo }) {
+export function TarjetaPartido({ partido: p, tieneHito = false }: { partido: PartidoProximo; tieneHito?: boolean }) {
   const hoy = esHoyUy(p);
   const tieneHorario = p.inicioUtc !== null;
   const tieneSede = tieneHorario && p.zonaHorariaEvento !== null;
@@ -82,6 +81,12 @@ export function TarjetaPartido({ partido: p }: { partido: PartidoProximo }) {
             {p.jugadorApodo || p.jugadorNombre}
             {p.conSeleccion ? ' · con la selección' : ''}
           </small>
+          {tieneHito && (
+            <span className="tag tag--hito">
+              <Ico nombre="medalla" clase="ico ico--sm" />
+              Hito
+            </span>
+          )}
         </div>
       </div>
 

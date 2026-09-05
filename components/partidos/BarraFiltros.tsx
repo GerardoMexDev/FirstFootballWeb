@@ -1,9 +1,6 @@
 /**
  * Chips de filtro de la vista `partidos`: `.barra`/`.chip` de la demo. Puramente controlado
  * (el estado del filtro vive en `SeccionPartidos`, el padre).
- *
- * "Con hito" queda deshabilitado: depende de `lib/motor-hitos` (escalas_hito), todavía sin
- * conectar — se habilita en esa sesión, no antes.
  */
 'use client';
 
@@ -34,8 +31,6 @@ export function BarraFiltros({
           className={filtro === f ? 'chip on' : 'chip'}
           data-f={f}
           onClick={() => onCambiar(f)}
-          disabled={f === 'hito'}
-          title={f === 'hito' ? 'Disponible cuando esté conectado el motor de hitos' : undefined}
         >
           {etiqueta}
         </button>

@@ -18,13 +18,15 @@ En Claude Code **no hay memoria entre sesiones**, así que este protocolo es obl
 3. Rutina de cierre Git: `git add . && git commit -m "Sesión N: ..." && git push`.
 4. La sesión no se cierra hasta que `git push` terminó OK.
 
-**Última actualización:** 2026-09-04/05 (Sesión 2, cont.: sync-partidos EN VIVO)
-**Estado general:** **la vista `partidos` ya muestra partidos reales de la agencia**, traídos
-de verdad por `sync-partidos` (Edge Function desplegada) + `pg_cron` diario. Roster real
-cargado (`clubes`/`jugadores`, 6+6, con IDs de API-Football). Verificado con capturas de
-pantalla: Toluca vs Puebla, Bragantino vs Bahia, Atlante vs Atlas, Genk vs Anderlecht,
-Colo-Colo vs Huachipato — todo real, hoy. Falta: `estadisticas_partido`/`convocatorias`
-(otra Edge Function), motor de hitos, Excel de fechas manuales, resto de vistas.
+**Última actualización:** 2026-09-05 (Sesión 2, cont.: motor de hitos — esqueleto listo)
+**Estado general:** vista `partidos` con partidos reales (`sync-partidos` + `pg_cron`, ver
+entrada anterior) **+ motor de hitos armado y probado**, esperando que Gerardo pase los
+números base de cada jugador (partidos/goles/asistencias de carrera y selección — no hay
+forma de reconstruir el historial completo desde la API). Mientras tanto no rompe nada: sin
+base cargada, "Se vienen los hitos" no aparece y el KPI da 0 (el conteo real, no un relleno).
+Probado con un valor de prueba: el hito, el resaltado, el KPI y el filtro "Con hito"
+funcionan — se restauró a NULL después. Pendiente de Gerardo también: lista de APIs
+alternativas a evaluar antes de considerar subir de plan en API-Football (ventana de ~3 días).
 
 ---
 
@@ -71,8 +73,12 @@ diseñador → Community Manager.
 | `app/(app)/partidos/page.tsx` | Vista `partidos` **conectada a datos reales**: hero, KPIs, filtros, lista agrupada por día | ✅ conectada S2 |
 | `app/(app)/{calendario,jugadores}/page.tsx` + `jugadores/[jugadorId]` | Vistas: esqueleto con clases de la demo + `EstadoSinDatos` | ✅ esqueleto |
 | `lib/repositorios/repositorio-partidos.ts` | `RepositorioPartidosSupabase`: lee `proximos_partidos`, filtra `estado != 'finalizado'`, mapea a `PartidoProximo` | ✅ creado S2 |
-| `lib/partidos/utilidades.ts` | `pesoPartido`, `claseTarjeta`, `filtrarPartidos`, `agruparPorDia` (reglas puras, sin JSX) | ✅ creado S2 |
-| `components/partidos/{HeroPartidoDelDia,TarjetasKpi,BarraFiltros,SeccionPartidos,ListaPartidos,TarjetaPartido}.tsx` | Vista `partidos` completa sobre datos reales | ✅ creados S2 |
+| `lib/partidos/utilidades.ts` | `pesoPartido`, `claseTarjeta`, `filtrarPartidos`, `agruparPorDia`, `agruparPorJugador` (reglas puras, sin JSX) | ✅ creado S2 |
+| `supabase/migrations/0003_motor_hitos.sql` | Columnas `jugadores.*_base` (manual) + vista `totales_jugador` (base + lo que sume la sync) | ✅ aplicada S2 |
+| `lib/motor-hitos/{tipos,index}.ts` | Cálculo puro de hitos (`calcularHitos`, `ordenarHitos`, `partidosConHito`) — mismo criterio que `ESCALAS`/`hitosDe()` de la demo | ✅ creado y probado S2 |
+| `lib/repositorios/repositorio-hitos.ts` | `RepositorioHitosSupabase`: trae `escalas_hito` + `totales_jugador` + jugadores activos | ✅ creado S2 |
+| `components/partidos/SeccionHitos.tsx` | "Se vienen los hitos" — no se renderiza si no hay ninguno (igual que la demo) | ✅ creado S2 |
+| `components/partidos/{HeroPartidoDelDia,TarjetasKpi,BarraFiltros,SeccionPartidos,ListaPartidos,TarjetaPartido}.tsx` | Vista `partidos` completa sobre datos reales, con el motor de hitos ya conectado (tag "Hito", desempate del hero, filtro "Con hito" habilitado) | ✅ creados/actualizados S2 |
 | `components/comunes/{Escudo,CaraJugador}.tsx` | Escudo de club / cara de jugador, con fallback a iniciales (hash de color igual a la demo) si no hay imagen o falla | ✅ creados S2 |
 | `app/(auth)/login/page.tsx` + `components/auth/FormularioLogin.tsx` | Marcado `.login` de la demo + form real (`signInWithPassword`, errores humanos, botón mostrar/ocultar contraseña) | ✅ cableado S2 |
 | `styles/app.css` | CSS de componentes que la demo no tenía (hoy: botón de ojo). Mismos tokens, no toca `demo.css` | ✅ creado S2 |
@@ -95,6 +101,40 @@ diseñador → Community Manager.
 | `lib/motor-hitos/`, `components/{calendario,jugadores,paneles}/*` | Lógica y componentes con datos | ⬜ |
 
 ## 4. Hecho (por fecha, más reciente primero)
+
+### 2026-09-05 — Sesión 2 (cont.: motor de hitos — esqueleto completo, esperando números base)
+- Gerardo decidió: **espera su lista de ~20 APIs candidatas** (algunas no cubren las ligas de
+  la cartera, pero puede haber alguna útil, ESPN como candidato natural) antes de considerar
+  subir de plan en API-Football por la ventana corta de fechas (ver entrada anterior). No se
+  toca nada de la sync hasta entonces.
+- **Migración `0003_motor_hitos.sql`**: 5 columnas nuevas en `jugadores`
+  (`carrera_partidos_base`, `carrera_goles_base`, `carrera_asistencias_base`,
+  `seleccion_partidos_base`, `seleccion_goles_base`, todas NULL-ables + `check >= 0`) y la
+  vista `totales_jugador` (base + lo que sume `estadisticas_partido`, agrupado por
+  `partidos_jugadores.con_seleccion` para separar carrera de selección). Con NULL en la base,
+  la suma da NULL sola — no hace falta lógica aparte para "sin datos".
+- **`lib/motor-hitos/{tipos,index}.ts`**: `calcularHitos()` reproduce `hitosDe()`/`ESCALAS` de
+  la demo — para cada jugador y cada escala activa, si hay base cargada calcula el próximo
+  número redondo (`Math.ceil((v+1)/paso)*paso`) y si falta poco (`<= aviso`) genera el hito;
+  para `pj`+`carrera` además intenta ubicarlo en un partido futuro concreto (el que está en la
+  posición `falta-1` de los próximos partidos de ese jugador, asumiendo que juega todos).
+  `ordenarHitos()` prioriza los que tienen partido conocido; `partidosConHito()` da el
+  `Set<partidoId>` que usan la tarjeta y el hero.
+- **`lib/repositorios/repositorio-hitos.ts`**: mismo fix de tipado que ya se vio con
+  `perfiles` (`.returns<T[]>()` — esta combinación de versiones infiere `never` si no).
+- **UI conectada**: `SeccionHitos` (nueva, no se renderiza si no hay hitos — igual que la
+  demo), KPI "Hitos por alcanzar" de vuelta (con el conteo real, no un relleno), tag "Hito"
+  en `TarjetaPartido`, el hero ahora desempata primero por hito y después por peso (como la
+  demo), y el chip "Con hito" de `BarraFiltros` ya filtra de verdad (antes estaba
+  deshabilitado).
+- **Sin `dangerouslySetInnerHTML`**: la demo arma el contexto del hito con HTML crudo
+  interpolando nombres de club — como esos nombres vienen de la API (dato externo), se
+  reescribió con JSX normal (checklist de seguridad: nada de HTML crudo con datos que no son
+  nuestros).
+- **Verificado con un valor de prueba** (no quedó cargado): `carrera_partidos_base = 247`
+  para Nahitan → la vista dio `carrera_partidos: 247` correcto → la UI mostró el hito
+  ("Partido 250", faltan 3, resaltado en acento porque es inminente), el KPI pasó a 1, y se
+  restauró a `NULL` al terminar. `npm run build` OK antes y después.
 
 ### 2026-09-04/05 — Sesión 2 (cont.: sync-partidos EN VIVO — Edge Function + roster real + cron)
 - **Roster real cargado** (`scripts/consultar-clubes-jugadores.mjs` + `scripts/seed-clubes-jugadores.mjs`):
@@ -346,8 +386,12 @@ diseñador → Community Manager.
       con su `cobertura`~~ — hecho 2026-09-04 (ver §4 Sesión 2 cont.: 15 competencias cargadas).
 - [x] ~~Conectar vista `partidos` a `proximos_partidos`~~ — hecho 2026-09-04 (ver §4 Sesión 2
       cont.). Sin datos reales todavía (BD vacía hasta que corra la sync o se importe el Excel).
-- [ ] `lib/motor-hitos` leyendo `escalas_hito`; sección "se vienen los hitos" + badges + KPI +
-      tag en la tarjeta + tie-break del hero (todo quedó deliberadamente afuera en la Sesión 2). — media
+- [x] ~~`lib/motor-hitos` leyendo `escalas_hito`; sección "se vienen los hitos" + badges + KPI +
+      tag en la tarjeta + tie-break del hero~~ — hecho 2026-09-05 (ver §4). **Esqueleto completo,
+      pero no muestra nada hasta que Gerardo pase los números base** (partidos/goles/asistencias
+      de carrera y selección, a HOY, de cada uno de los 6 — no se puede reconstruir desde la
+      API). Cuando los tenga: cargarlos en `jugadores.*_base` (columna por columna, o pedirle a
+      Claude que arme un script puntual con esos 6×5 números) y listo, el resto ya funciona. — alta
 - [ ] Wirear el click de `TarjetaPartido`/`HeroPartidoDelDia` para abrir el panel de detalle
       (hoy no son clicables — paneles, junto con el resto del panel lateral). — media
 - [x] ~~`supabase/functions/sync-partidos`; activar `pg_cron`~~ — hecho 2026-09-04/05 (ver §4):
@@ -359,6 +403,10 @@ diseñador → Community Manager.
       fuente."). Por ahora solo queda en la bitácora de la tabla. — media
 - [ ] Revisar cada tanto si el plan free amplía la ventana de fechas de `GET /fixtures?date=`
       (hoy ~3 días) — afecta cuánto por delante puede ver "próximos partidos". — baja
+- [ ] **Esperando a Gerardo**: lista de ~20 APIs de fútbol gratis que está evaluando como
+      alternativa/complemento a API-Football (algunas no cubren las ligas de la cartera; ESPN
+      ya es candidato natural, ya documentado como respaldo). Cuando la pase, evaluar cuáles
+      cubren las 6 ligas + copas + continentales antes de registrarse a ninguna. — media
 - [ ] Confirmar si Al-Qadsiah juega la AFC Champions League **Elite** o **Two** esta temporada
       (se cargaron las dos, ver §4 Sesión 2 cont. — la que no aplique no va a tener partidos,
       no hace falta decidir ahora, la sync lo resuelve solo). — baja
@@ -548,6 +596,16 @@ diseñador → Community Manager.
   simple, dentro del árbol que el CLI ya sabe empaquetar) que reusar `lib/` de la raíz del
   proyecto — evita cualquier duda sobre si el bundler de Deno va a resolver una ruta que sale de
   `supabase/functions/`. Funcionó al primer intento con `_shared/`.
+- **NULL se propaga solo en una vista agregada de Postgres**: `totales_jugador` suma la base
+  manual (que puede ser NULL) con lo que ya sincronizó — `null + count(...)` da `null`, sin
+  escribir un `case when` para cada columna. Mismo principio de "cero invenciones" que ya
+  aplicaba `mostrar()` en el frontend, pero resuelto en la base: si no se cargó el dato, ni
+  siquiera hay que acordarse de chequearlo del lado de la app.
+- **`dangerouslySetInnerHTML` con datos que vienen de una API es justo lo que el checklist de
+  seguridad prohíbe** (contexto.md/arquitectura-fase1.html: nada de HTML crudo con datos que no
+  son nuestros) — la demo arma el contexto de un hito interpolando nombre de club dentro de un
+  template string con `<b>`/`<br>`; al pasar a React eso se resuelve con JSX normal (un
+  componente que devuelve fragmentos), no copiando el patrón de la demo literal.
 
 ## 11. Dudas abiertas (de `contexto.md` §12)
 

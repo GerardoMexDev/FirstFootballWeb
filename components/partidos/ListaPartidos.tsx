@@ -9,7 +9,13 @@ import { diasDesdeHoyUy, etiquetaDiaUy } from '@/lib/fechas/zonas';
 import { agruparPorDia } from '@/lib/partidos/utilidades';
 import type { PartidoProximo } from '@/lib/repositorios/tipos';
 
-export function ListaPartidos({ partidos }: { partidos: PartidoProximo[] }) {
+export function ListaPartidos({
+  partidos,
+  partidosConHito = new Set<string>(),
+}: {
+  partidos: PartidoProximo[];
+  partidosConHito?: Set<string>;
+}) {
   if (!partidos.length) {
     return (
       <EstadoSinDatos style={{ justifyContent: 'center', padding: 56 }}>
@@ -32,7 +38,11 @@ export function ListaPartidos({ partidos }: { partidos: PartidoProximo[] }) {
             </div>
             <div className="lista__g">
               {partidosDelDia.map((p) => (
-                <TarjetaPartido key={`${p.partidoId}-${p.jugadorId}`} partido={p} />
+                <TarjetaPartido
+                  key={`${p.partidoId}-${p.jugadorId}`}
+                  partido={p}
+                  tieneHito={partidosConHito.has(p.partidoId)}
+                />
               ))}
             </div>
           </section>

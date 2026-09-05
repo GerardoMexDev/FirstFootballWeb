@@ -200,6 +200,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "convocatorias_jugador_id_fkey"
+            columns: ["jugador_id"]
+            isOneToOne: false
+            referencedRelation: "totales_jugador"
+            referencedColumns: ["jugador_id"]
+          },
+          {
             foreignKeyName: "convocatorias_partido_id_fkey"
             columns: ["partido_id"]
             isOneToOne: false
@@ -315,6 +322,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "estadisticas_partido_jugador_id_fkey"
+            columns: ["jugador_id"]
+            isOneToOne: false
+            referencedRelation: "totales_jugador"
+            referencedColumns: ["jugador_id"]
+          },
+          {
             foreignKeyName: "estadisticas_partido_partido_id_fkey"
             columns: ["partido_id"]
             isOneToOne: false
@@ -424,6 +438,13 @@ export type Database = {
             referencedRelation: "jugadores"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "hitos_jugador_id_fkey"
+            columns: ["jugador_id"]
+            isOneToOne: false
+            referencedRelation: "totales_jugador"
+            referencedColumns: ["jugador_id"]
+          },
         ]
       }
       jugadores: {
@@ -432,6 +453,10 @@ export type Database = {
           actualizado_en: string
           apellido: string | null
           apodo: string | null
+          base_actualizada_en: string | null
+          carrera_asistencias_base: number | null
+          carrera_goles_base: number | null
+          carrera_partidos_base: number | null
           club_actual_id: string | null
           creado_en: string
           debut: string | null
@@ -450,6 +475,8 @@ export type Database = {
           proveedor_externo: string | null
           representante_id: string | null
           seleccion: string | null
+          seleccion_goles_base: number | null
+          seleccion_partidos_base: number | null
           sincronizado_en: string | null
         }
         Insert: {
@@ -457,6 +484,10 @@ export type Database = {
           actualizado_en?: string
           apellido?: string | null
           apodo?: string | null
+          base_actualizada_en?: string | null
+          carrera_asistencias_base?: number | null
+          carrera_goles_base?: number | null
+          carrera_partidos_base?: number | null
           club_actual_id?: string | null
           creado_en?: string
           debut?: string | null
@@ -475,6 +506,8 @@ export type Database = {
           proveedor_externo?: string | null
           representante_id?: string | null
           seleccion?: string | null
+          seleccion_goles_base?: number | null
+          seleccion_partidos_base?: number | null
           sincronizado_en?: string | null
         }
         Update: {
@@ -482,6 +515,10 @@ export type Database = {
           actualizado_en?: string
           apellido?: string | null
           apodo?: string | null
+          base_actualizada_en?: string | null
+          carrera_asistencias_base?: number | null
+          carrera_goles_base?: number | null
+          carrera_partidos_base?: number | null
           club_actual_id?: string | null
           creado_en?: string
           debut?: string | null
@@ -500,6 +537,8 @@ export type Database = {
           proveedor_externo?: string | null
           representante_id?: string | null
           seleccion?: string | null
+          seleccion_goles_base?: number | null
+          seleccion_partidos_base?: number | null
           sincronizado_en?: string | null
         }
         Relationships: [
@@ -696,6 +735,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "partidos_jugadores_jugador_id_fkey"
+            columns: ["jugador_id"]
+            isOneToOne: false
+            referencedRelation: "totales_jugador"
+            referencedColumns: ["jugador_id"]
+          },
+          {
             foreignKeyName: "partidos_jugadores_partido_id_fkey"
             columns: ["partido_id"]
             isOneToOne: false
@@ -793,6 +839,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "jugadores"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "piezas_jugador_id_fkey"
+            columns: ["jugador_id"]
+            isOneToOne: false
+            referencedRelation: "totales_jugador"
+            referencedColumns: ["jugador_id"]
           },
         ]
       }
@@ -1031,7 +1084,25 @@ export type Database = {
             referencedRelation: "jugadores"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "partidos_jugadores_jugador_id_fkey"
+            columns: ["jugador_id"]
+            isOneToOne: false
+            referencedRelation: "totales_jugador"
+            referencedColumns: ["jugador_id"]
+          },
         ]
+      }
+      totales_jugador: {
+        Row: {
+          carrera_asistencias: number | null
+          carrera_goles: number | null
+          carrera_partidos: number | null
+          jugador_id: string | null
+          seleccion_goles: number | null
+          seleccion_partidos: number | null
+        }
+        Relationships: []
       }
     }
     Functions: {
