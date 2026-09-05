@@ -1,33 +1,31 @@
 # Fotos de fondo del hero (vista partidos)
 
-Acá van las imágenes de fondo del bloque grande de "Próximos partidos".
-Todavía no están conectadas al código — se cablean cuando lleguen las fotos.
+**Estado: 8 fotos cargadas** (Sesión 3). Falta cablearlas al componente del hero
+(elegir foto por `competencias.tipo`) — eso se hace en una sesión siguiente.
 
-## Qué se necesita
+## Archivos
 
-- **8 imágenes** (con 4 se puede arrancar: una por tipo de competencia).
-- **Horizontales, mínimo 1600×900 px.**
-- JPG o PNG (se optimizan a WebP al conectarlas).
-- **Sin estadio, escudo, sponsor ni jugador reconocible** (si no, queda raro:
-  un Camp Nou de fondo en un partido de Liga MX).
-- Un poco oscuras / con poco contraste en la mitad superior, para que el
-  texto blanco encima se lea.
+| Archivo | Tipo de competencia | Foto (Unsplash) |
+|---|---|---|
+| `liga-1.webp` | liga | Fiorentina, saque de arco, de día |
+| `liga-2.webp` | liga | Buriram, cielo dramático al atardecer |
+| `copa-1.webp` | copa | Emirates, techo contra cielo gris |
+| `copa-2.webp` | copa | Bernabéu de noche, DTs en la línea |
+| `continental-1.webp` | continental | Camp Nou de noche, vista amplia |
+| `continental-2.webp` | continental | Bernabéu de noche, muro de hinchada |
+| `seleccion-1.webp` | seleccion | Atardecer rosado, luces de celular |
+| `seleccion-2.webp` | seleccion | Bernabéu vacío, de día (previa) |
 
-## Nombres (si se puede)
+Todas 1920×1080 WebP (~110–530 KB), recorte anclado arriba (saca cabezas de
+primer plano), leve bajada de exposición para que el texto blanco se lea.
 
-Dos por tipo de competencia:
+## Reprocesar una foto
 
-```
-liga-1.jpg          liga-2.jpg
-copa-1.jpg          copa-2.jpg
-continental-1.jpg   continental-2.jpg
-seleccion-1.jpg     seleccion-2.jpg
-```
-
-Si es más fácil, mandalas con cualquier nombre y se renombran acá.
+Los originales `.jpg` no se guardan en el repo. Para recambiar una:
+poné el nuevo original acá y avisá con qué recorte/tipo, se reprocesa y se
+borra el original.
 
 ## Cómo se van a usar
 
-El hero elige una imagen según el tipo de competencia del partido
-(`competencias.tipo`: liga / copa / continental / seleccion), de forma
-estable por partido. Si no hay foto para un tipo, cae a un degradado.
+El hero elige una imagen según `competencias.tipo` (liga / copa / continental /
+seleccion), estable por partido. Sin foto para un tipo → degradado.
