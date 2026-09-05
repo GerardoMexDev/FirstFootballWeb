@@ -195,7 +195,9 @@ async function sincronizarFixture(
   if (errPartido) throw errPartido;
 
   // Puente partidos_jugadores: un representado por cada lado que sea "nuestro" (puede haber
-  // 2, ej. Toluca vs Atlante). `convocado` queda NULL: el fixture no dice quién fue citado.
+  // 2, ej. Toluca vs Atlante). `ignoreDuplicates`: si la fila ya existe NO se pisa —
+  // `sync-estadisticas` escribe `convocado` ahí y este job corre todos los días; sin esto
+  // le borraría el dato en cada corrida.
   const cartera = [
     ...(carteraPorExterno.get(homeExterno)?.jugadorIds ?? []),
     ...(carteraPorExterno.get(awayExterno)?.jugadorIds ?? []),
@@ -205,7 +207,7 @@ async function sincronizarFixture(
       .from('partidos_jugadores')
       .upsert(
         { partido_id: partido.id, jugador_id: jugadorId, convocado: null, con_seleccion: false },
-        { onConflict: 'partido_id,jugador_id' },
+        { onConflict: 'partido_id,jugador_id', ignoreDuplicates: true },
       );
     if (errPuente) throw errPuente;
   }

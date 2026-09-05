@@ -129,3 +129,32 @@ export async function obtenerUltimoTraspaso(apiKey: string, jugadorIdExterno: st
     hasta: aClubExterno(ultimo.teams?.in),
   };
 }
+
+/** Estado + marcador de un fixture concreto por su id — `GET /fixtures?id=` (anda en free). */
+export interface EstadoFixture {
+  estadoCorto: string; // FT, NS, PST, CANC, 1H, ...
+  marcadorLocal: number | null;
+  marcadorVisitante: number | null;
+}
+
+/** Re-consulta un fixture puntual. `null` si la API no lo devuelve. */
+export async function obtenerFixturePorId(apiKey: string, fixtureId: string): Promise<EstadoFixture | null> {
+  const response = await getResponse(apiKey, `/fixtures?id=${fixtureId}`);
+  // deno-lint-ignore no-explicit-any
+  const fx = response[0] as any;
+  if (!fx?.fixture) return null;
+  return {
+    estadoCorto: String(fx.fixture.status?.short ?? ''),
+    marcadorLocal: fx.goals?.home ?? null,
+    marcadorVisitante: fx.goals?.away ?? null,
+  };
+}
+
+/**
+ * Planilla de estadísticas por jugador de un fixture — `GET /fixtures/players?fixture=`
+ * (anda en free, verificado). Devuelve el array `response` crudo (una entrada por equipo);
+ * `extraerLineaJugador` de `_shared/estadisticas.ts` saca de ahí la línea de un jugador.
+ */
+export async function obtenerJugadoresDeFixture(apiKey: string, fixtureId: string): Promise<unknown[]> {
+  return await getResponse(apiKey, `/fixtures/players?fixture=${fixtureId}`);
+}

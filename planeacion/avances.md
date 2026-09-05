@@ -18,7 +18,7 @@ En Claude Code **no hay memoria entre sesiones**, así que este protocolo es obl
 3. Rutina de cierre Git: `git add . && git commit -m "Sesión N: ..." && git push`.
 4. La sesión no se cierra hasta que `git push` terminó OK.
 
-**Última actualización:** 2026-09-05 (Sesión 3: base de hitos cargada + "Fechas señaladas" + cambio de club automático)
+**Última actualización:** 2026-09-05 (Sesión 3: base de hitos + "Fechas señaladas" + cambio de club automático + `sync-estadisticas`)
 **Estado general:** vista `partidos` con partidos reales (`sync-partidos` + `pg_cron`) +
 **motor de hitos con la base real cargada** (números de carrera/selección de los 6, corte
 2026-08-29 — de Transfermarkt vía Excel). Hoy da 0 hitos porque nadie está en ventana de
@@ -78,6 +78,9 @@ diseñador → Community Manager.
 | `supabase/migrations/0003_motor_hitos.sql` | Columnas `jugadores.*_base` (manual) + vista `totales_jugador` (base + lo que sume la sync) | ✅ aplicada S2 |
 | `supabase/migrations/0004_debut_seleccion_agenda.sql` | `jugadores.debut_seleccion` + `agenda_anual` con bloque `aniversario_seleccion` | ✅ aplicada S3 |
 | `supabase/migrations/0005_cron_sync_roster.sql` | `recurso_sync` += `roster` + `pg_cron` semanal para `sync-roster` | ✅ aplicada S3 |
+| `supabase/migrations/0006_cron_sync_estadisticas.sql` | `pg_cron` diario 05:00 UTC para `sync-estadisticas` | ✅ aplicada S3 |
+| `supabase/functions/_shared/estadisticas.ts` (+ `.test.ts`) | Extracción pura de la línea de un jugador de `/fixtures/players` (7 tests) | ✅ creado S3 |
+| `supabase/functions/sync-estadisticas/index.ts` | Edge Function: stats por partido → `estadisticas_partido` + `convocado`. **Desplegada + cron** | ✅ S3 |
 | `scripts/seed-base-hitos.mjs` | Carga `jugadores.*_base` + `debut_seleccion` del Excel (corte 2026-08-29). `npm run seed:base-hitos` | ✅ creado y corrido S3 |
 | `scripts/seed-datos-manuales.mjs` | Carga 6 cumpleaños + 6 fundaciones del Excel (interino del importador del .xlsx). `npm run seed:datos-manuales` | ✅ creado y corrido S3 |
 | `scripts/consultar-traspasos.mjs` | Spike de solo lectura: `/transfers` + `/players/squads` + `/players/profiles` en el plan free | ✅ creado S3 |
@@ -113,6 +116,33 @@ diseñador → Community Manager.
 | `components/{calendario,jugadores,paneles}/*` | Grilla mensual del calendario, fichas de jugador, paneles laterales — con datos | ⬜ |
 
 ## 4. Hecho (por fecha, más reciente primero)
+
+### 2026-09-05 — Sesión 3 (cont.: `sync-estadisticas` — stats por partido automáticas)
+
+- **Spike**: `GET /fixtures/players?fixture=` y `GET /fixtures?id=` **funcionan en el plan
+  free** (verificado con un fixture finalizado real). Con eso las stats semana a semana se
+  automatizan **sin pagar** — el Excel semanal deja de hacer falta (solo un refresco raro de
+  la base histórica).
+- **`_shared/estadisticas.ts`** — `extraerLineaJugador(respuesta, idExterno)` puro, **7 tests**.
+  Convención de NULL de API-Football en ese endpoint: si el jugador **tiene línea**, `null` en
+  goles/asistencias/tarjetas = **0** (jugó y no sumó); `minutos`/`valoracion` en `null` sí son
+  "sin dato". Suplente no usado (minutos 0/null) → se marca `convocado` pero **no** se crea
+  fila de estadística (si no, contaría un partido no jugado en `totales_jugador`).
+- **`sync-estadisticas/index.ts`** (Edge Function + cron diario 05:00 UTC, migración `0006`):
+  candidatos = `partidos_jugadores.convocado IS NULL` con el partido ya empezado y dentro de
+  15 días; hasta 8 por corrida. Por candidato: `/fixtures?id=` (corrige `partidos.estado` +
+  marcador si `sync-partidos` ya no lo veía) y, si terminó, `/fixtures/players` → upsert en
+  `estadisticas_partido` + `partidos_jugadores.convocado` (true si figuró, false si no).
+  Alimenta `totales_jugador` → **el motor de hitos se actualiza solo**.
+- **Alcance Fase 1**: solo suma a **carrera** (fixtures de club, `con_seleccion=false`). Las
+  stats de selección siguen de la base hasta que haya un sync de partidos de selección.
+- **`sync-partidos` ajustado**: el upsert de `partidos_jugadores` pasa a `ignoreDuplicates`
+  para no pisar `convocado` en cada corrida diaria (lo escribe `sync-estadisticas`).
+- **Verificado end-to-end** (deploy real + curl): con un fixture finalizado real (1519477) y
+  Nacho Sosa prestando su `id_externo` a un jugador que jugó ahí → `estadisticas_partido`
+  cargada (34', 1 gol, rating 8.2), `partido.estado` `programado`→`finalizado` con marcador
+  1:1, `convocado`→true, y **`totales_jugador` de Nacho pj 152→153 / g 4→5** (base + lo
+  sincronizado). 2ª corrida no duplica. Todo restaurado (id_externo, partido test borrado).
 
 ### 2026-09-05 — Sesión 3 (base de hitos + "Fechas señaladas" + cambio de club automático)
 
@@ -462,15 +492,19 @@ diseñador → Community Manager.
       `seed-base-hitos.mjs` (corte 2026-08-29). Da 0 hitos hoy (nadie en ventana). Se
       refresca con el Excel del 5-sep (volver a correr el script con los números nuevos y
       subir `base_actualizada_en`) y, hacia adelante, con `sync-estadisticas`.
-- [ ] **Refrescar la base con el Excel del 2026-09-05** (Gerardo lo actualiza semanalmente):
-      editar los números en `scripts/seed-base-hitos.mjs`, subir `CORTE`, correr. — alta
+- [ ] **Refrescar la base con el Excel** — ahora **baja prioridad**: con `sync-estadisticas`
+      corriendo, los partidos de club se suman solos. La base solo se re-carga de vez en
+      cuando para reconciliar (editar `scripts/seed-base-hitos.mjs`, subir `CORTE`, correr).
 - [ ] Wirear el click de `TarjetaPartido`/`HeroPartidoDelDia` para abrir el panel de detalle
       (hoy no son clicables — paneles, junto con el resto del panel lateral). — media
 - [x] ~~`supabase/functions/sync-partidos`; activar `pg_cron`~~ — hecho 2026-09-04/05 (ver §4):
       desplegada, corriendo con datos reales, cron diario probado de punta a punta.
-- [ ] `sync-estadisticas` (minutos/goles/asistencias por partido) — mismo patrón que
-      `sync-partidos`. Solo debe sumar partidos con fecha > `jugadores.base_actualizada_en`
-      (hoy 2026-08-29) para no doble-contar la base del Excel. — alta
+- [x] ~~`sync-estadisticas`~~ — hecho 2026-09-05 (ver §4). Cron diario, plan free, verificado
+      end-to-end. Ojo con el doble-conteo: hoy suma **todo partido en la ventana de 15 días**,
+      no filtra por `base_actualizada_en`. Como la base es del 2026-08-29 y los partidos que
+      procesa son de esta semana, no hay solape real — pero si alguna vez se re-carga la base
+      con un corte más nuevo, hay que limpiar `estadisticas_partido` anteriores a ese corte o
+      agregar el filtro. — vigilar
 - [ ] `sync-agenda` — ya NO hace falta para cumpleaños/fundaciones/aniversario-selección
       (esos son manuales, cargados, y `agenda_anual` los proyecta). Quedaría solo para hitos
       derivados que no cubra ni el motor de hitos ni `sync-roster`. — baja
@@ -540,6 +574,12 @@ diseñador → Community Manager.
 - **Migraciones `0004`/`0005` aplicadas directo con `scripts/aplicar-migracion.mjs`** (como
   `0001`-`0003`), no con el CLI de Supabase — mismo apunte de abajo si algún día se adopta
   `supabase db push`.
+- **`partidos_jugadores` no tiene columna `id`** — la PK es compuesta `(partido_id, jugador_id)`.
+  Cualquier `.update()` sobre esa tabla se filtra por las dos columnas, no por un `id`.
+- **`estadisticas_partido` hoy no filtra por `base_actualizada_en`**: procesa todo partido en
+  la ventana de 15 días. No hay solape hoy (la base es del 28-ago y los partidos son de esta
+  semana), pero si se re-carga la base con un corte más nuevo, `seed-base-hitos.mjs` tendría
+  que borrar las filas de `estadisticas_partido` anteriores al nuevo corte.
 - **`sync-roster` NO reasigna `partidos_jugadores` viejos** cuando un jugador cambia de club:
   los partidos que ya estaban puenteados quedan como estaban (correcto — jugó ese partido
   con el club anterior). Solo los fixtures futuros salen con el club nuevo (vía la vista).
@@ -755,6 +795,15 @@ diseñador → Community Manager.
   `new Date()`" prohibida** (esa regla es para convertir instantes entre zonas). Anclás las
   dos a medianoche UTC y restás — exacto, sin DST en juego. `lib/agenda/notas-proximas.ts` y
   `_shared/roster.ts` lo hacen con un comentario que lo aclara.
+- **`/fixtures/players?fixture=` y `/fixtures?id=` funcionan en el plan free** — por eso
+  `sync-estadisticas` puede correr sin pagar. `/fixtures?id=` además sirve para re-chequear
+  el estado de un fixture que ya se salió de la ventana corta de `/fixtures?date=`.
+- **API-Football, en `/fixtures/players`, codifica "0" como `null`** en goles/asistencias/
+  tarjetas: si el jugador tiene línea de stats, ese `null` es un 0 real (no "sin dato"). Pero
+  `minutes`/`rating` en `null` sí son ausencia. `_shared/estadisticas.ts` distingue los dos.
+- **Un error de PostgREST no es `instanceof Error`** — es un objeto plano `{message, code, …}`.
+  En un `catch`, `String(e)` da `"[object Object]"`; hay que `JSON.stringify(e)` (y
+  `console.error(e)` para que quede en los logs de la función).
 
 ## 11. Dudas abiertas (de `contexto.md` §12)
 
