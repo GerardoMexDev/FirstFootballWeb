@@ -2,10 +2,10 @@
  * Barra superior de la app. Emite el marcado `.top` de la demo:
  * marca + nav + acciones (buscador ⌘K, cambio de tema, menú de usuario).
  *
- * ANDAMIAJE: la marca y la nav ya funcionan. El buscador y el toggle de tema se cablean
- * en sesiones siguientes. El menú de usuario (sesión de auth) ya muestra el perfil real
- * y cierra sesión; "Mi perfil" / "Cambiar contraseña" / "Notificaciones" abren paneles
- * que se cablean en la sesión de paneles (por eso siguen deshabilitados).
+ * La marca, la nav y el buscador ⌘K ya funcionan. El toggle de tema se cablea en una sesión
+ * siguiente. El menú de usuario muestra el perfil real y cierra sesión; "Mi perfil" /
+ * "Cambiar contraseña" / "Notificaciones" abren el panel de perfil (sesión aparte, por eso
+ * siguen deshabilitados).
  */
 'use client';
 
@@ -13,6 +13,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Nav } from '@/components/layout/Nav';
 import { Ico } from '@/components/comunes/Ico';
+import { Buscador } from '@/components/buscador/Buscador';
 import { crearClienteNavegador } from '@/lib/supabase/cliente-navegador';
 
 export interface PerfilBarra {
@@ -73,15 +74,7 @@ export function BarraSuperior({ perfil }: { perfil: PerfilBarra }) {
         <Nav />
 
         <div className="top__acc">
-          {/* TODO(sesión buscador): abrir modal .busca con ⌘K / click */}
-          <button className="buscabtn" id="abrir-busca" aria-label="Buscar" disabled>
-            <svg className="ico" viewBox="0 0 24 24">
-              <circle cx="11" cy="11" r="7" />
-              <path d="m20 20-3.6-3.6" />
-            </svg>
-            <span>Buscar</span>
-            <kbd>⌘K</kbd>
-          </button>
+          <Buscador />
 
           {/* TODO(sesión tema): alternar data-theme en <html> y persistir preferencia */}
           <button className="icobtn" id="tema" aria-label="Cambiar tema" disabled>

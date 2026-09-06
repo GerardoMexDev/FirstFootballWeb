@@ -18,16 +18,15 @@ En Claude Code **no hay memoria entre sesiones**, así que este protocolo es obl
 3. Rutina de cierre Git: `git add . && git commit -m "Sesión N: ..." && git push`.
 4. La sesión no se cierra hasta que `git push` terminó OK.
 
-**Última actualización:** 2026-09-06 (Sesión 4: vista `jugadores` + ficha + **panel lateral**)
+**Última actualización:** 2026-09-06 (Sesión 4: `jugadores` + ficha + panel lateral + **buscador ⌘K**)
 **Estado general:** 3 vistas conectadas a datos reales (`partidos`, `calendario`, `jugadores`)
-+ **panel lateral de detalle** (partido y jugador), que se abre desde la grilla, las tarjetas
-de partido, el hero y el calendario. El panel vive en la URL (`?panel=jugador|partido&id=…`):
-lo abre cualquier vista, el "atrás" del navegador / Escape / clic en el velo lo cierran, y
++ **panel lateral de detalle** (partido y jugador, abierto desde grilla/tarjetas/hero/calendario,
+estado en la URL `?panel=…&id=…`) + **buscador global ⌘K** (`.busca` de la demo: precarga
+plantel + próximos partidos al abrir, filtra en el cliente, un resultado abre el panel).
 `/jugadores/[jugadorId]` sigue existiendo como enlace directo. Migraciones hasta `0007`.
-Motor de hitos sigue dando 0 hoy. **Falta ~12%:** panel de perfil ("Mi cuenta" + forms de
-Supabase); buscador ⌘K; toggle de tema; deploy a Vercel + QA. `debut` / `fichaje` /
-`instagram` de los 6 cargados. Pendiente de Gerardo: fotos definitivas de jugadores (las
-manda la agencia).
+Motor de hitos sigue dando 0 hoy. **Falta ~8%:** panel de perfil ("Mi cuenta" + forms de
+Supabase); toggle de tema; deploy a Vercel + QA. `debut` / `fichaje` / `instagram` de los 6
+cargados. Pendiente de Gerardo: fotos definitivas de jugadores (las manda la agencia).
 
 ---
 
@@ -83,6 +82,8 @@ diseñador → Community Manager.
 | `lib/paneles/cargar-detalle-partido.ts` · `lib/jugadores/cargar-ficha.ts` | Bundles que comparten las rutas SSR y los endpoints `/api/paneles/*` | ✅ creados S4 |
 | `components/paneles/{PanelLateral,PanelPartido,PanelJugador}.tsx` | Panel lateral (shell + foco + fetch) + cuerpos de partido/jugador | ✅ creados S4 |
 | `app/api/paneles/{jugador,partido}/route.ts` | Endpoints JSON del panel (cliente SSR → RLS), 404 si no existe | ✅ creados S4 |
+| `lib/buscador/indexar.ts` (+ `.test.ts`) | `buscar` — filtro sin acentos sobre plantel + partidos, puro, 8 tests | ✅ creado S4 |
+| `components/buscador/Buscador.tsx` · `app/api/buscador/route.ts` | Modal `.busca` ⌘K (botón + modal) · endpoint de precarga | ✅ creados S4 |
 | `scripts/seed-fotos-jugadores.mjs` | Guarda `/jugadores/<slug>.webp` en `jugadores.foto_url`. `npm run seed:fotos` | ✅ creado y corrido S4 |
 | `public/jugadores/*.webp` | 6 fotos procesadas (600×800). Originales fuera del repo (`.gitignore`) | ✅ S4 |
 | `lib/repositorios/repositorio-partidos.ts` | `RepositorioPartidosSupabase`: lee `proximos_partidos`, filtra `estado != 'finalizado'`, mapea a `PartidoProximo` | ✅ creado S2 |
@@ -128,6 +129,30 @@ diseñador → Community Manager.
 | `components/paneles/PanelPerfil.tsx` | Panel "Mi cuenta" (Mi perfil / Cambiar contraseña / Notificaciones) — necesita forms de Supabase | ⬜ |
 
 ## 4. Hecho (por fecha, más reciente primero)
+
+### 2026-09-06 — Sesión 4 (cont.: buscador global ⌘K)
+
+- **`lib/buscador/indexar.ts`** (`buscar`, puro, **8 tests**): filtra plantel + próximos
+  partidos sin distinción de acentos ni mayúsculas (`normalizar` = NFD + strip de marcas
+  combinantes, igual que `norm()` de la demo). Indexa: jugador por nombre/apodo/club/posición/
+  país/nacionalidad; partido por club/rival/competencia (nombre y código)/estadio/ciudad.
+  Consulta vacía → primeros 5 próximos partidos (`vacia: true`). Partidos deduplicados por
+  `partidoId` (la vista trae una fila por representado), tope 8.
+- **`app/api/buscador/route.ts`** — precarga: `listar()` + `listarProximos()` (cliente SSR →
+  RLS). Se llama una sola vez, la primera vez que se abre el modal.
+- **`components/buscador/Buscador.tsx`** (Client, va en `BarraSuperior`): renderiza el botón
+  `.buscabtn` **y** el modal `.busca`. Abre con ⌘/Ctrl+K (listener global) o clic; foco al
+  input; Escape y clic en el fondo cierran; Tab atrapado dentro del modal; al cerrar el foco
+  vuelve al botón. Un resultado (`.res`) cierra el modal y abre el panel lateral
+  (`router.push(?panel=…&id=…)` — se arma la URL directo, sin `useSearchParams`, así el
+  componente del `<header>` no necesita `<Suspense>`).
+- `BarraSuperior`: el `<button className="buscabtn" disabled>` de andamiaje se reemplazó por
+  `<Buscador />`.
+- **Verificado con `browser-automation`** (login real): abre con Ctrl+K y con clic, input
+  focado; consulta vacía muestra "Próximos partidos"; "nandez" → Nández **y** Fernández
+  (substring, igual que la demo); "zxqw" → "Nada coincide"; clic en resultado de jugador y de
+  partido abre el panel correspondiente y cierra el modal; Escape cierra y **el foco vuelve al
+  botón**. **57 tests**, build + lint OK, 0 errores de consola.
 
 ### 2026-09-06 — Sesión 4 (cont.: panel lateral — partido + jugador)
 
@@ -711,7 +736,9 @@ diseñador → Community Manager.
       que quedaba deshabilitado a propósito (Sesión 2); no es bug, es esta tarea pendiente. — media
 - [x] ~~Paneles laterales (partido + jugador)~~ — hecho 2026-09-06 (Sesión 4 cont.). Falta el
       **panel de perfil** ("Mi cuenta") — va con los forms de Supabase.
-- [ ] Cablear buscador ⌘K. — media
+- [x] ~~Cablear buscador ⌘K~~ — hecho 2026-09-06 (Sesión 4 cont.). Precarga + filtro en
+      cliente, resultado abre el panel. Posible mejora: navegación con ↑/↓ + Enter (hoy es
+      Tab + clic/Enter, igual que la demo).
 - [ ] Hacer clicables los `.pm` de "próximos partidos" de la ficha (abrir panel de partido) y
       los `.ev` de cumpleaños del calendario (abrir panel de jugador). — baja
 - [ ] `scripts/importar-datos-manuales.ts` (Excel — falta el archivo en el repo). — media
