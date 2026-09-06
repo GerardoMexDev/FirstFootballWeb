@@ -18,17 +18,16 @@ En Claude Code **no hay memoria entre sesiones**, así que este protocolo es obl
 3. Rutina de cierre Git: `git add . && git commit -m "Sesión N: ..." && git push`.
 4. La sesión no se cierra hasta que `git push` terminó OK.
 
-**Última actualización:** 2026-09-06 (Sesión 4: vista `jugadores` + ficha `/jugadores/[id]`)
-**Estado general:** 3 vistas conectadas a datos reales (`partidos`, `calendario`, **`jugadores`**).
-La vista `jugadores` es la grilla del plantel (6 tarjetas con foto real, país/hito, stats de
-carrera al hover) → clic abre la **ficha SSR** `/jugadores/[jugadorId]` (hitos por alcanzar,
-"Este año" desde la vista nueva `temporada_actual`, carrera, selección si corresponde, datos
-para contenido con cumpleaños/edad, próximos 5 partidos). Migraciones hasta `0007`. Motor de
-hitos sigue dando 0 hoy (nadie en ventana de aviso). **Falta ~20%:** panel lateral (velo/
-animación/foco) y hacer clicables las tarjetas de partido y los `.ev` del calendario;
-buscador ⌘K; toggle de tema; deploy a Vercel + QA. `debut` / `fichaje` / `instagram` de los 6
-ya cargados (2026-09-06). Pendiente de Gerardo: fotos definitivas de jugadores (las manda la
-agencia; las de internet son con equipos anteriores).
+**Última actualización:** 2026-09-06 (Sesión 4: vista `jugadores` + ficha + **panel lateral**)
+**Estado general:** 3 vistas conectadas a datos reales (`partidos`, `calendario`, `jugadores`)
++ **panel lateral de detalle** (partido y jugador), que se abre desde la grilla, las tarjetas
+de partido, el hero y el calendario. El panel vive en la URL (`?panel=jugador|partido&id=…`):
+lo abre cualquier vista, el "atrás" del navegador / Escape / clic en el velo lo cierran, y
+`/jugadores/[jugadorId]` sigue existiendo como enlace directo. Migraciones hasta `0007`.
+Motor de hitos sigue dando 0 hoy. **Falta ~12%:** panel de perfil ("Mi cuenta" + forms de
+Supabase); buscador ⌘K; toggle de tema; deploy a Vercel + QA. `debut` / `fichaje` /
+`instagram` de los 6 cargados. Pendiente de Gerardo: fotos definitivas de jugadores (las
+manda la agencia).
 
 ---
 
@@ -78,7 +77,12 @@ diseñador → Community Manager.
 | `supabase/migrations/0007_temporada_actual.sql` | Vista `temporada_actual` (año calendario en curso, solo club) | ✅ aplicada S4 |
 | `lib/jugadores/datos-contenido.ts` (+ `.test.ts`) | `datosParaContenido` — edad/años en club/años carrera/cumpleaños, puro, 8 tests | ✅ creado S4 |
 | `lib/repositorios/repositorio-jugadores.ts` | `RepositorioJugadoresSupabase`: `listar` / `obtener` (guarda UUID) / `temporadaActual` | ✅ creado S4 |
-| `components/jugadores/{GrillaPlantel,FichaJugador}.tsx` | Grilla `.jug` (Client, navega a la ficha) + cuerpo de la ficha (render puro) | ✅ creados S4 |
+| `components/jugadores/{GrillaPlantel,FichaJugador}.tsx` | Grilla `.jug` (Client, abre el panel) + cuerpo de la ficha (render puro, lo reusa el panel) | ✅ creados S4 |
+| `lib/paneles/use-panel.ts` | Hook `usePanel`: estado del panel en la URL (`?panel=…&id=…`), `abrir`/`cerrar` | ✅ creado S4 |
+| `lib/paneles/detalle-partido.ts` (+ `.test.ts`) | `plegarDetallePartido` — 1-2 filas de la vista → una forma, resuelve el caso derby. 8 tests | ✅ creado S4 |
+| `lib/paneles/cargar-detalle-partido.ts` · `lib/jugadores/cargar-ficha.ts` | Bundles que comparten las rutas SSR y los endpoints `/api/paneles/*` | ✅ creados S4 |
+| `components/paneles/{PanelLateral,PanelPartido,PanelJugador}.tsx` | Panel lateral (shell + foco + fetch) + cuerpos de partido/jugador | ✅ creados S4 |
+| `app/api/paneles/{jugador,partido}/route.ts` | Endpoints JSON del panel (cliente SSR → RLS), 404 si no existe | ✅ creados S4 |
 | `scripts/seed-fotos-jugadores.mjs` | Guarda `/jugadores/<slug>.webp` en `jugadores.foto_url`. `npm run seed:fotos` | ✅ creado y corrido S4 |
 | `public/jugadores/*.webp` | 6 fotos procesadas (600×800). Originales fuera del repo (`.gitignore`) | ✅ S4 |
 | `lib/repositorios/repositorio-partidos.ts` | `RepositorioPartidosSupabase`: lee `proximos_partidos`, filtra `estado != 'finalizado'`, mapea a `PartidoProximo` | ✅ creado S2 |
@@ -121,9 +125,48 @@ diseñador → Community Manager.
 | `scripts/consultar-clubes-jugadores.mjs` | Solo lectura: `GET /teams` + `GET /players/squads` para ubicar a la cartera real | ✅ creado S2 |
 | `scripts/seed-clubes-jugadores.mjs` | Carga los 6 clubes + 6 jugadores reales con IDs de API-Football (upsert por `proveedor_externo`+`id_externo`) | ✅ creado y corrido S2 |
 | `scripts/importar-datos-manuales.ts` | Importador del .xlsx con diff. El archivo ya llegó (S3); por ahora se usa `seed-datos-manuales.mjs` (valores fijos) | ⬜ (interino cubierto) |
-| `components/paneles/*` | Paneles laterales (velo/animación/foco) para partido / jugador / perfil | ⬜ |
+| `components/paneles/PanelPerfil.tsx` | Panel "Mi cuenta" (Mi perfil / Cambiar contraseña / Notificaciones) — necesita forms de Supabase | ⬜ |
 
 ## 4. Hecho (por fecha, más reciente primero)
+
+### 2026-09-06 — Sesión 4 (cont.: panel lateral — partido + jugador)
+
+- **Estado del panel en la URL** (`lib/paneles/use-panel.ts` → hook `usePanel`; nombre en
+  inglés a propósito: `react-hooks/rules-of-hooks` solo reconoce un hook si empieza con
+  `use`). `abrir(tipo, id)` agrega `?panel=…&id=…` al path actual (`router.push`,
+  `scroll:false`); `cerrar()` los saca. Así se abre desde cualquier vista, "atrás"/Escape/velo
+  lo cierran, y las rutas propias quedan intactas.
+- **`components/paneles/PanelLateral.tsx`** (una instancia, en `app/(app)/layout.tsx` bajo
+  `<Suspense>` — usa `useSearchParams`). Traduce el estado de la URL a `.panel.on`/`.velo.on`,
+  trae los datos del endpoint, y maneja la accesibilidad del diálogo igual que
+  `mostrarPanel`/`cerrarPanel` de la demo: guarda el foco previo → foco al botón Cerrar;
+  Escape / clic en velo / X cierran; **Tab atrapado** dentro del panel; al cerrar el foco
+  **vuelve** al disparador. Durante la animación de salida deja el contenido anterior visible
+  (el panel queda `aria-hidden`).
+- **`app/api/paneles/{jugador,partido}/route.ts`** — endpoints JSON con el cliente SSR
+  (cookies → RLS). El de jugador reusa `lib/jugadores/cargar-ficha.ts` (`cargarFichaJugador`,
+  extraído también de la página `/jugadores/[id]` para no duplicar). El de partido usa
+  `lib/paneles/cargar-detalle-partido.ts`. 404 si no existe.
+- **`lib/paneles/detalle-partido.ts`** (`plegarDetallePartido`, puro, **8 tests**): pliega las
+  1-2 filas de `proximos_partidos` de un partido en una forma con `jugadores[]`. Resuelve el
+  caso **derby** (Toluca vs Atlante = dos representados en equipos rivales): el duelo pasa a
+  ser entre sus dos clubes y `representadoEsLocal` queda `null` (no hay "un" lado nuestro).
+- **`RepositorioPartidosSupabase.listarPorPartido(id)`** — nuevo, filtra la vista por
+  `partido_id` sin filtro de estado (se pidió ese partido puntual).
+- **`components/paneles/{PanelJugador,PanelPartido}.tsx`** — `PanelJugador` reusa
+  `FichaJugador` tal cual. `PanelPartido` es el marcado de `abrirPanelPartido()` de la demo
+  (competición, duelo con escudos, ronda, horario UY + sede + aviso de diferencia, sede,
+  hitos en el partido, "jugador a cubrir" que **salta** al panel de ese jugador).
+- **Vistas cableadas para abrir el panel**: `GrillaPlantel` (`.jug` → `panel=jugador`, ya no
+  navega a la ruta), `TarjetaPartido` (prop `onAbrir` → `role="button"` + Enter/Espacio),
+  `HeroPartidoDelDia` (pasa a `'use client'`), `Calendario` (los `.ev` de **partido** pasan a
+  `<button>`; cumpleaños/aniversarios siguen `<div>` como en la demo).
+- **Verificado con `browser-automation`** (login real): panel jugador desde la grilla (foco al
+  botón Cerrar), Escape cierra y **el foco vuelve a la tarjeta**; panel partido desde el hero
+  ("Toluca vs Monterrey", horario con aviso de diferencia); "jugador a cubrir" salta al panel
+  del jugador; clic en el velo cierra; `.ev` de partido del calendario abre el panel;
+  `/jugadores/[id]` directo sigue renderizando sin panel. **49 tests**, build + lint OK, 0
+  errores de consola.
 
 ### 2026-09-06 — Sesión 4 (vista `jugadores` + ficha)
 
@@ -599,8 +642,9 @@ diseñador → Community Manager.
 - [ ] **Refrescar la base con el Excel** — ahora **baja prioridad**: con `sync-estadisticas`
       corriendo, los partidos de club se suman solos. La base solo se re-carga de vez en
       cuando para reconciliar (editar `scripts/seed-base-hitos.mjs`, subir `CORTE`, correr).
-- [ ] Wirear el click de `TarjetaPartido`/`HeroPartidoDelDia` para abrir el panel de detalle
-      (hoy no son clicables — paneles, junto con el resto del panel lateral). — media
+- [x] ~~Wirear el click de `TarjetaPartido`/`HeroPartidoDelDia` para abrir el panel de detalle~~
+      — hecho 2026-09-06 (Sesión 4 cont.). También la grilla de jugadores y los `.ev` de
+      partido del calendario. Panel = `?panel=partido|jugador&id=…` en la URL.
 - [x] ~~`supabase/functions/sync-partidos`; activar `pg_cron`~~ — hecho 2026-09-04/05 (ver §4):
       desplegada, corriendo con datos reales, cron diario probado de punta a punta.
 - [x] ~~`sync-estadisticas`~~ — hecho 2026-09-05 (ver §4). Cron diario, plan free, verificado
@@ -665,15 +709,18 @@ diseñador → Community Manager.
       competencia. Ver §9. — baja
 - [ ] Toggle de tema claro/oscuro (persistir preferencia) — Gerardo probó el botón y confirmó
       que quedaba deshabilitado a propósito (Sesión 2); no es bug, es esta tarea pendiente. — media
-- [ ] Cablear buscador ⌘K y paneles laterales. — media
+- [x] ~~Paneles laterales (partido + jugador)~~ — hecho 2026-09-06 (Sesión 4 cont.). Falta el
+      **panel de perfil** ("Mi cuenta") — va con los forms de Supabase.
+- [ ] Cablear buscador ⌘K. — media
+- [ ] Hacer clicables los `.pm` de "próximos partidos" de la ficha (abrir panel de partido) y
+      los `.ev` de cumpleaños del calendario (abrir panel de jugador). — baja
 - [ ] `scripts/importar-datos-manuales.ts` (Excel — falta el archivo en el repo). — media
 - [x] ~~Vista `calendario` (`DensidadAnual`, `GrillaMes`) contra `agenda_anual`~~ — hecho
-      2026-09-05 (Sesión 3). Falta: los `.ev` clicables (paneles) y afinar la altura de las
-      celdas vacías (crecen con la fila más alta, igual que la demo).
+      2026-09-05 (Sesión 3); `.ev` de partido clicables 2026-09-06. Falta afinar la altura de
+      las celdas vacías (crecen con la fila más alta, igual que la demo).
 - [x] ~~Vista `jugadores` (grilla del plantel) + ficha `/jugadores/[jugadorId]`~~ — hecho
-      2026-09-06 (Sesión 4). Falta: abrirla en **panel lateral** (hoy es ruta SSR propia),
-      hacer clicables los `.pm` de "próximos partidos" (paneles), y `.jug`/ficha con foto
-      grande en la cabecera cuando haya mejores fotos.
+      2026-09-06 (Sesión 4); clic en la tarjeta abre el panel lateral. Falta: `.jug`/ficha con
+      foto grande en la cabecera cuando haya mejores fotos.
 - [x] ~~Cargar `debut` profesional / `fichaje` / `instagram` de los 6~~ — hecho 2026-09-06
       (Gerardo los agregó a la hoja 1 del Excel). `seed-datos-manuales.mjs` ampliado para
       cubrir todos los campos manuales de la hoja 1 (nacimiento + debut + fichaje + instagram
@@ -953,6 +1000,30 @@ diseñador → Community Manager.
   + `!` para los 6 `.webp` procesados y el LEEME deja subir solo lo que se sirve y mantiene
   los originales (de cualquier nombre/formato) fuera del repo. Mismo criterio que `public/heroes/`,
   donde en cambio los originales simplemente se borraron.
+- **Un custom hook DEBE llamarse `useXxx`, aunque el proyecto sea todo-en-español**:
+  `react-hooks/rules-of-hooks` (y el análisis del compilador de React) solo tratan una
+  función como hook si el nombre empieza con `use`. `usarPanel` → 5 errores de lint;
+  `usePanel` compila. Es la misma clase de excepción que `className` o `useState`; queda
+  documentado en la cabecera de `lib/paneles/use-panel.ts`.
+- **Estado de overlay (panel/modal) en la URL, no en un store de cliente**: un search param
+  (`?panel=…&id=…`) leído con `useSearchParams` hace que el panel se abra desde cualquier
+  vista, que el botón "atrás" del navegador lo cierre gratis, y que la ruta propia
+  (`/jugadores/[id]`) siga sirviendo el mismo contenido para enlace directo. El componente que
+  lee `useSearchParams` en el layout va envuelto en `<Suspense>`.
+- **Contenido del panel: endpoint JSON que reusa el mismo "cargador" que la página SSR**.
+  `cargarFichaJugador(supabase, id)` lo llaman tanto `/jugadores/[id]/page.tsx` como
+  `/api/paneles/jugador/route.ts` — una sola fuente de verdad para el bundle, y el route
+  handler usa `crearClienteServidor()` así que RLS aplica igual que en las páginas.
+- **Trampa de foco de un diálogo, mínima y sin dependencia**: `querySelectorAll` de los
+  focusables dentro del panel + filtrar por `offsetParent !== null` (visibles) + en `Tab`
+  redirigir de último→primero y de primero→último con `shift`. Guardar `document.activeElement`
+  al abrir y restaurarlo al cerrar (si sigue en el DOM). Igual que `mostrarPanel`/`cerrarPanel`
+  de la demo, sin librería de "focus-trap".
+- **Un partido puede ser un derby entre dos representados** (Toluca vs Atlante): la vista trae
+  una fila por representado y con `es_local` opuesto en cada una. `plegarDetallePartido` lo
+  detecta (2 `club_nombre` distintos) y arma el duelo entre esos dos clubes, dejando
+  `representadoEsLocal = null` (no hay "un" lado nuestro) — el panel entonces no muestra la
+  línea "Local/Visitante".
 
 ## 11. Dudas abiertas (de `contexto.md` §12)
 

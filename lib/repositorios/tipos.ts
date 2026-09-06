@@ -52,6 +52,11 @@ export interface RepositorioPartidos {
   listarProximos(): Promise<PartidoProximo[]>;
   /** Partidos de un jugador puntual (ficha de jugador). */
   listarPorJugador(jugadorId: string): Promise<PartidoProximo[]>;
+  /**
+   * Todas las filas de `proximos_partidos` de UN partido (una por representado involucrado).
+   * Para el panel de detalle de partido. No filtra por estado: se pidió ese partido puntual.
+   */
+  listarPorPartido(partidoId: string): Promise<PartidoProximo[]>;
 }
 
 /**

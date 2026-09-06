@@ -8,6 +8,7 @@
 import { useMemo, useState } from 'react';
 import { BarraFiltros } from '@/components/partidos/BarraFiltros';
 import { ListaPartidos } from '@/components/partidos/ListaPartidos';
+import { usePanel } from '@/lib/paneles/use-panel';
 import { filtrarPartidos, type FiltroPartidos } from '@/lib/partidos/utilidades';
 import type { PartidoProximo } from '@/lib/repositorios/tipos';
 
@@ -19,6 +20,7 @@ export function SeccionPartidos({
   partidosConHito: Set<string>;
 }) {
   const [filtro, setFiltro] = useState<FiltroPartidos>('todos');
+  const { abrir } = usePanel();
   const filtrados = useMemo(
     () => filtrarPartidos(partidos, filtro, partidosConHito),
     [partidos, filtro, partidosConHito],
@@ -28,7 +30,11 @@ export function SeccionPartidos({
     <>
       <BarraFiltros filtro={filtro} onCambiar={setFiltro} cantidad={filtrados.length} />
       <div id="lista">
-        <ListaPartidos partidos={filtrados} partidosConHito={partidosConHito} />
+        <ListaPartidos
+          partidos={filtrados}
+          partidosConHito={partidosConHito}
+          onAbrirPartido={(partidoId) => abrir('partido', partidoId)}
+        />
       </div>
     </>
   );

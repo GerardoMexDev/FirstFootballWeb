@@ -95,4 +95,18 @@ export class RepositorioPartidosSupabase implements RepositorioPartidos {
       .map(aPartidoProximo)
       .filter((p): p is PartidoProximo => p !== null);
   }
+
+  async listarPorPartido(partidoId: string): Promise<PartidoProximo[]> {
+    // Sin filtro de estado: se pidió este partido puntual (para el panel de detalle).
+    const { data, error } = await this.supabase
+      .from('proximos_partidos')
+      .select('*')
+      .eq('partido_id', partidoId);
+
+    if (error) throw new Error(`No se pudo leer proximos_partidos del partido ${partidoId}: ${error.message}`);
+
+    return (data ?? [])
+      .map(aPartidoProximo)
+      .filter((p): p is PartidoProximo => p !== null);
+  }
 }

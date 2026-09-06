@@ -7,9 +7,15 @@
  * partido real — es una foto ambiente elegida por tipo de competencia (`lib/partidos/hero-imagen.ts`),
  * estable por partido. Al ir en grises y a `brightness(.46)`, cualquier estadio identificable
  * queda genérico y el texto blanco siempre se lee. Si no se conoce el tipo, queda el degradé.
+ *
+ * `'use client'`: el hero abre el panel de detalle de ese partido al hacer clic (Enter/Espacio),
+ * igual que `.hero` en la demo.
  */
+'use client';
+
 import { Ico } from '@/components/comunes/Ico';
 import { CaraJugador } from '@/components/comunes/CaraJugador';
+import { usePanel } from '@/lib/paneles/use-panel';
 import { diasDesdeHoyUy, etiquetaDiaUy, horaCortaEnSede, horaCortaEnUruguay } from '@/lib/fechas/zonas';
 import { mostrar } from '@/lib/formato/valores';
 import { imagenHero } from '@/lib/partidos/hero-imagen';
@@ -18,6 +24,7 @@ import type { Hito } from '@/lib/motor-hitos/tipos';
 import type { PartidoProximo } from '@/lib/repositorios/tipos';
 
 export function HeroPartidoDelDia({ partidos, hitos }: { partidos: PartidoProximo[]; hitos: Hito[] }) {
+  const { abrir } = usePanel();
   const candidatos = partidos.filter(
     (p) => p.diaUy !== null && diasDesdeHoyUy(p.diaUy) >= 0 && diasDesdeHoyUy(p.diaUy) <= 3,
   );
@@ -42,7 +49,19 @@ export function HeroPartidoDelDia({ partidos, hitos }: { partidos: PartidoProxim
   const fondo = imagenHero(p.competenciaTipo, p.partidoId);
 
   return (
-    <div className="hero">
+    <div
+      className="hero"
+      role="button"
+      tabIndex={0}
+      style={{ cursor: 'pointer' }}
+      onClick={() => abrir('partido', p.partidoId)}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          abrir('partido', p.partidoId);
+        }
+      }}
+    >
       <div className="hero__fb" />
       {fondo && (
         // eslint-disable-next-line @next/next/no-img-element

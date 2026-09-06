@@ -12,9 +12,12 @@ import type { PartidoProximo } from '@/lib/repositorios/tipos';
 export function ListaPartidos({
   partidos,
   partidosConHito = new Set<string>(),
+  onAbrirPartido,
 }: {
   partidos: PartidoProximo[];
   partidosConHito?: Set<string>;
+  /** Abre el panel de detalle del partido. Si no se pasa, las tarjetas quedan no interactivas. */
+  onAbrirPartido?: (partidoId: string) => void;
 }) {
   if (!partidos.length) {
     return (
@@ -42,6 +45,7 @@ export function ListaPartidos({
                   key={`${p.partidoId}-${p.jugadorId}`}
                   partido={p}
                   tieneHito={partidosConHito.has(p.partidoId)}
+                  onAbrir={onAbrirPartido ? () => onAbrirPartido(p.partidoId) : undefined}
                 />
               ))}
             </div>

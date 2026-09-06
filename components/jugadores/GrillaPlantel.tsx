@@ -3,8 +3,8 @@
  * Marcado y clases 1:1 con la demo (`.plantel` / `.jug` / `.jug__*`).
  *
  * Client Component: cada `.jug` es un `<button>` (la demo estiliza `.jug` como botón — ver
- * avances.md §10, "CSS de la demo = button, no <a>") que navega a la ficha. El panel lateral
- * con velo/animación es una sesión aparte; por ahora la ficha vive en su propia ruta.
+ * avances.md §10, "CSS de la demo = button, no <a>") que abre el panel lateral del jugador
+ * (`?panel=jugador&id=…`). La ruta `/jugadores/[id]` sigue existiendo como enlace directo.
  *
  * Diferencia con la demo: `.jug__pos` mostraba "posición · liga". No hay una "liga principal"
  * por jugador en el modelo (un club juega varias competencias), así que se muestra
@@ -15,8 +15,8 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
 import { Escudo } from '@/components/comunes/Escudo';
+import { usePanel } from '@/lib/paneles/use-panel';
 import type { JugadorPlantel } from '@/lib/repositorios/tipos';
 
 /** Número para las celdas de stats: un guion si no hay dato (nunca "0" inventado, nunca texto largo). */
@@ -94,7 +94,7 @@ export function GrillaPlantel({
   /** id de jugador → frase del hito más próximo (para la pill). Vacío si no tiene ninguno cerca. */
   hitoFrasePorJugador: Record<string, string>;
 }) {
-  const router = useRouter();
+  const { abrir } = usePanel();
 
   return (
     <div className="plantel" id="plantel">
@@ -103,7 +103,7 @@ export function GrillaPlantel({
           key={jugador.id}
           jugador={jugador}
           hitoFrase={hitoFrasePorJugador[jugador.id]}
-          onAbrir={() => router.push(`/jugadores/${jugador.id}`)}
+          onAbrir={() => abrir('jugador', jugador.id)}
         />
       ))}
     </div>

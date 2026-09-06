@@ -5,8 +5,9 @@
  *   "hora local" (regla de zonas horarias — ver arquitectura-fase1.html §3).
  * - Sin "· país" en la competencia: la vista `proximos_partidos` no expone el país de la
  *   competencia (no se le agregó esa columna); si hace falta, es un cambio de vista, no de acá.
- * - Todavía no abre el panel de detalle al hacer click (paneles, sesión aparte) — por eso no
- *   lleva `role="button"`/`tabIndex` como la demo: no se anuncia una interacción que no existe.
+ * - Con `onAbrir`, la tarjeta abre el panel de detalle del partido (clic, Enter o Espacio),
+ *   con `role="button"` y foco — igual que `.match` en la demo. Sin `onAbrir` (por si se
+ *   reusa en otro contexto) queda como bloque no interactivo.
  */
 import { Ico } from '@/components/comunes/Ico';
 import { Escudo } from '@/components/comunes/Escudo';
@@ -16,7 +17,15 @@ import { mostrar } from '@/lib/formato/valores';
 import { esHoyUy, claseTarjeta } from '@/lib/partidos/utilidades';
 import type { PartidoProximo } from '@/lib/repositorios/tipos';
 
-export function TarjetaPartido({ partido: p, tieneHito = false }: { partido: PartidoProximo; tieneHito?: boolean }) {
+export function TarjetaPartido({
+  partido: p,
+  tieneHito = false,
+  onAbrir,
+}: {
+  partido: PartidoProximo;
+  tieneHito?: boolean;
+  onAbrir?: () => void;
+}) {
   const hoy = esHoyUy(p);
   const tieneHorario = p.inicioUtc !== null;
   const tieneSede = tieneHorario && p.zonaHorariaEvento !== null;
@@ -28,6 +37,18 @@ export function TarjetaPartido({ partido: p, tieneHito = false }: { partido: Par
     <article
       className={`match ${claseTarjeta(p)} ${hoy ? 'match--hoy' : ''} ${p.tentativo ? 'match--tent' : ''} ${p.esInternacional ? 'match--int' : ''}`}
       data-id={p.partidoId}
+      {...(onAbrir && {
+        role: 'button',
+        tabIndex: 0,
+        style: { cursor: 'pointer' },
+        onClick: onAbrir,
+        onKeyDown: (e: React.KeyboardEvent) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            onAbrir();
+          }
+        },
+      })}
     >
       <div className="hora">
         <b>{horaUy ?? '—'}</b>

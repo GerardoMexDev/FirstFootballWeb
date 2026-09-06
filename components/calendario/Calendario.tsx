@@ -4,15 +4,16 @@
  * de mes es estado local (el server ya trajo TODOS los eventos de la ventana de proyección,
  * así que moverse entre meses/años no vuelve a pedir nada).
  *
- * Marcado y clases 1:1 con la demo (`renderAnio()` / `renderCal()`). Los `.ev` no son
- * clicables todavía (paneles, sesión aparte) — por eso son `<div>`, mismo criterio que
- * `TarjetaPartido`.
+ * Marcado y clases 1:1 con la demo (`renderAnio()` / `renderCal()`). Los `.ev` de partido
+ * abren el panel de detalle (`<button>`); los de cumpleaños / aniversario quedan como `<div>`
+ * no interactivo (igual que la demo — abrir el jugador desde ahí es un extra para después).
  *
- * Football First (Fase 1). Creado 2026-09-05.
+ * Football First (Fase 1). Creado 2026-09-05. Paneles: 2026-09-06.
  */
 'use client';
 
 import { useMemo, useState } from 'react';
+import { usePanel } from '@/lib/paneles/use-panel';
 import { horaCortaEnUruguay } from '@/lib/fechas/zonas';
 import {
   agruparPorDia,
@@ -42,6 +43,7 @@ function chipEvento(e: EventoCalendario): { etiqueta: string; texto: string } {
 }
 
 export function Calendario({ eventos, hoyUy }: { eventos: EventoCalendario[]; hoyUy: string }) {
+  const { abrir } = usePanel();
   const [anio, setAnio] = useState(() => Number(hoyUy.slice(0, 4)));
   const [mes, setMes] = useState(() => Number(hoyUy.slice(5, 7)) - 1); // 0-11
 
@@ -114,11 +116,19 @@ export function Calendario({ eventos, hoyUy }: { eventos: EventoCalendario[]; ho
               <div className="celda__n">{c.dia}</div>
               {evs.map((e, j) => {
                 const { etiqueta, texto } = chipEvento(e);
+                const clave = `${e.fuente}-${e.refId ?? j}`;
+                const clase = `ev ${e.tentativo ? 'ev--tent' : ''} ${e.esInternacional ? 'ev--int' : ''}`;
+                if (e.fuente === 'partido' && e.refId) {
+                  const refId = e.refId;
+                  return (
+                    <button key={clave} type="button" className={clase} onClick={() => abrir('partido', refId)}>
+                      <b>{etiqueta}</b>
+                      {texto}
+                    </button>
+                  );
+                }
                 return (
-                  <div
-                    key={`${e.fuente}-${e.refId ?? j}`}
-                    className={`ev ${e.tentativo ? 'ev--tent' : ''} ${e.esInternacional ? 'ev--int' : ''}`}
-                  >
+                  <div key={clave} className={clase}>
                     <b>{etiqueta}</b>
                     {texto}
                   </div>
