@@ -769,6 +769,7 @@ export type Database = {
           id: string
           nombre_completo: string
           rol: Database["public"]["Enums"]["rol_usuario"]
+          tema: string
         }
         Insert: {
           activo?: boolean
@@ -778,6 +779,7 @@ export type Database = {
           id: string
           nombre_completo?: string
           rol?: Database["public"]["Enums"]["rol_usuario"]
+          tema?: string
         }
         Update: {
           activo?: boolean
@@ -787,6 +789,7 @@ export type Database = {
           id?: string
           nombre_completo?: string
           rol?: Database["public"]["Enums"]["rol_usuario"]
+          tema?: string
         }
         Relationships: []
       }

@@ -18,15 +18,14 @@ En Claude Code **no hay memoria entre sesiones**, así que este protocolo es obl
 3. Rutina de cierre Git: `git add . && git commit -m "Sesión N: ..." && git push`.
 4. La sesión no se cierra hasta que `git push` terminó OK.
 
-**Última actualización:** 2026-09-06 (Sesión 4: `jugadores` + ficha + panel lateral + **buscador ⌘K**)
+**Última actualización:** 2026-09-06 (Sesión 4: `jugadores` + ficha + panel lateral + ⌘K + **tema**)
 **Estado general:** 3 vistas conectadas a datos reales (`partidos`, `calendario`, `jugadores`)
-+ **panel lateral de detalle** (partido y jugador, abierto desde grilla/tarjetas/hero/calendario,
-estado en la URL `?panel=…&id=…`) + **buscador global ⌘K** (`.busca` de la demo: precarga
-plantel + próximos partidos al abrir, filtra en el cliente, un resultado abre el panel).
-`/jugadores/[jugadorId]` sigue existiendo como enlace directo. Migraciones hasta `0007`.
-Motor de hitos sigue dando 0 hoy. **Falta ~8%:** panel de perfil ("Mi cuenta" + forms de
-Supabase); toggle de tema; deploy a Vercel + QA. `debut` / `fichaje` / `instagram` de los 6
-cargados. Pendiente de Gerardo: fotos definitivas de jugadores (las manda la agencia).
++ **panel lateral de detalle** (partido y jugador, estado en la URL `?panel=…&id=…`)
++ **buscador global ⌘K** + **toggle de tema claro/oscuro** (preferencia en `perfiles.tema`,
+leída server-side → sin parpadeo). `/jugadores/[jugadorId]` sigue como enlace directo.
+Migraciones hasta `0008`. Motor de hitos sigue dando 0 hoy. **Falta ~5%:** panel de perfil
+("Mi cuenta" + forms de Supabase); deploy a Vercel + QA. `debut` / `fichaje` / `instagram` de
+los 6 cargados. Pendiente de Gerardo: fotos definitivas de jugadores (las manda la agencia).
 
 ---
 
@@ -84,6 +83,9 @@ diseñador → Community Manager.
 | `app/api/paneles/{jugador,partido}/route.ts` | Endpoints JSON del panel (cliente SSR → RLS), 404 si no existe | ✅ creados S4 |
 | `lib/buscador/indexar.ts` (+ `.test.ts`) | `buscar` — filtro sin acentos sobre plantel + partidos, puro, 8 tests | ✅ creado S4 |
 | `components/buscador/Buscador.tsx` · `app/api/buscador/route.ts` | Modal `.busca` ⌘K (botón + modal) · endpoint de precarga | ✅ creados S4 |
+| `supabase/migrations/0008_perfiles_tema.sql` | `perfiles.tema` (claro/oscuro) | ✅ aplicada S4 |
+| `lib/sesion/sesion-actual.ts` | `sesionActual` (`React.cache`): usuario + perfil + tema, 1 consulta. Lo usan ambos layouts | ✅ creado S4 |
+| `components/layout/ToggleTema.tsx` | Toggle claro/oscuro; persiste en `perfiles.tema` | ✅ creado S4 |
 | `scripts/seed-fotos-jugadores.mjs` | Guarda `/jugadores/<slug>.webp` en `jugadores.foto_url`. `npm run seed:fotos` | ✅ creado y corrido S4 |
 | `public/jugadores/*.webp` | 6 fotos procesadas (600×800). Originales fuera del repo (`.gitignore`) | ✅ S4 |
 | `lib/repositorios/repositorio-partidos.ts` | `RepositorioPartidosSupabase`: lee `proximos_partidos`, filtra `estado != 'finalizado'`, mapea a `PartidoProximo` | ✅ creado S2 |
@@ -129,6 +131,27 @@ diseñador → Community Manager.
 | `components/paneles/PanelPerfil.tsx` | Panel "Mi cuenta" (Mi perfil / Cambiar contraseña / Notificaciones) — necesita forms de Supabase | ⬜ |
 
 ## 4. Hecho (por fecha, más reciente primero)
+
+### 2026-09-06 — Sesión 4 (cont.: toggle de tema claro/oscuro)
+
+- **Migración `0008`**: `perfiles.tema text not null default 'claro' check (tema in ('claro','oscuro'))`.
+  La RLS `perfiles_update_propio` (0001) ya deja que el usuario actualice su fila mientras no
+  cambie `rol` → el toggle escribe directo desde el cliente, sin endpoint.
+- **`lib/sesion/sesion-actual.ts`** (`sesionActual`, `React.cache`): trae `{ usuarioId, email,
+  nombreCompleto, cargo, tema }` en una consulta. Lo llaman el **layout raíz** (para pintar
+  `<html data-theme>` server-side, cero parpadeo) y `app/(app)/layout.tsx` (que antes hacía
+  `getUser()` + un `select` aparte — unificados; `cache` evita la 2ª ida a la BD por request).
+  Efecto colateral esperado: el layout raíz ahora lee cookies → `/`, `/login` y `/_not-found`
+  pasan de estáticas a dinámicas (`ƒ`). Para una app interna sin SEO no importa.
+- **`components/layout/ToggleTema.tsx`**: reemplaza el `<button id="tema" disabled>` de
+  andamiaje. Al alternar: cambia `document.documentElement.dataset.theme` al instante
+  (`light`/`dark` explícito — el CSS de la demo alterna el ícono sol/luna por ese valor) y
+  después `perfiles.update({ tema }).eq('id', usuarioId)` con el cliente del navegador. Si la
+  escritura falla, el cambio visual ya se aplicó y queda en consola.
+- **Verificado con `browser-automation`**: togglear cambia `data-theme`, el ícono y el fondo
+  (`#0e0c0b` en oscuro); recargar **mantiene** el tema (leído del perfil, sin flash); un 2º
+  usuario (`maxi`) tiene su propia preferencia sin verse afectado. `npm test` 57, build + lint
+  OK, 0 errores de consola.
 
 ### 2026-09-06 — Sesión 4 (cont.: buscador global ⌘K)
 
@@ -732,8 +755,9 @@ diseñador → Community Manager.
 - [ ] Liga de Expansión MX dejó de ser prioridad: Atlante (Martín Fernández) ascendió y juega
       Liga MX esta temporada — los dos clubes mexicanos de la cartera están en la misma
       competencia. Ver §9. — baja
-- [ ] Toggle de tema claro/oscuro (persistir preferencia) — Gerardo probó el botón y confirmó
-      que quedaba deshabilitado a propósito (Sesión 2); no es bug, es esta tarea pendiente. — media
+- [x] ~~Toggle de tema claro/oscuro (persistir preferencia)~~ — hecho 2026-09-06 (Sesión 4
+      cont.). Preferencia en `perfiles.tema`, leída server-side (sin flash). Falta (opcional):
+      el toast "Modo oscuro/claro" de la demo y suprimir las transiciones durante el switch.
 - [x] ~~Paneles laterales (partido + jugador)~~ — hecho 2026-09-06 (Sesión 4 cont.). Falta el
       **panel de perfil** ("Mi cuenta") — va con los forms de Supabase.
 - [x] ~~Cablear buscador ⌘K~~ — hecho 2026-09-06 (Sesión 4 cont.). Precarga + filtro en
@@ -1051,6 +1075,19 @@ diseñador → Community Manager.
   detecta (2 `club_nombre` distintos) y arma el duelo entre esos dos clubes, dejando
   `representadoEsLocal = null` (no hay "un" lado nuestro) — el panel entonces no muestra la
   línea "Local/Visitante".
+- **`@supabase/ssr@0.5.2` quedó viejo frente a `supabase-js`/`postgrest-js` 2.115**: las
+  LECTURAS se salvan con `.returns<T[]>()` (ya se hacía), pero un `.update({...})` tipado
+  infiere `never` para el payload. Parche localizado: tipar el objeto contra
+  `Database['public']['Tables']['x']['Update']` (atrapa un typo de columna) y pasarlo con
+  `as never` al builder (`ToggleTema.tsx`). La solución de fondo es subir `@supabase/ssr` —
+  hacerlo cuando se toque auth (afecta `middleware.ts` + los dos `cliente-*.ts`).
+- **Leer sesión/cookies en el layout RAÍZ vuelve dinámicas TODAS las rutas** (incluidas `/` y
+  `/login`, que eran `○` estáticas). Fue a propósito para pintar `<html data-theme>` sin
+  parpadeo con `sesionActual()` (`React.cache` → una sola consulta por request, compartida con
+  `app/(app)/layout.tsx`). Para una app interna sin SEO ni caché de CDN no tiene costo real.
+- **`[data-theme]` en `<html>` tiene que ser un valor EXPLÍCITO** (`light` o `dark`), no
+  ausente: el CSS de la demo alterna el ícono sol/luna con `[data-theme="dark"] .sol{...}` /
+  `[data-theme="light"] .luna{...}` — sin atributo no se oculta ninguno.
 
 ## 11. Dudas abiertas (de `contexto.md` §12)
 

@@ -7,30 +7,19 @@
  * (ver middleware.ts), pero esta verificación server-side es la que de verdad protege
  * los Server Components de acá para abajo (no solo la navegación) — mismo criterio que
  * cualquier política RLS: sin chequeo propio, no se confía solo en la capa de arriba.
+ *
+ * `sesionActual()` está envuelto en React.cache: el layout raíz ya lo llamó para el tema,
+ * así que acá no hay una segunda ida a la BD.
  */
 import { Suspense } from 'react';
 import { redirect } from 'next/navigation';
 import { BarraSuperior } from '@/components/layout/BarraSuperior';
 import { PanelLateral } from '@/components/paneles/PanelLateral';
-import { crearClienteServidor } from '@/lib/supabase/cliente-servidor';
-import type { Database } from '@/lib/supabase/tipos-db';
-
-type PerfilFilas = Pick<Database['public']['Tables']['perfiles']['Row'], 'nombre_completo' | 'cargo'>;
+import { sesionActual } from '@/lib/sesion/sesion-actual';
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
-  const supabase = crearClienteServidor();
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) redirect('/login');
-
-  const { data: perfil } = await supabase
-    .from('perfiles')
-    .select('nombre_completo, cargo')
-    .eq('id', user.id)
-    .returns<PerfilFilas[]>()
-    .single();
+  const sesion = await sesionActual();
+  if (!sesion) redirect('/login');
 
   return (
     <>
@@ -40,9 +29,11 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       <div className="app on" id="app">
         <BarraSuperior
           perfil={{
-            nombreCompleto: perfil?.nombre_completo || '',
-            cargo: perfil?.cargo || 'Prueba',
-            email: user.email ?? '',
+            usuarioId: sesion.usuarioId,
+            nombreCompleto: sesion.nombreCompleto,
+            cargo: sesion.cargo,
+            email: sesion.email,
+            tema: sesion.tema,
           }}
         />
         <main className="wrap">{children}</main>
@@ -53,7 +44,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         <PanelLateral />
       </Suspense>
 
-      {/* Toast — se cablea en la sesión de buscador/tema */}
+      {/* Toast — se cablea más adelante (sistema de toasts) */}
       <div className="toast" id="toast" role="status" aria-live="polite" />
     </>
   );

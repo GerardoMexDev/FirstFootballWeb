@@ -9,6 +9,7 @@
  * - Monta una sola vez el <symbol id="ff"> del logo, para <use href="#ff"/>.
  */
 import type { Metadata, Viewport } from 'next';
+import { sesionActual } from '@/lib/sesion/sesion-actual';
 import '@/styles/tokens.css';
 import '@/styles/demo.css';
 import '@/styles/app.css';
@@ -25,9 +26,14 @@ export const viewport: Viewport = {
   initialScale: 1,
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  // Tema del perfil, leído server-side para pintar `<html data-theme>` sin parpadeo.
+  // Valor explícito siempre (light/dark): el CSS de la demo alterna el ícono sol/luna por él.
+  const sesion = await sesionActual();
+  const tema = sesion?.tema === 'oscuro' ? 'dark' : 'light';
+
   return (
-    <html lang="es" data-theme="light">
+    <html lang="es" data-theme={tema}>
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />

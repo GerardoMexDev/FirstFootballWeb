@@ -2,10 +2,9 @@
  * Barra superior de la app. Emite el marcado `.top` de la demo:
  * marca + nav + acciones (buscador ⌘K, cambio de tema, menú de usuario).
  *
- * La marca, la nav y el buscador ⌘K ya funcionan. El toggle de tema se cablea en una sesión
- * siguiente. El menú de usuario muestra el perfil real y cierra sesión; "Mi perfil" /
- * "Cambiar contraseña" / "Notificaciones" abren el panel de perfil (sesión aparte, por eso
- * siguen deshabilitados).
+ * La marca, la nav, el buscador ⌘K y el toggle de tema ya funcionan. El menú de usuario
+ * muestra el perfil real y cierra sesión; "Mi perfil" / "Cambiar contraseña" /
+ * "Notificaciones" abren el panel de perfil (sesión aparte, por eso siguen deshabilitados).
  */
 'use client';
 
@@ -14,12 +13,16 @@ import { useRouter } from 'next/navigation';
 import { Nav } from '@/components/layout/Nav';
 import { Ico } from '@/components/comunes/Ico';
 import { Buscador } from '@/components/buscador/Buscador';
+import { ToggleTema } from '@/components/layout/ToggleTema';
 import { crearClienteNavegador } from '@/lib/supabase/cliente-navegador';
+import type { Tema } from '@/lib/sesion/sesion-actual';
 
 export interface PerfilBarra {
+  usuarioId: string;
   nombreCompleto: string;
   cargo: string;
   email: string;
+  tema: Tema;
 }
 
 export function BarraSuperior({ perfil }: { perfil: PerfilBarra }) {
@@ -76,16 +79,7 @@ export function BarraSuperior({ perfil }: { perfil: PerfilBarra }) {
         <div className="top__acc">
           <Buscador />
 
-          {/* TODO(sesión tema): alternar data-theme en <html> y persistir preferencia */}
-          <button className="icobtn" id="tema" aria-label="Cambiar tema" disabled>
-            <svg className="ico luna" viewBox="0 0 24 24">
-              <path d="M20 14.6A8.5 8.5 0 1 1 9.4 4a7 7 0 0 0 10.6 10.6Z" />
-            </svg>
-            <svg className="ico sol" viewBox="0 0 24 24">
-              <circle cx="12" cy="12" r="4.2" />
-              <path d="M12 2.6v2.1M12 19.3v2.1M2.6 12h2.1M19.3 12h2.1M5.3 5.3l1.5 1.5M17.2 17.2l1.5 1.5M18.7 5.3l-1.5 1.5M6.8 17.2l-1.5 1.5" />
-            </svg>
-          </button>
+          <ToggleTema usuarioId={perfil.usuarioId} temaInicial={perfil.tema} />
 
           <div className="who" ref={contenedorRef}>
             <button
