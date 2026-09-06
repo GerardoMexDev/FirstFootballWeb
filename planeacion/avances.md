@@ -26,9 +26,9 @@ carrera al hover) → clic abre la **ficha SSR** `/jugadores/[jugadorId]` (hitos
 para contenido con cumpleaños/edad, próximos 5 partidos). Migraciones hasta `0007`. Motor de
 hitos sigue dando 0 hoy (nadie en ventana de aviso). **Falta ~20%:** panel lateral (velo/
 animación/foco) y hacer clicables las tarjetas de partido y los `.ev` del calendario;
-buscador ⌘K; toggle de tema; deploy a Vercel + QA. Pendiente de Gerardo: mejores fotos de
-jugadores (consiguió 6, algunas de baja resolución), y cargar `debut` profesional / `fichaje`
-/ `instagram` (hoy la ficha los muestra como "Sin datos").
+buscador ⌘K; toggle de tema; deploy a Vercel + QA. `debut` / `fichaje` / `instagram` de los 6
+ya cargados (2026-09-06). Pendiente de Gerardo: fotos definitivas de jugadores (las manda la
+agencia; las de internet son con equipos anteriores).
 
 ---
 
@@ -173,6 +173,11 @@ diseñador → Community Manager.
   las 6 fotos cargan, pills de país, stats de carrera al hover; ficha de Fede (temporada vacía
   → "recién arranca") y de Martín (temporada con datos reales); id inexistente → 404. `npm test`
   40/40, `npm run build` OK. **0 errores de consola.**
+- **Datos manuales de la ficha cargados** (Gerardo los sumó a la hoja 1 del Excel): `debut`
+  profesional, `fichaje` al club actual e `instagram` (`@handle`) de los 6.
+  `seed-datos-manuales.mjs` ampliado a todos los campos manuales de la hoja 1 (antes solo
+  nacimiento + fundación) y corrido. La ficha de Fede pasó a mostrar "2.7 Años en el club",
+  "7 Años de carrera" y `@fede_pereira6` con datos reales.
 
 ### 2026-09-05 — Sesión 3 (cont.: vista `calendario` conectada a `agenda_anual`)
 
@@ -665,9 +670,11 @@ diseñador → Community Manager.
       2026-09-06 (Sesión 4). Falta: abrirla en **panel lateral** (hoy es ruta SSR propia),
       hacer clicables los `.pm` de "próximos partidos" (paneles), y `.jug`/ficha con foto
       grande en la cabecera cuando haya mejores fotos.
-- [ ] **Cargar `debut` profesional / `fichaje` / `instagram` de los 6** — la ficha ya los
-      muestra ("Años de carrera", "Años en el club", pill de IG) pero hoy salen "Sin datos"
-      / "—". Van al Excel (hoja 1) o a `seed-datos-manuales.mjs`. — media
+- [x] ~~Cargar `debut` profesional / `fichaje` / `instagram` de los 6~~ — hecho 2026-09-06
+      (Gerardo los agregó a la hoja 1 del Excel). `seed-datos-manuales.mjs` ampliado para
+      cubrir todos los campos manuales de la hoja 1 (nacimiento + debut + fichaje + instagram
+      de jugadores, fundación de clubes) y corrido. La ficha ya muestra "Años en el club" /
+      "Años de carrera" / handle de IG con datos reales. Instagram guardado como `@handle`.
 - [ ] **`temporada_actual` es año calendario, no temporada real** — para Bélgica/Arabia
       (~ago–may) parte la temporada al 1-ene. Afinar al corte de cada competencia cuando
       importe (hoy con datos ralos da igual). La ficha lo rotula "Este año (AAAA)" para ser
