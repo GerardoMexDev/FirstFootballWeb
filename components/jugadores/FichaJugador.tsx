@@ -65,6 +65,8 @@ export function FichaJugador({
 }) {
   const datos = datosParaContenido(jugador, hoyUy);
   const anio = hoyUy.slice(0, 4);
+  // Fichaje reciente (< 1 año): se muestra en meses; "8 meses" se lee mejor que "0 años".
+  const clubEnMeses = datos.aniosEnClub !== null && datos.aniosEnClub < 1;
   const identidad = [
     jugador.clubPais,
     jugador.posicion,
@@ -199,8 +201,8 @@ export function FichaJugador({
             <span>Años</span>
           </div>
           <div className="dato">
-            <b>{datos.aniosEnClub ?? '—'}</b>
-            <span>Años en el club</span>
+            <b>{datos.aniosEnClub === null ? '—' : clubEnMeses ? datos.mesesEnClub : datos.aniosEnClub}</b>
+            <span>{clubEnMeses ? (datos.mesesEnClub === 1 ? 'Mes en el club' : 'Meses en el club') : 'Años en el club'}</span>
           </div>
           <div className="dato">
             <b>{datos.aniosDeCarrera ?? '—'}</b>

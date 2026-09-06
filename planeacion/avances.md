@@ -178,6 +178,10 @@ diseñador → Community Manager.
   `seed-datos-manuales.mjs` ampliado a todos los campos manuales de la hoja 1 (antes solo
   nacimiento + fundación) y corrido. La ficha de Fede pasó a mostrar "2.7 Años en el club",
   "7 Años de carrera" y `@fede_pereira6` con datos reales.
+- **"Meses en el club" para fichajes recientes**: 4 de los 6 se ficharon en 2026 (< 1 año).
+  `datosParaContenido` devuelve además `mesesEnClub`; la ficha muestra "1 Mes en el club" /
+  "2 Meses en el club" (singular/plural) cuando `aniosEnClub < 1`, y "2.7 Años en el club"
+  cuando es más — "0 años" se leía como dato faltante. 41 tests.
 
 ### 2026-09-05 — Sesión 3 (cont.: vista `calendario` conectada a `agenda_anual`)
 

@@ -23,8 +23,14 @@ export interface FechasJugador {
 export interface DatosContenido {
   /** Años cumplidos. */
   edad: number | null;
-  /** Años en el club actual, con un decimal (p.ej. 1.3). */
+  /** Años en el club actual, con un decimal (p.ej. 1.3). La ficha lo usa cuando es >= 1. */
   aniosEnClub: number | null;
+  /**
+   * Meses en el club actual, entero redondeado. La ficha lo muestra en lugar de los años
+   * cuando el jugador lleva menos de un año (fichaje reciente) — "8 meses" se lee mejor que
+   * "0 años" / "0.7 años".
+   */
+  mesesEnClub: number | null;
   /** Años desde el debut profesional, entero. */
   aniosDeCarrera: number | null;
   /** Cumpleaños en texto, día y mes en español sin año (p.ej. "28 de diciembre"). */
@@ -49,6 +55,7 @@ export function datosParaContenido(fechas: FechasJugador, hoyUy: string): DatosC
   return {
     edad: nacimiento ? Math.floor(hoy.diff(nacimiento, 'years').years) : null,
     aniosEnClub: fichaje ? Math.round(hoy.diff(fichaje, 'years').years * 10) / 10 : null,
+    mesesEnClub: fichaje ? Math.round(hoy.diff(fichaje, 'months').months) : null,
     aniosDeCarrera: debut ? Math.round(hoy.diff(debut, 'years').years) : null,
     cumpleLegible: nacimiento ? nacimiento.setLocale('es').toFormat("d 'de' LLLL") : null,
   };

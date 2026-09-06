@@ -27,6 +27,13 @@ test('años en el club: un decimal', () => {
   assert.equal(d.aniosEnClub, 0.5);
 });
 
+test('meses en el club: entero, para los fichajes recientes', () => {
+  // fichó el 06/03/2026 → 6 meses exactos al 06/09/2026
+  assert.equal(datosParaContenido({ fichaje: '2026-03-06' }, HOY).mesesEnClub, 6);
+  // fichó hace ~3 semanas → 1 mes redondeado
+  assert.equal(datosParaContenido({ fichaje: '2026-08-18' }, HOY).mesesEnClub, 1);
+});
+
 test('años de carrera: entero redondeado', () => {
   const d = datosParaContenido({ debut: '2018-09-22' }, HOY);
   assert.equal(d.aniosDeCarrera, 8);
@@ -37,6 +44,7 @@ test('campos ausentes → null, nunca 0 ni NaN', () => {
   assert.equal(d.edad, null);
   assert.equal(d.cumpleLegible, null);
   assert.equal(d.aniosEnClub, null);
+  assert.equal(d.mesesEnClub, null);
   assert.equal(d.aniosDeCarrera, null);
 });
 
@@ -44,6 +52,7 @@ test('fecha en el futuro (dato cargado mal) → null, no un número negativo', (
   const d = datosParaContenido({ fechaNacimiento: '2030-01-01', fichaje: '2031-01-01', debut: '2040-01-01' }, HOY);
   assert.equal(d.edad, null);
   assert.equal(d.aniosEnClub, null);
+  assert.equal(d.mesesEnClub, null);
   assert.equal(d.aniosDeCarrera, null);
 });
 
