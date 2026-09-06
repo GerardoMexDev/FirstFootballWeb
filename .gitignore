@@ -43,3 +43,15 @@ Thumbs.db
 # Datos manuales sensibles (el Excel se maneja aparte, no versionado)
 /scripts/*.xlsx
 *.xlsx
+
+# Fotos de jugadores: se versiona SOLO el .webp procesado (slug = apellido sin tildes)
+# + el LEEME. Los originales que deja Gerardo para procesar quedan fuera del repo,
+# igual criterio que public/heroes/ (ver public/jugadores/LEEME.md).
+/public/jugadores/*
+!/public/jugadores/LEEME.md
+!/public/jugadores/nandez.webp
+!/public/jugadores/pereira.webp
+!/public/jugadores/sosa.webp
+!/public/jugadores/mendez.webp
+!/public/jugadores/amaro.webp
+!/public/jugadores/fernandez.webp

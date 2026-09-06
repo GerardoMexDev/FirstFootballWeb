@@ -54,4 +54,66 @@ export interface RepositorioPartidos {
   listarPorJugador(jugadorId: string): Promise<PartidoProximo[]>;
 }
 
-// RepositorioJugadores y RepositorioHitos se definen al conectarlos.
+/**
+ * Un jugador como lo pinta la grilla del plantel (vista `jugadores`). Números de carrera
+ * de la vista `totales_jugador` (base manual + lo sincronizado) — `null` si la agencia no
+ * cargó la base de ese jugador (contexto.md §10, cero invenciones).
+ */
+export interface JugadorPlantel {
+  id: string;
+  nombre: string;
+  apodo: string | null;
+  dorsal: number | null;
+  posicion: string | null;
+  nacionalidad: string | null;
+  /** Nombre de la selección si tiene caps con ella; `null` si no juega en selección. */
+  seleccion: string | null;
+  /** Ruta pública de la foto (`/jugadores/<slug>.webp`) o `null` → la tarjeta usa el fondo `.jug__fb`. */
+  fotoUrl: string | null;
+  clubNombre: string | null;
+  clubEscudoUrl: string | null;
+  clubPais: string | null;
+  carreraPartidos: number | null;
+  carreraGoles: number | null;
+  carreraAsistencias: number | null;
+}
+
+/** Números del jugador en el año calendario en curso (vista `temporada_actual`). */
+export interface TemporadaActual {
+  partidos: number | null;
+  minutos: number | null;
+  goles: number | null;
+  asistencias: number | null;
+  amarillas: number | null;
+  rojas: number | null;
+  valoracionPromedio: number | null;
+}
+
+/**
+ * La ficha completa de un jugador (`/jugadores/[jugadorId]`). Todo lo de la grilla + las
+ * fechas y datos de contacto para "Datos para contenido". Los campos `debut`, `fichaje` e
+ * `instagram` hoy suelen venir `null` (no cargados) → la ficha muestra "Sin datos", no los
+ * inventa.
+ */
+export interface JugadorFicha extends JugadorPlantel {
+  /** YYYY-MM-DD (fecha civil, sin hora). */
+  fechaNacimiento: string | null;
+  debut: string | null;
+  debutSeleccion: string | null;
+  fichaje: string | null;
+  instagram: string | null;
+  seleccionPartidos: number | null;
+  seleccionGoles: number | null;
+}
+
+export interface RepositorioJugadores {
+  /** Todo el plantel activo, ordenado por nombre. */
+  listar(): Promise<JugadorPlantel[]>;
+  /** Un jugador por id, o `null` si no existe o está inactivo. */
+  obtener(jugadorId: string): Promise<JugadorFicha | null>;
+  /** Números del año en curso, o `null` si el jugador no jugó ningún partido este año. */
+  temporadaActual(jugadorId: string): Promise<TemporadaActual | null>;
+}
+
+// RepositorioHitos: la clase `RepositorioHitosSupabase` se usa directo (sin interfaz)
+// desde las páginas que arman el motor de hitos.

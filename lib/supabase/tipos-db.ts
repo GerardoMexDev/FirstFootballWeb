@@ -1096,6 +1096,34 @@ export type Database = {
           },
         ]
       }
+      temporada_actual: {
+        Row: {
+          amarillas: number | null
+          asistencias: number | null
+          goles: number | null
+          jugador_id: string | null
+          minutos: number | null
+          partidos: number | null
+          rojas: number | null
+          valoracion_promedio: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "partidos_jugadores_jugador_id_fkey"
+            columns: ["jugador_id"]
+            isOneToOne: false
+            referencedRelation: "jugadores"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "partidos_jugadores_jugador_id_fkey"
+            columns: ["jugador_id"]
+            isOneToOne: false
+            referencedRelation: "totales_jugador"
+            referencedColumns: ["jugador_id"]
+          },
+        ]
+      }
       totales_jugador: {
         Row: {
           carrera_asistencias: number | null
@@ -1129,7 +1157,7 @@ export type Database = {
       estado_sync: "ok" | "error" | "parcial"
       metrica_hito: "pj" | "g" | "a"
       origen_dato: "api" | "manual" | "derivado"
-      recurso_sync: "partidos" | "estadisticas" | "agenda"
+      recurso_sync: "partidos" | "estadisticas" | "agenda" | "roster"
       rol_usuario: "usuario"
       tipo_competencia: "liga" | "copa" | "continental" | "seleccion"
       tipo_convocatoria: "club" | "seleccion"
@@ -1291,7 +1319,7 @@ export const Constants = {
       estado_sync: ["ok", "error", "parcial"],
       metrica_hito: ["pj", "g", "a"],
       origen_dato: ["api", "manual", "derivado"],
-      recurso_sync: ["partidos", "estadisticas", "agenda"],
+      recurso_sync: ["partidos", "estadisticas", "agenda", "roster"],
       rol_usuario: ["usuario"],
       tipo_competencia: ["liga", "copa", "continental", "seleccion"],
       tipo_convocatoria: ["club", "seleccion"],

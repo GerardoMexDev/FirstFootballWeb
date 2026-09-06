@@ -18,16 +18,17 @@ En Claude Code **no hay memoria entre sesiones**, así que este protocolo es obl
 3. Rutina de cierre Git: `git add . && git commit -m "Sesión N: ..." && git push`.
 4. La sesión no se cierra hasta que `git push` terminó OK.
 
-**Última actualización:** 2026-09-05 (Sesión 3: base de hitos + "Fechas señaladas" + cambio de club automático + `sync-estadisticas`)
-**Estado general:** vista `partidos` con partidos reales (`sync-partidos` + `pg_cron`) +
-**motor de hitos con la base real cargada** (números de carrera/selección de los 6, corte
-2026-08-29 — de Transfermarkt vía Excel). Hoy da 0 hitos porque nadie está en ventana de
-aviso (el más cerca: Nahitan a 4 del partido 75 con la selección, aviso 3). **Nuevo:**
-"Fechas señaladas" (notas que avisan 7-10 días antes de cumpleaños / aniversarios de club /
-aniversario de debut en selección) en calendario y partidos; y **`sync-roster`** (Edge
-Function + cron semanal) que detecta cambios de club por `/transfers` y mueve al jugador +
-crea el hito de traspaso. Pendiente de Gerardo: las 8 fotos del hero (2 por tipo de
-competencia) y la lista de APIs alternativas.
+**Última actualización:** 2026-09-06 (Sesión 4: vista `jugadores` + ficha `/jugadores/[id]`)
+**Estado general:** 3 vistas conectadas a datos reales (`partidos`, `calendario`, **`jugadores`**).
+La vista `jugadores` es la grilla del plantel (6 tarjetas con foto real, país/hito, stats de
+carrera al hover) → clic abre la **ficha SSR** `/jugadores/[jugadorId]` (hitos por alcanzar,
+"Este año" desde la vista nueva `temporada_actual`, carrera, selección si corresponde, datos
+para contenido con cumpleaños/edad, próximos 5 partidos). Migraciones hasta `0007`. Motor de
+hitos sigue dando 0 hoy (nadie en ventana de aviso). **Falta ~20%:** panel lateral (velo/
+animación/foco) y hacer clicables las tarjetas de partido y los `.ev` del calendario;
+buscador ⌘K; toggle de tema; deploy a Vercel + QA. Pendiente de Gerardo: mejores fotos de
+jugadores (consiguió 6, algunas de baja resolución), y cargar `debut` profesional / `fichaje`
+/ `instagram` (hoy la ficha los muestra como "Sin datos").
 
 ---
 
@@ -72,7 +73,14 @@ diseñador → Community Manager.
 | `app/layout.tsx` | HTML/body, CSS, fuentes por `<link>`, `<symbol id="ff">` | ✅ |
 | `app/(app)/layout.tsx` | Shell `.app on` + `BarraSuperior` + overlays (velo/panel/toast) + **guard de sesión server-side** | ✅ guard S2 |
 | `app/(app)/partidos/page.tsx` | Vista `partidos` **conectada a datos reales**: hero, KPIs, filtros, lista agrupada por día | ✅ conectada S2 |
-| `app/(app)/{calendario,jugadores}/page.tsx` + `jugadores/[jugadorId]` | Vistas: esqueleto con clases de la demo + `EstadoSinDatos` | ✅ esqueleto |
+| `app/(app)/calendario/page.tsx` | Vista: esqueleto con clases de la demo (`Calendario` la llena) | ✅ conectada S3 |
+| `app/(app)/jugadores/page.tsx` + `jugadores/[jugadorId]/page.tsx` | Grilla del plantel + ficha SSR, con datos reales y motor de hitos | ✅ conectadas S4 |
+| `supabase/migrations/0007_temporada_actual.sql` | Vista `temporada_actual` (año calendario en curso, solo club) | ✅ aplicada S4 |
+| `lib/jugadores/datos-contenido.ts` (+ `.test.ts`) | `datosParaContenido` — edad/años en club/años carrera/cumpleaños, puro, 8 tests | ✅ creado S4 |
+| `lib/repositorios/repositorio-jugadores.ts` | `RepositorioJugadoresSupabase`: `listar` / `obtener` (guarda UUID) / `temporadaActual` | ✅ creado S4 |
+| `components/jugadores/{GrillaPlantel,FichaJugador}.tsx` | Grilla `.jug` (Client, navega a la ficha) + cuerpo de la ficha (render puro) | ✅ creados S4 |
+| `scripts/seed-fotos-jugadores.mjs` | Guarda `/jugadores/<slug>.webp` en `jugadores.foto_url`. `npm run seed:fotos` | ✅ creado y corrido S4 |
+| `public/jugadores/*.webp` | 6 fotos procesadas (600×800). Originales fuera del repo (`.gitignore`) | ✅ S4 |
 | `lib/repositorios/repositorio-partidos.ts` | `RepositorioPartidosSupabase`: lee `proximos_partidos`, filtra `estado != 'finalizado'`, mapea a `PartidoProximo` | ✅ creado S2 |
 | `lib/partidos/utilidades.ts` | `pesoPartido`, `claseTarjeta`, `filtrarPartidos`, `agruparPorDia`, `agruparPorJugador` (reglas puras, sin JSX) | ✅ creado S2 |
 | `supabase/migrations/0003_motor_hitos.sql` | Columnas `jugadores.*_base` (manual) + vista `totales_jugador` (base + lo que sume la sync) | ✅ aplicada S2 |
@@ -113,9 +121,58 @@ diseñador → Community Manager.
 | `scripts/consultar-clubes-jugadores.mjs` | Solo lectura: `GET /teams` + `GET /players/squads` para ubicar a la cartera real | ✅ creado S2 |
 | `scripts/seed-clubes-jugadores.mjs` | Carga los 6 clubes + 6 jugadores reales con IDs de API-Football (upsert por `proveedor_externo`+`id_externo`) | ✅ creado y corrido S2 |
 | `scripts/importar-datos-manuales.ts` | Importador del .xlsx con diff. El archivo ya llegó (S3); por ahora se usa `seed-datos-manuales.mjs` (valores fijos) | ⬜ (interino cubierto) |
-| `components/{calendario,jugadores,paneles}/*` | Grilla mensual del calendario, fichas de jugador, paneles laterales — con datos | ⬜ |
+| `components/paneles/*` | Paneles laterales (velo/animación/foco) para partido / jugador / perfil | ⬜ |
 
 ## 4. Hecho (por fecha, más reciente primero)
+
+### 2026-09-06 — Sesión 4 (vista `jugadores` + ficha)
+
+- **Fotos de los 6 representados**: Gerardo pasó 6 originales (nombres/formatos/tamaños
+  dispares, algunas < 800 px — sigue buscando mejores). Procesadas con ffmpeg a
+  `public/jugadores/<slug>.webp` 600×800 (3:4, "cover" centrado, calidad 80, ~15–40 KB);
+  `fernandez` era plano entero → recorte propio a cabeza+torso. `.gitignore` versiona **solo**
+  esos 6 `.webp` + el LEEME (los originales quedan afuera, igual criterio que `public/heroes/`).
+  `scripts/seed-fotos-jugadores.mjs` (`npm run seed:fotos`) guarda `/jugadores/<slug>.webp` en
+  `jugadores.foto_url` (match por `id_externo`, idempotente).
+- **Migración `0007_temporada_actual.sql`** — vista `temporada_actual`: agrega
+  `estadisticas_partido` del **año calendario en curso en hora de Uruguay**
+  (`date_part('year', inicio_utc at time zone 'America/Montevideo')`), solo partidos de club
+  (`partidos_jugadores.con_seleccion = false`, igual que `totales_jugador`). `minutos` /
+  `valoracion_promedio` NULL-ables. Un jugador sin partidos este año **no aparece** → la ficha
+  lo trata como "la temporada recién arranca", no como ceros. **Aproximada**: es año
+  calendario, no respeta el corte real de cada liga (Bélgica/Arabia ~agosto) — pendiente §5.
+  Hoy solo Martín Fernández tiene fila (1 partido, 44′, rating 6.26).
+- **`lib/jugadores/datos-contenido.ts`** (puro, 8 tests `node --test`): `datosParaContenido(fechas, hoyUy)`
+  → `edad`, `aniosEnClub` (1 decimal), `aniosDeCarrera` (entero), `cumpleLegible` ("28 de
+  diciembre"). Fechas civiles ancladas a UTC (mismo patrón que `notas-proximas.ts`). Cualquier
+  fecha ausente / inválida / **en el futuro** → `null`, nunca 0 ni NaN.
+- **`lib/repositorios/tipos.ts`**: + `JugadorPlantel`, `TemporadaActual`, `JugadorFicha`,
+  interfaz `RepositorioJugadores` (`listar` / `obtener` / `temporadaActual`).
+- **`lib/repositorios/repositorio-jugadores.ts`** — `RepositorioJugadoresSupabase`. Embebe el
+  club con `clubes!jugadores_club_actual_id_fkey(...)` (hay que **desambiguar por nombre de la
+  FK**: `jugadores.club_actual_id` tiene relaciones a `clubes` y al view `proximos_partidos`,
+  un `clubes(...)` a secas da "Could not find a relationship"). Carrera de `totales_jugador`
+  (merge en JS, no se puede embeber un view). `obtener()` valida que el id sea UUID **antes**
+  de consultar → un id con otra forma es 404, no un 500 por `invalid input syntax for type uuid`.
+- **`components/jugadores/GrillaPlantel.tsx`** (Client): `.plantel` + `.jug` (1:1 con
+  `renderPlantel()` de la demo). `<button>` que navega a la ficha (`router.push`, mismo criterio
+  que `Nav`). Foto en `<img class="jug__foto">` con fallback a `.jug__fb` si falla. Divergencia:
+  `.jug__pos` muestra **"posición · país del club"** (la demo mostraba "posición · liga"; no hay
+  "liga principal" por jugador en el modelo).
+- **`components/jugadores/FichaJugador.tsx`** (render puro): bloques `.bloque`/`.datos`/`.filaht`/
+  `.lst` de la demo. Divergencias, todas por dato faltante (cero invenciones): "Carrera" sin
+  minutos ni min/partido (`*_base` solo guarda pj/g/a); celda numérica sin dato → **"—"** (el
+  "Sin datos" chillón se reserva para bloques enteros vacíos `.sinDato`); bloque de temporada
+  rotulado **"Este año (AAAA)"**. Cumpleaños en **dos lugares** (pedido de Gerardo): línea de
+  identidad (`… · N años`) y bloque "Datos para contenido" (`Cumpleaños: 28 de febrero`).
+  Próximos partidos **no clicables** todavía (paneles, sesión aparte).
+- **`app/(app)/jugadores/page.tsx`** + **`[jugadorId]/page.tsx`**: Server Components. La grilla
+  calcula la frase del hito más próximo por jugador con el mismo motor que `partidos`. La ficha
+  hace `notFound()` si el id no existe. `[jugadorId]` = UUID de `jugadores.id`.
+- **Verificado con `browser-automation`** (login real como `alexis`): grilla con 6 tarjetas,
+  las 6 fotos cargan, pills de país, stats de carrera al hover; ficha de Fede (temporada vacía
+  → "recién arranca") y de Martín (temporada con datos reales); id inexistente → 404. `npm test`
+  40/40, `npm run build` OK. **0 errores de consola.**
 
 ### 2026-09-05 — Sesión 3 (cont.: vista `calendario` conectada a `agenda_anual`)
 
@@ -604,6 +661,19 @@ diseñador → Community Manager.
 - [x] ~~Vista `calendario` (`DensidadAnual`, `GrillaMes`) contra `agenda_anual`~~ — hecho
       2026-09-05 (Sesión 3). Falta: los `.ev` clicables (paneles) y afinar la altura de las
       celdas vacías (crecen con la fila más alta, igual que la demo).
+- [x] ~~Vista `jugadores` (grilla del plantel) + ficha `/jugadores/[jugadorId]`~~ — hecho
+      2026-09-06 (Sesión 4). Falta: abrirla en **panel lateral** (hoy es ruta SSR propia),
+      hacer clicables los `.pm` de "próximos partidos" (paneles), y `.jug`/ficha con foto
+      grande en la cabecera cuando haya mejores fotos.
+- [ ] **Cargar `debut` profesional / `fichaje` / `instagram` de los 6** — la ficha ya los
+      muestra ("Años de carrera", "Años en el club", pill de IG) pero hoy salen "Sin datos"
+      / "—". Van al Excel (hoja 1) o a `seed-datos-manuales.mjs`. — media
+- [ ] **`temporada_actual` es año calendario, no temporada real** — para Bélgica/Arabia
+      (~ago–may) parte la temporada al 1-ene. Afinar al corte de cada competencia cuando
+      importe (hoy con datos ralos da igual). La ficha lo rotula "Este año (AAAA)" para ser
+      honesta. — baja
+- [ ] Fotos de jugadores de mayor resolución (Gerardo consiguió 6; `amaro` 402×497 y
+      `pereira` 495×619 quedan blandas al escalar). Recambio: ver `public/jugadores/LEEME.md`. — baja
 - [ ] Tests de zona horaria en fines de semana de cambio de hora. — media
 
 ## 6. Bugs conocidos / cosas a vigilar
@@ -848,6 +918,30 @@ diseñador → Community Manager.
 - **Un error de PostgREST no es `instanceof Error`** — es un objeto plano `{message, code, …}`.
   En un `catch`, `String(e)` da `"[object Object]"`; hay que `JSON.stringify(e)` (y
   `console.error(e)` para que quede en los logs de la función).
+- **Embeber una tabla en `.select()` con varias FKs candidatas hay que desambiguarlo por
+  nombre de la FK**: `jugadores.club_actual_id` referencia `clubes` Y (vía los tipos
+  generados) el view `proximos_partidos` dos veces, así que `.select('..., clubes(...)')`
+  falla con *"Could not find a relationship between 'jugadores' and 'club_actual_id'"*. La
+  forma correcta es `clubes!jugadores_club_actual_id_fkey(col, col)` — la key del JSON sigue
+  siendo `clubes`. Un view no se puede embeber: `totales_jugador` se lee aparte y se mergea
+  en JS por `jugador_id`.
+- **Un `[param]` de ruta que es UUID hay que validarlo con regex ANTES de consultar**: si le
+  llega `/jugadores/cualquier-cosa`, `.eq('id', 'cualquier-cosa')` contra una columna `uuid`
+  tira `invalid input syntax for type uuid` → 500. Con la guarda, un id mal formado devuelve
+  `null` → `notFound()` → 404, que es lo correcto. Un UUID bien formado pero inexistente ya
+  caía en 404 solo (`maybeSingle()` → `data: null`).
+- **`node --test` con type-stripping exige la extensión `.ts` en el import relativo del
+  test**: `import { x } from './modulo'` → `ERR_MODULE_NOT_FOUND`; tiene que ser
+  `'./modulo.ts'` (así lo hacen `notas-proximas.test.ts` y `eventos.test.ts`). El módulo en
+  sí no lleva extensión en sus imports — solo los archivos `.test.ts`.
+- **No correr `npm run build` con `next dev` levantado**: `build` reescribe `.next/` y el
+  server de dev queda sirviendo chunks con hash viejo → cascada de 404 en `/_next/static/...`
+  (no es un bug del código). Matar el dev, `rm -rf .next`, `npm run dev` de nuevo. En QA:
+  primero `npm test` + `npm run build`, y recién ahí levantar el dev para `browser-automation`.
+- **`.gitignore` con all-list para carpetas de assets con originales pesados**: `public/jugadores/*`
+  + `!` para los 6 `.webp` procesados y el LEEME deja subir solo lo que se sirve y mantiene
+  los originales (de cualquier nombre/formato) fuera del repo. Mismo criterio que `public/heroes/`,
+  donde en cambio los originales simplemente se borraron.
 
 ## 11. Dudas abiertas (de `contexto.md` §12)
 

@@ -1,36 +1,40 @@
 # Fotos de los jugadores
 
-Acá van las 6 fotos de los representados. Todavía no están conectadas —
-se cablean en la sesión de la vista `jugadores` + ficha.
+**Estado: 6 fotos procesadas y cableadas** (Sesión 4). La grilla de la vista
+`jugadores` las usa como fondo de cada tarjeta (`.jug__foto`). Sin foto para un
+jugador → queda el fondo `.jug__fb` (el fallback ya está en el componente).
 
-## Qué se necesita
+## Archivos versionados
 
-- **1 por jugador** (los 6).
-- **Retrato vertical**, cara + torso, **centrada y con aire** alrededor
-  (la app recorta a cuadrado para el círculo y a card para la grilla).
-- **Lado corto ≥ 800 px** (ideal 1000–1400). Más grande no molesta.
-- JPG o PNG (se convierten a WebP).
-- Fondo cualquiera; mejor si es liso/neutro (foto de plantel o de prensa).
-- Idealmente con la camiseta del club actual o de la selección.
+| Archivo | Jugador | Club |
+|---|---|---|
+| `nandez.webp`    | Nahitan Nández   | Al-Qadisiyah |
+| `pereira.webp`   | Federico Pereira | Toluca |
+| `sosa.webp`      | Ignacio Sosa     | RB Bragantino |
+| `mendez.webp`    | Javier Méndez    | Colo-Colo |
+| `amaro.webp`     | Kevin Amaro      | Genk |
+| `fernandez.webp` | Martín Fernández | Atlante |
 
-## Nombres
+Todas 600×800 WebP (3:4, calidad 80, ~15–40 KB), recorte "cover" centrado
+anclado arriba para dejar aire sobre la cabeza. La ruta se guarda en
+`jugadores.foto_url` (`/jugadores/<slug>.webp`) con `scripts/seed-fotos-jugadores.mjs`.
 
-Por apellido, en minúscula, sin tildes:
+## Recambiar una foto
 
-```
-nandez.jpg     -> Nahitan Nández  (Al-Qadisiyah)
-pereira.jpg    -> Federico Pereira (Toluca)
-sosa.jpg       -> Ignacio Sosa    (RB Bragantino)
-mendez.jpg     -> Javier Méndez   (Colo-Colo)
-amaro.jpg      -> Kevin Amaro     (Genk)
-fernandez.jpg  -> Martín Fernández (Atlante)
-```
+Los originales NO se versionan (`.gitignore` deja pasar solo los 6 `.webp` de
+arriba, igual criterio que `public/heroes/`). Para cambiar una:
 
-Si es más fácil, mandalas con cualquier nombre y se renombran acá.
+1. Poné el nuevo original en esta carpeta (cualquier nombre/formato).
+2. Reprocesá a `<slug>.webp` 600×800:
+   ```
+   ffmpeg -y -i "<original>" -vf "scale=600:800:force_original_aspect_ratio=increase,crop=600:800:(iw-ow)/2:(ih-oh)*0.18" -c:v libwebp -quality 80 "<slug>.webp"
+   ```
+   (si es un plano entero, ajustá el `crop` para acercar cabeza + torso, como se
+   hizo con `fernandez.webp`).
+3. `foto_url` ya apunta ahí — no hace falta re-seed salvo que cambie el slug.
 
-## Cómo se van a usar
+## Qué conviene en el original
 
-Se procesan a WebP (una versión ~1200px para la ficha, un cuadrado ~400px
-para las caras) y se guarda la ruta en `jugadores.foto_url`. Sin foto para
-un jugador → iniciales con color derivado del nombre (ya está ese fallback).
-Los `.jpg` originales no se versionan.
+- Retrato vertical, cara + torso, sujeto centrado y con aire alrededor.
+- Lado corto ≥ 800 px (ideal 1000–1400).
+- Fondo liso/neutro; camiseta del club actual o de la selección.

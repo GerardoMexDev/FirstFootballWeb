@@ -18,6 +18,7 @@
     "seed:roster": "node scripts/seed-clubes-jugadores.mjs",
     "seed:base-hitos": "node scripts/seed-base-hitos.mjs",
     "seed:datos-manuales": "node scripts/seed-datos-manuales.mjs",
+    "seed:fotos": "node scripts/seed-fotos-jugadores.mjs",
     "vault:cron": "node scripts/configurar-vault-cron.mjs",
     "deploy:funcion": "node scripts/desplegar-funcion.mjs"
   },
