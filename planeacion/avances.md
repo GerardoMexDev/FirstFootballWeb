@@ -18,14 +18,14 @@ En Claude Code **no hay memoria entre sesiones**, así que este protocolo es obl
 3. Rutina de cierre Git: `git add . && git commit -m "Sesión N: ..." && git push`.
 4. La sesión no se cierra hasta que `git push` terminó OK.
 
-**Última actualización:** 2026-09-06 (Sesión 4: `jugadores` + ficha + panel lateral + ⌘K + **tema**)
+**Última actualización:** 2026-09-06 (Sesión 4: `jugadores` + ficha + panel lateral + ⌘K + tema + **perfil**)
 **Estado general:** 3 vistas conectadas a datos reales (`partidos`, `calendario`, `jugadores`)
-+ **panel lateral de detalle** (partido y jugador, estado en la URL `?panel=…&id=…`)
-+ **buscador global ⌘K** + **toggle de tema claro/oscuro** (preferencia en `perfiles.tema`,
-leída server-side → sin parpadeo). `/jugadores/[jugadorId]` sigue como enlace directo.
-Migraciones hasta `0008`. Motor de hitos sigue dando 0 hoy. **Falta ~5%:** panel de perfil
-("Mi cuenta" + forms de Supabase); deploy a Vercel + QA. `debut` / `fichaje` / `instagram` de
-los 6 cargados. Pendiente de Gerardo: fotos definitivas de jugadores (las manda la agencia).
++ **panel lateral** (partido / jugador / **perfil**, estado en la URL) + **buscador ⌘K** +
+**toggle de tema**. El panel de perfil ("Mi cuenta", desde el menú de usuario) tiene las 3
+pestañas: Datos (editar nombre; correo/rol solo lectura), Contraseña (`auth.updateUser`),
+Notificaciones (`perfiles.avisos`, el envío es Fase 2). Migraciones hasta `0009`. Motor de
+hitos sigue dando 0 hoy. **Falta:** deploy a Vercel + QA final. `debut`/`fichaje`/`instagram`
+de los 6 cargados. Pendiente de Gerardo: fotos definitivas de jugadores (las manda la agencia).
 
 ---
 
@@ -83,9 +83,11 @@ diseñador → Community Manager.
 | `app/api/paneles/{jugador,partido}/route.ts` | Endpoints JSON del panel (cliente SSR → RLS), 404 si no existe | ✅ creados S4 |
 | `lib/buscador/indexar.ts` (+ `.test.ts`) | `buscar` — filtro sin acentos sobre plantel + partidos, puro, 8 tests | ✅ creado S4 |
 | `components/buscador/Buscador.tsx` · `app/api/buscador/route.ts` | Modal `.busca` ⌘K (botón + modal) · endpoint de precarga | ✅ creados S4 |
-| `supabase/migrations/0008_perfiles_tema.sql` | `perfiles.tema` (claro/oscuro) | ✅ aplicada S4 |
-| `lib/sesion/sesion-actual.ts` | `sesionActual` (`React.cache`): usuario + perfil + tema, 1 consulta. Lo usan ambos layouts | ✅ creado S4 |
+| `supabase/migrations/0008_perfiles_tema.sql` · `0009_perfiles_avisos.sql` | `perfiles.tema` (claro/oscuro) · `perfiles.avisos` (jsonb) | ✅ aplicadas S4 |
+| `lib/sesion/sesion-actual.ts` | `sesionActual` (`React.cache`): usuario + perfil + tema + avisos, 1 consulta. Lo usan ambos layouts y el endpoint de perfil | ✅ creado S4 |
 | `components/layout/ToggleTema.tsx` | Toggle claro/oscuro; persiste en `perfiles.tema` | ✅ creado S4 |
+| `lib/perfil/validar-contrasena.ts` (+ `.test.ts`) | `validarContrasena` (≥8, coinciden), puro, 5 tests | ✅ creado S4 |
+| `components/paneles/PanelPerfil.tsx` · `app/api/paneles/perfil/route.ts` | Panel "Mi cuenta" (3 pestañas) · endpoint GET | ✅ creados S4 |
 | `scripts/seed-fotos-jugadores.mjs` | Guarda `/jugadores/<slug>.webp` en `jugadores.foto_url`. `npm run seed:fotos` | ✅ creado y corrido S4 |
 | `public/jugadores/*.webp` | 6 fotos procesadas (600×800). Originales fuera del repo (`.gitignore`) | ✅ S4 |
 | `lib/repositorios/repositorio-partidos.ts` | `RepositorioPartidosSupabase`: lee `proximos_partidos`, filtra `estado != 'finalizado'`, mapea a `PartidoProximo` | ✅ creado S2 |
@@ -131,6 +133,35 @@ diseñador → Community Manager.
 | `components/paneles/PanelPerfil.tsx` | Panel "Mi cuenta" (Mi perfil / Cambiar contraseña / Notificaciones) — necesita forms de Supabase | ⬜ |
 
 ## 4. Hecho (por fecha, más reciente primero)
+
+### 2026-09-06 — Sesión 4 (cont.: panel de perfil "Mi cuenta")
+
+- **Migración `0009`**: `perfiles.avisos jsonb` (default `{hitos,partidos,resumen}: true`). El
+  envío de notificaciones es Fase 2; esto solo persiste la preferencia.
+- **`sesionActual()`** ahora también trae `avisos` (misma consulta) con un normalizador a
+  booleanos. `/api/paneles/perfil` lo reusa (+ `usuarioId` para los `.update`).
+- **`use-panel.ts`**: `TipoPanel` += `'perfil'`. Para perfil `id` es opcional (si viene, es la
+  pestaña inicial: `?panel=perfil&id=clave`). Nuevo helper puro `rutaPanel(pathname, tipo, id?)`
+  para los disparadores que no viven en una vista (buscador, menú de usuario) — arman la URL
+  sin `useSearchParams`, sin depender de `<Suspense>`. `Buscador` pasa a usarlo.
+- **`components/paneles/PanelPerfil.tsx`** — 3 pestañas (`.barra`/`.chip`):
+  - **Datos**: nombre editable → `perfiles.update({ nombre_completo })` + `router.refresh()`
+    (la barra superior lo relee). Correo y rol solo lectura, con el `.aviso` de la demo.
+  - **Contraseña**: nueva + repetir → `validarContrasena` (`lib/perfil/`, puro, 5 tests) →
+    `auth.updateUser({ password })`. **Sin campo "actual"**: Supabase no lo verifica con la
+    sesión activa, dejarlo implicaría un chequeo que no ocurre.
+  - **Notificaciones**: 3 switches (`.switch`) → `perfiles.update({ avisos })` optimista (si
+    falla, revierte). Nota de que el envío llega en Fase 2.
+  - Sin bloque de foto (Fase 2, Storage).
+- **`PanelLateral`**: maneja `tipo === 'perfil'` (título "Mi cuenta", fetch a
+  `/api/paneles/perfil`, abre sin `id`). **`BarraSuperior`**: los 3 items del menú de usuario
+  (Mi perfil / Cambiar contraseña / Notificaciones) dejan de estar `disabled` → abren el panel
+  en la pestaña correspondiente y cierran el menú.
+- **Verificado con `browser-automation`** (login real): abre "Mi cuenta" desde el menú en la
+  pestaña Datos; cambiar el nombre lo refleja en la barra superior; validaciones de contraseña
+  ("8 caracteres", "no coinciden"); togglear un aviso persiste (confirmado contra el endpoint)
+  y se revierte; "Cambiar contraseña" del menú abre directo en esa pestaña. **62 tests**,
+  build + lint OK, 0 errores de consola.
 
 ### 2026-09-06 — Sesión 4 (cont.: toggle de tema claro/oscuro)
 
@@ -676,8 +707,10 @@ diseñador → Community Manager.
 - [x] ~~Sesión auth~~ — hecho 2026-09-04 (ver §4 Sesión 2): middleware, guard, login real, menú de
       usuario + cerrar sesión. Verificado de punta a punta con las 4 cuentas.
 - [x] ~~`scripts/seed-usuarios.ts`~~ — hecho 2026-09-04 como `.mjs` (ver §4 Sesión 2 y §10).
-- [ ] Paneles de "Mi perfil" / "Cambiar contraseña" / "Notificaciones" (hoy `disabled` en el
-      menú de usuario). — media
+- [x] ~~Paneles de "Mi perfil" / "Cambiar contraseña" / "Notificaciones"~~ — hecho 2026-09-06
+      (Sesión 4 cont.): panel "Mi cuenta" con las 3 pestañas, desde el menú de usuario. Sin
+      bloque de foto (Fase 2). El ENVÍO de notificaciones es Fase 2; el panel solo guarda la
+      preferencia (`perfiles.avisos`).
 - [x] ~~Confirmar contra `GET /leagues` los IDs de ligas/copas/continentales; cargar `competencias`
       con su `cobertura`~~ — hecho 2026-09-04 (ver §4 Sesión 2 cont.: 15 competencias cargadas).
 - [x] ~~Conectar vista `partidos` a `proximos_partidos`~~ — hecho 2026-09-04 (ver §4 Sesión 2

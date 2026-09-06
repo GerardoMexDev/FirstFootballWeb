@@ -19,6 +19,7 @@ import { Ico } from '@/components/comunes/Ico';
 import { Escudo } from '@/components/comunes/Escudo';
 import { CaraJugador } from '@/components/comunes/CaraJugador';
 import { buscar } from '@/lib/buscador/indexar';
+import { rutaPanel } from '@/lib/paneles/use-panel';
 import { etiquetaDiaUy, horaCortaEnUruguay } from '@/lib/fechas/zonas';
 import { mostrar } from '@/lib/formato/valores';
 import type { JugadorPlantel, PartidoProximo } from '@/lib/repositorios/tipos';
@@ -82,7 +83,7 @@ export function Buscador() {
 
   function irA(tipo: 'jugador' | 'partido', id: string) {
     cerrar();
-    router.push(`${pathname}?panel=${tipo}&id=${encodeURIComponent(id)}`, { scroll: false });
+    router.push(rutaPanel(pathname, tipo, id), { scroll: false });
   }
 
   function alTecladoModal(evento: React.KeyboardEvent) {

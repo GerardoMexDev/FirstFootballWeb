@@ -20,21 +20,26 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { EstadoSinDatos } from '@/components/comunes/EstadoSinDatos';
 import { PanelJugador } from '@/components/paneles/PanelJugador';
 import { PanelPartido } from '@/components/paneles/PanelPartido';
+import { PanelPerfil, type PerfilBundle } from '@/components/paneles/PanelPerfil';
 import { usePanel } from '@/lib/paneles/use-panel';
 import type { FichaJugadorBundle } from '@/lib/jugadores/cargar-ficha';
 import type { DetallePartidoBundle } from '@/lib/paneles/cargar-detalle-partido';
+
+type PestanaPerfil = 'datos' | 'clave' | 'avisos';
 
 type Contenido =
   | { fase: 'cargando' }
   | { fase: 'error'; mensaje: string }
   | { fase: 'jugador'; datos: FichaJugadorBundle }
-  | { fase: 'partido'; datos: DetallePartidoBundle };
+  | { fase: 'partido'; datos: DetallePartidoBundle }
+  | { fase: 'perfil'; datos: PerfilBundle };
 
 const FOCOS = 'a[href], button:not([disabled]), input, select, textarea, [tabindex]:not([tabindex="-1"])';
 
 export function PanelLateral() {
   const { tipo, id, cerrar } = usePanel();
-  const abierto = tipo !== null && id !== null;
+  // perfil no necesita id (el id, si viene, es la pestaña inicial); jugador/partido sí.
+  const abierto = tipo === 'perfil' || (tipo !== null && id !== null);
 
   const [contenido, setContenido] = useState<Contenido | null>(null);
   const panelRef = useRef<HTMLElement>(null);
@@ -44,11 +49,12 @@ export function PanelLateral() {
   // Traer los datos al abrir / cambiar de entidad. Mientras no está abierto no se toca el
   // contenido (así queda visible durante la animación de salida).
   useEffect(() => {
-    if (!abierto) return;
+    if (!abierto || !tipo) return;
     let vivo = true;
     setContenido({ fase: 'cargando' });
 
-    fetch(`/api/paneles/${tipo}?id=${encodeURIComponent(id!)}`)
+    const url = tipo === 'perfil' ? '/api/paneles/perfil' : `/api/paneles/${tipo}?id=${encodeURIComponent(id!)}`;
+    fetch(url)
       .then(async (respuesta) => {
         if (!vivo) return;
         if (respuesta.status === 404) {
@@ -61,7 +67,9 @@ export function PanelLateral() {
         }
         const datos = await respuesta.json();
         if (!vivo) return;
-        setContenido(tipo === 'jugador' ? { fase: 'jugador', datos } : { fase: 'partido', datos });
+        if (tipo === 'jugador') setContenido({ fase: 'jugador', datos });
+        else if (tipo === 'partido') setContenido({ fase: 'partido', datos });
+        else setContenido({ fase: 'perfil', datos });
       })
       .catch(() => {
         if (vivo) setContenido({ fase: 'error', mensaje: 'No pudimos cargar el detalle. Probá de nuevo.' });
@@ -109,7 +117,13 @@ export function PanelLateral() {
   );
 
   const titulo =
-    tipo === 'jugador' ? 'Ficha del jugador' : tipo === 'partido' ? 'Detalle del partido' : 'Detalle';
+    tipo === 'jugador'
+      ? 'Ficha del jugador'
+      : tipo === 'partido'
+        ? 'Detalle del partido'
+        : tipo === 'perfil'
+          ? 'Mi cuenta'
+          : 'Detalle';
 
   return (
     <>
@@ -138,6 +152,14 @@ export function PanelLateral() {
           {contenido?.fase === 'error' && <EstadoSinDatos>{contenido.mensaje}</EstadoSinDatos>}
           {contenido?.fase === 'jugador' && <PanelJugador bundle={contenido.datos} />}
           {contenido?.fase === 'partido' && <PanelPartido bundle={contenido.datos} />}
+          {contenido?.fase === 'perfil' && (
+            <PanelPerfil
+              bundle={contenido.datos}
+              pestanaInicial={
+                id === 'clave' || id === 'avisos' || id === 'datos' ? (id as PestanaPerfil) : 'datos'
+              }
+            />
+          )}
         </div>
       </aside>
     </>

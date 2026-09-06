@@ -1,5 +1,6 @@
 /**
- * Estado del panel lateral, en la URL. `?panel=jugador&id=…` (o `partido`).
+ * Estado del panel lateral, en la URL. `?panel=jugador&id=…` · `?panel=partido&id=…` ·
+ * `?panel=perfil` (sin id, o `&id=<pestaña>` para abrir en Datos / Contraseña / Notificaciones).
  *
  * Abrir = agregar los params al path actual (sin scrollear). Cerrar = sacarlos. Así el
  * panel se abre desde cualquier vista, el botón "atrás" del navegador lo cierra, y las
@@ -17,12 +18,27 @@
 import { useCallback } from 'react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 
-export type TipoPanel = 'jugador' | 'partido';
+export type TipoPanel = 'jugador' | 'partido' | 'perfil';
+
+const TIPOS: readonly TipoPanel[] = ['jugador', 'partido', 'perfil'];
+
+/**
+ * Arma la URL que abre un panel, sin leer `useSearchParams` — para los componentes que
+ * disparan un panel pero no viven dentro de una vista (buscador, menú de usuario) y no
+ * quieren la dependencia de `<Suspense>`. No preserva otros query params (en esta app no hay).
+ */
+export function rutaPanel(pathname: string, tipo: TipoPanel, id?: string): string {
+  const q = new URLSearchParams({ panel: tipo });
+  if (id) q.set('id', id);
+  return `${pathname}?${q.toString()}`;
+}
 
 export interface EstadoPanel {
   tipo: TipoPanel | null;
+  /** Para jugador/partido: el id de la entidad. Para perfil: la pestaña inicial, o null. */
   id: string | null;
-  abrir: (tipo: TipoPanel, id: string) => void;
+  /** `id` es obligatorio para jugador/partido; opcional para perfil (pestaña inicial). */
+  abrir: (tipo: TipoPanel, id?: string) => void;
   cerrar: () => void;
 }
 
@@ -32,14 +48,15 @@ export function usePanel(): EstadoPanel {
   const params = useSearchParams();
 
   const tipoCrudo = params.get('panel');
-  const tipo: TipoPanel | null = tipoCrudo === 'jugador' || tipoCrudo === 'partido' ? tipoCrudo : null;
+  const tipo = (TIPOS as readonly string[]).includes(tipoCrudo ?? '') ? (tipoCrudo as TipoPanel) : null;
   const id = tipo ? params.get('id') : null;
 
   const abrir = useCallback(
-    (t: TipoPanel, i: string) => {
+    (t: TipoPanel, i?: string) => {
       const q = new URLSearchParams(Array.from(params.entries()));
       q.set('panel', t);
-      q.set('id', i);
+      if (i) q.set('id', i);
+      else q.delete('id');
       router.push(`${pathname}?${q.toString()}`, { scroll: false });
     },
     [params, pathname, router],
@@ -53,5 +70,5 @@ export function usePanel(): EstadoPanel {
     router.push(cadena ? `${pathname}?${cadena}` : pathname, { scroll: false });
   }, [params, pathname, router]);
 
-  return { tipo, id: id && tipo ? id : null, abrir, cerrar };
+  return { tipo, id, abrir, cerrar };
 }

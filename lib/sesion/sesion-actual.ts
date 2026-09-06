@@ -14,10 +14,19 @@ import type { Database } from '@/lib/supabase/tipos-db';
 
 type FilaPerfil = Pick<
   Database['public']['Tables']['perfiles']['Row'],
-  'nombre_completo' | 'cargo' | 'tema'
+  'nombre_completo' | 'cargo' | 'tema' | 'avisos'
 >;
 
 export type Tema = 'claro' | 'oscuro';
+
+/** Preferencias de notificación (el envío es Fase 2; esto solo persiste la elección). */
+export interface Avisos {
+  hitos: boolean;
+  partidos: boolean;
+  resumen: boolean;
+}
+
+export const AVISOS_POR_DEFECTO: Avisos = { hitos: true, partidos: true, resumen: true };
 
 export interface Sesion {
   usuarioId: string;
@@ -25,6 +34,17 @@ export interface Sesion {
   nombreCompleto: string;
   cargo: string;
   tema: Tema;
+  avisos: Avisos;
+}
+
+/** Normaliza el jsonb crudo de `perfiles.avisos` a la forma `Avisos` (todo booleano). */
+function aAvisos(crudo: unknown): Avisos {
+  const o = (crudo && typeof crudo === 'object' ? crudo : {}) as Record<string, unknown>;
+  return {
+    hitos: o.hitos !== false,
+    partidos: o.partidos !== false,
+    resumen: o.resumen !== false,
+  };
 }
 
 export const sesionActual = cache(async (): Promise<Sesion | null> => {
@@ -37,7 +57,7 @@ export const sesionActual = cache(async (): Promise<Sesion | null> => {
 
   const { data: perfil } = await supabase
     .from('perfiles')
-    .select('nombre_completo, cargo, tema')
+    .select('nombre_completo, cargo, tema, avisos')
     .eq('id', user.id)
     .returns<FilaPerfil[]>()
     .single();
@@ -48,5 +68,6 @@ export const sesionActual = cache(async (): Promise<Sesion | null> => {
     nombreCompleto: perfil?.nombre_completo || '',
     cargo: perfil?.cargo || 'Prueba',
     tema: perfil?.tema === 'oscuro' ? 'oscuro' : 'claro',
+    avisos: aAvisos(perfil?.avisos),
   };
 });

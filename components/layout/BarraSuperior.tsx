@@ -9,11 +9,12 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { Nav } from '@/components/layout/Nav';
 import { Ico } from '@/components/comunes/Ico';
 import { Buscador } from '@/components/buscador/Buscador';
 import { ToggleTema } from '@/components/layout/ToggleTema';
+import { rutaPanel } from '@/lib/paneles/use-panel';
 import { crearClienteNavegador } from '@/lib/supabase/cliente-navegador';
 import type { Tema } from '@/lib/sesion/sesion-actual';
 
@@ -27,9 +28,16 @@ export interface PerfilBarra {
 
 export function BarraSuperior({ perfil }: { perfil: PerfilBarra }) {
   const router = useRouter();
+  const pathname = usePathname();
   const [abierto, setAbierto] = useState(false);
   const [saliendo, setSaliendo] = useState(false);
   const contenedorRef = useRef<HTMLDivElement>(null);
+
+  /** Cierra el menú y abre el panel "Mi cuenta" en la pestaña pedida. */
+  function abrirPerfil(pestana: 'datos' | 'clave' | 'avisos') {
+    setAbierto(false);
+    router.push(rutaPanel(pathname, 'perfil', pestana), { scroll: false });
+  }
 
   // Cierra el desplegable al hacer click afuera o al presionar Escape (mismo criterio que
   // el buscador ⌘K: un overlay contextual se cierra con las dos vías, no solo con un botón).
@@ -109,16 +117,15 @@ export function BarraSuperior({ perfil }: { perfil: PerfilBarra }) {
                   <span className="drop__rol">{perfil.cargo}</span>
                 </div>
               </div>
-              {/* TODO(sesión paneles): Mi perfil / Cambiar contraseña / Notificaciones */}
-              <button data-perfil="datos" disabled>
+              <button type="button" onClick={() => abrirPerfil('datos')}>
                 <Ico nombre="persona" />
                 Mi perfil
               </button>
-              <button data-perfil="clave" disabled>
+              <button type="button" onClick={() => abrirPerfil('clave')}>
                 <Ico nombre="candado" />
                 Cambiar contraseña
               </button>
-              <button data-perfil="avisos" disabled>
+              <button type="button" onClick={() => abrirPerfil('avisos')}>
                 <Ico nombre="campana" />
                 Notificaciones
               </button>

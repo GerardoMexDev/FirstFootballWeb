@@ -764,6 +764,7 @@ export type Database = {
         Row: {
           activo: boolean
           actualizado_en: string
+          avisos: Json
           cargo: string
           creado_en: string
           id: string
@@ -774,6 +775,7 @@ export type Database = {
         Insert: {
           activo?: boolean
           actualizado_en?: string
+          avisos?: Json
           cargo?: string
           creado_en?: string
           id: string
@@ -784,6 +786,7 @@ export type Database = {
         Update: {
           activo?: boolean
           actualizado_en?: string
+          avisos?: Json
           cargo?: string
           creado_en?: string
           id?: string
