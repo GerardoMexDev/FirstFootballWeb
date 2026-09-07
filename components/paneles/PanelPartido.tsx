@@ -30,6 +30,8 @@ export function PanelPartido({ bundle }: { bundle: DetallePartidoBundle }) {
   const horaUy = d.inicioUtc ? horaCortaEnUruguay(d.inicioUtc) : null;
   const horaSede =
     d.inicioUtc && d.zonaHorariaEvento ? horaCortaEnSede(d.inicioUtc, d.zonaHorariaEvento) : null;
+  // La hora local se muestra siempre que se conozca la zona de la sede; el aviso de
+  // "trabajen con la hora de Uruguay" solo cuando realmente difiere.
   const hayDiferencia = horaSede !== null && horaSede !== horaUy;
 
   return (
@@ -77,10 +79,10 @@ export function PanelPartido({ bundle }: { bundle: DetallePartidoBundle }) {
                 <b>{horaUy}</b>
                 <span>Hora Uruguay</span>
               </div>
-              {hayDiferencia && (
+              {horaSede !== null && (
                 <div className="dato">
                   <b>{horaSede}</b>
-                  <span>Hora local</span>
+                  <span>{hayDiferencia ? 'Hora local' : 'Hora local · igual que Uruguay'}</span>
                 </div>
               )}
             </div>

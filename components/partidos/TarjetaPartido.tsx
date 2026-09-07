@@ -3,6 +3,9 @@
  * demo (datos reales, no mock):
  * - Sin sigla de zona (CEST/BRT/…): la hora en la sede se muestra sola, con la etiqueta
  *   "hora local" (regla de zonas horarias — ver arquitectura-fase1.html §3).
+ * - La hora local se muestra SIEMPRE que se conozca la zona de la sede (la agencia la
+ *   necesita para los pósters). Cuando coincide con la de Uruguay (Brasil/Chile, mismo
+ *   UTC−3 sin DST) se aclara "misma hora que Uruguay" para que no parezca un error.
  * - Sin "· país" en la competencia: la vista `proximos_partidos` no expone el país de la
  *   competencia (no se le agregó esa columna); si hace falta, es un cambio de vista, no de acá.
  * - Con `onAbrir`, la tarjeta abre el panel de detalle del partido (clic, Enter o Espacio),
@@ -64,10 +67,16 @@ export function TarjetaPartido({
             'Sin horario confirmado'
           )}
         </div>
-        {tieneSede && !mismaHora && (
+        {tieneSede && (
           <div className="loc">
             <Ico nombre="pin" clase="ico ico--sm" />
-            <b>{horaSede}</b> hora local
+            {mismaHora ? (
+              <span>misma hora que Uruguay</span>
+            ) : (
+              <>
+                <b>{horaSede}</b> hora local
+              </>
+            )}
           </div>
         )}
       </div>

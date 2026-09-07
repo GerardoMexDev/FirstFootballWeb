@@ -17,8 +17,14 @@
  * seed, busca y decide insert/update a mano porque esos índices son parciales.
  */
 import { createClient } from 'npm:@supabase/supabase-js@2';
-import { obtenerFixturesDeVariosDias, type FixtureApiFootball } from '../_shared/api-football.ts';
+import {
+  esperarEntreLlamadas,
+  obtenerFixturesDeVariosDias,
+  obtenerSede,
+  type FixtureApiFootball,
+} from '../_shared/api-football.ts';
 import { mapearEstado } from '../_shared/estado-partido.ts';
+import { zonaDePais } from '../_shared/zona-pais.ts';
 
 const PROVEEDOR = 'api-football';
 const NOVENTA_DIAS_MS = 90 * 86_400_000;
@@ -66,11 +72,14 @@ Deno.serve(async (req: Request) => {
     }
 
     // 2) Competencias ya catalogadas (scripts/seed-competencias.mjs), por id_externo.
+    //    `pais` sirve para deducir la zona horaria de la sede en partidos de visitante
+    //    (el club local rival no la trae) — ver `deducirZonaSede`.
     const { data: competencias, error: errCompetencias } = await supabase
       .from('competencias')
-      .select('id, id_externo');
+      .select('id, id_externo, pais');
     if (errCompetencias) throw errCompetencias;
     const competenciaIdPorExterno = new Map((competencias ?? []).map((c) => [c.id_externo, c.id]));
+    const competenciaPaisPorExterno = new Map((competencias ?? []).map((c) => [c.id_externo, c.pais]));
 
     // 3) Fixtures del mundo para la ventana de días, filtrados a los que tocan a la cartera.
     const resultadoFixtures = await obtenerFixturesDeVariosDias(apiKey, diasAdelante);
@@ -83,7 +92,14 @@ Deno.serve(async (req: Request) => {
     });
 
     for (const fx of relevantes) {
-      registrosAfectados += await sincronizarFixture(supabase, fx, carteraPorExterno, competenciaIdPorExterno);
+      registrosAfectados += await sincronizarFixture(
+        supabase,
+        fx,
+        carteraPorExterno,
+        competenciaIdPorExterno,
+        competenciaPaisPorExterno,
+        apiKey,
+      );
     }
 
     if (diasOmitidos.length) {
@@ -139,6 +155,47 @@ async function asegurarClub(
   return { id: creado.id, zonaHoraria: creado.zona_horaria };
 }
 
+/**
+ * Zona horaria de la sede, con cadena de respaldo (la agencia necesita la hora local en
+ * TODO partido, para los pósters):
+ *   1) zona del club local, si la conocemos (nuestros 6 clubes la tienen del seed).
+ *   2) país de la competencia → zona representativa (`_shared/zona-pais.ts`). Cubre todas
+ *      las ligas y copas domésticas — el partido se juega en ese país.
+ *   3) `GET /venues?id=` de la sede puntual → país → zona. Solo para copas continentales
+ *      (país de la competencia = un continente) y sedes nuevas. De paso devuelve el
+ *      nombre/ciudad para rellenarlos si el fixture no los trajo.
+ * Nunca se inventa: si nada resuelve, queda NULL y la UI no muestra "hora local".
+ */
+async function deducirZonaSede(
+  apiKey: string,
+  fx: FixtureApiFootball,
+  zonaClubLocal: string | null,
+  competenciaPais: string | null,
+): Promise<{ zona: string | null; estadio: string | null; ciudad: string | null }> {
+  let estadio = fx.fixture.venue.name;
+  let ciudad = fx.fixture.venue.city;
+  let zona = zonaClubLocal ?? zonaDePais(competenciaPais);
+
+  // Consulta puntual `GET /venues` si todavía falta la zona (copas continentales) O si
+  // falta el nombre/ciudad de la sede y hay un id de sede para pedirla.
+  const venueId = fx.fixture.venue.id;
+  if (venueId && (!zona || !estadio || !ciudad)) {
+    await esperarEntreLlamadas(); // respeta el límite de 10 req/min del plan free
+    try {
+      const sede = await obtenerSede(apiKey, venueId);
+      if (sede) {
+        estadio = estadio ?? sede.nombre;
+        ciudad = ciudad ?? sede.ciudad;
+        zona = zona ?? zonaDePais(sede.pais);
+      }
+    } catch (e) {
+      console.error(`No se pudo consultar la sede ${venueId}:`, e instanceof Error ? e.message : e);
+    }
+  }
+
+  return { zona, estadio, ciudad }; // zona puede quedar null — nunca se inventa
+}
+
 /** Sincroniza un fixture: upsert de clubes + partido + partidos_jugadores. Devuelve cuántas filas tocó. */
 async function sincronizarFixture(
   // deno-lint-ignore no-explicit-any
@@ -146,6 +203,8 @@ async function sincronizarFixture(
   fx: FixtureApiFootball,
   carteraPorExterno: Map<string, { clubId: string; zonaHoraria: string | null; jugadorIds: string[] }>,
   competenciaIdPorExterno: Map<string, string>,
+  competenciaPaisPorExterno: Map<string, string | null>,
+  apiKey: string,
 ): Promise<number> {
   const homeExterno = String(fx.teams.home.id);
   const awayExterno = String(fx.teams.away.id);
@@ -153,24 +212,34 @@ async function sincronizarFixture(
   const clubLocal = await asegurarClub(supabase, homeExterno, fx.teams.home.name);
   const clubVisitante = await asegurarClub(supabase, awayExterno, fx.teams.away.name);
 
-  // Hora de la sede: la del club local si la conocemos (nuestros 6 clubes la tienen desde el
-  // seed; un rival recién descubierto no la trae de la API -> queda NULL, nunca inventada).
-  const zonaHorariaEvento = clubLocal.zonaHoraria;
+  const competenciaPais = competenciaPaisPorExterno.get(String(fx.league.id)) ?? null;
+  const sede = await deducirZonaSede(apiKey, fx, clubLocal.zonaHoraria, competenciaPais);
 
   const inicioUtc = fx.fixture.date;
   const tentativo = new Date(inicioUtc).getTime() - Date.now() > NOVENTA_DIAS_MS;
   const competenciaId = competenciaIdPorExterno.get(String(fx.league.id)) ?? null;
+
+  // Fila existente (si la hay): sirve para NO pisar con null un estadio/ciudad/zona que ya
+  // teníamos — sea de un sync anterior con mejor dato o de una carga manual. Estos 3 campos
+  // solo mejoran; `estado`, marcador y ronda sí se actualizan siempre.
+  const { data: partidoExistente, error: errBuscarPartido } = await supabase
+    .from('partidos')
+    .select('id, estadio, ciudad, zona_horaria_evento')
+    .eq('proveedor_externo', PROVEEDOR)
+    .eq('id_externo', String(fx.fixture.id))
+    .maybeSingle();
+  if (errBuscarPartido) throw errBuscarPartido;
 
   const filaPartido = {
     competencia_id: competenciaId,
     club_local_id: clubLocal.id,
     club_visitante_id: clubVisitante.id,
     inicio_utc: inicioUtc,
-    zona_horaria_evento: zonaHorariaEvento,
+    zona_horaria_evento: sede.zona ?? partidoExistente?.zona_horaria_evento ?? null,
     estado: mapearEstado(fx.fixture.status.short),
     ronda: fx.league.round,
-    estadio: fx.fixture.venue.name,
-    ciudad: fx.fixture.venue.city,
+    estadio: sede.estadio ?? partidoExistente?.estadio ?? null,
+    ciudad: sede.ciudad ?? partidoExistente?.ciudad ?? null,
     marcador_local: fx.goals.home,
     marcador_visitante: fx.goals.away,
     tentativo,
@@ -180,14 +249,6 @@ async function sincronizarFixture(
     payload_crudo: fx,
     sincronizado_en: new Date().toISOString(),
   };
-
-  const { data: partidoExistente, error: errBuscarPartido } = await supabase
-    .from('partidos')
-    .select('id')
-    .eq('proveedor_externo', PROVEEDOR)
-    .eq('id_externo', filaPartido.id_externo)
-    .maybeSingle();
-  if (errBuscarPartido) throw errBuscarPartido;
 
   const { data: partido, error: errPartido } = partidoExistente
     ? await supabase.from('partidos').update(filaPartido).eq('id', partidoExistente.id).select('id').single()

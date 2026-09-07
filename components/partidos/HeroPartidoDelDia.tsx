@@ -3,13 +3,16 @@
  * dentro de 3 días; gana el que tenga un hito encima (si hay), después el de mayor "peso"
  * (internacional pesa más), y a igualdad, el más cercano en el tiempo — mismo orden que la demo.
  *
- * Fondo: `.hero__bg` (clase que la demo ya estiliza en B&N y oscurecida). La imagen NO es del
- * partido real — es una foto ambiente elegida por tipo de competencia (`lib/partidos/hero-imagen.ts`),
- * estable por partido. Al ir en grises y a `brightness(.46)`, cualquier estadio identificable
- * queda genérico y el texto blanco siempre se lee. Si no se conoce el tipo, queda el degradé.
+ * Layout "Variante A" (pedido de la agencia, 2026-09-06): la demo apilaba todo abajo-izquierda
+ * y dejaba el recuadro medio vacío. Acá se reparte: IZQUIERDA = identidad (competición, duelo,
+ * jugador); DERECHA = logística (cuándo — las dos horas — y dónde). El CSS de esa grilla vive
+ * en `styles/app.css` (`.hero--a` + `.heroA__*`); las clases de la demo (`.hero`, `.hero__*`)
+ * no se tocan.
  *
- * `'use client'`: el hero abre el panel de detalle de ese partido al hacer clic (Enter/Espacio),
- * igual que `.hero` en la demo.
+ * Fondo: `.hero__bg` (clase que la demo ya estiliza en B&N y oscurecida). La imagen NO es del
+ * partido real — es una foto ambiente elegida por tipo de competencia (`lib/partidos/hero-imagen.ts`).
+ *
+ * `'use client'`: el hero abre el panel de detalle de ese partido al hacer clic (Enter/Espacio).
  */
 'use client';
 
@@ -47,10 +50,11 @@ export function HeroPartidoDelDia({ partidos, hitos }: { partidos: PartidoProxim
   const horaSede = p.inicioUtc && p.zonaHorariaEvento ? horaCortaEnSede(p.inicioUtc, p.zonaHorariaEvento) : null;
   const mismaHora = horaSede !== null && horaSede === horaUy;
   const fondo = imagenHero(p.competenciaTipo, p.partidoId);
+  const tieneSede = Boolean(p.estadio || p.ciudad);
 
   return (
     <div
-      className="hero"
+      className="hero hero--a"
       role="button"
       tabIndex={0}
       style={{ cursor: 'pointer' }}
@@ -68,47 +72,74 @@ export function HeroPartidoDelDia({ partidos, hitos }: { partidos: PartidoProxim
         <img className="hero__bg" src={fondo} alt="" />
       )}
       <div className="hero__grad" />
+
       <div className="hero__top">
         <span className="hero__flag">
           <Ico nombre={hitoDelPartido ? 'medalla' : 'fuego'} clase="ico ico--sm" />
           {hitoDelPartido ? 'Partido del día · con hito' : 'Partido del día'}
         </span>
-        <div className="hero__cd">
-          <b>{esHoy ? 'Hoy' : `${dias} día${dias > 1 ? 's' : ''}`}</b>
-          <span>{esHoy && horaUy ? `${horaUy} hora Uruguay` : etiquetaDiaUy(p.diaUy!)}</span>
-        </div>
       </div>
+
       <div className="hero__b">
-        <div className="hero__c">
-          <i>{mostrar(p.competenciaCodigo)}</i>
-          <span>
-            {mostrar(p.competenciaNombre)}
-            {p.ronda ? ` · ${p.ronda}` : ''}
-          </span>
-        </div>
-        <div className="hero__t">
-          {mostrar(p.clubNombre)} vs {mostrar(p.rivalNombre)}
-        </div>
-        <div className="hero__m">
-          <span>
-            <Ico nombre="pin" clase="ico ico--sm" />
-            {p.estadio || p.ciudad ? `${mostrar(p.estadio)}, ${mostrar(p.ciudad)}` : 'Sin datos'}
-          </span>
-          {horaUy && (
+        {/* Identidad */}
+        <div className="heroA__id">
+          <div className="hero__c">
+            <i>{mostrar(p.competenciaCodigo)}</i>
             <span>
-              <Ico nombre="reloj" clase="ico ico--sm" />
-              {horaUy} UY{mismaHora ? '' : horaSede ? ` · ${horaSede} hora local` : ''}
+              {mostrar(p.competenciaNombre)}
+              {p.ronda ? ` · ${p.ronda}` : ''}
             </span>
-          )}
-        </div>
-        <div className="hero__j">
-          <div className="caras__pila">
-            <CaraJugador nombre={p.jugadorNombre} fotoUrl={p.jugadorFotoUrl} />
           </div>
-          <small>
-            {p.jugadorApodo || p.jugadorNombre}
-            {hitoDelPartido ? ` · ${hitoDelPartido.frase}` : ''}
-          </small>
+          <div className="hero__t">
+            {mostrar(p.clubNombre)} vs {mostrar(p.rivalNombre)}
+          </div>
+          <div className="hero__j">
+            <div className="caras__pila">
+              <CaraJugador nombre={p.jugadorNombre} fotoUrl={p.jugadorFotoUrl} />
+            </div>
+            <small>
+              {p.jugadorApodo || p.jugadorNombre}
+              {hitoDelPartido ? ` · ${hitoDelPartido.frase}` : ''}
+            </small>
+          </div>
+        </div>
+
+        {/* Logística: cuándo y dónde */}
+        <div className="heroA__log">
+          <span className="heroA__lbl">{esHoy ? 'Hoy' : etiquetaDiaUy(p.diaUy!)}</span>
+          {horaUy && (
+            <div className="heroA__horas">
+              <div>
+                <b>{horaUy}</b>
+                <span>Hora Uruguay</span>
+              </div>
+              {horaSede && (
+                <div>
+                  <b>{horaSede}</b>
+                  <span>{mismaHora ? 'Hora local · igual que Uruguay' : 'Hora local'}</span>
+                </div>
+              )}
+            </div>
+          )}
+          <div className="heroA__sede">
+            {tieneSede ? (
+              <>
+                <span>
+                  <Ico nombre="pin" clase="ico ico--sm" />
+                  {mostrar(p.estadio)}
+                </span>
+                <span>
+                  <Ico nombre="globo" clase="ico ico--sm" />
+                  {mostrar(p.ciudad)}
+                </span>
+              </>
+            ) : (
+              <span>
+                <Ico nombre="pin" clase="ico ico--sm" />
+                Sede a confirmar
+              </span>
+            )}
+          </div>
         </div>
       </div>
     </div>

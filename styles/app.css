@@ -34,3 +34,80 @@
   font-size: 10px;
   font-weight: 700;
 }
+
+/* ------------------------------------------------------------
+   Hero "Variante A" (HeroPartidoDelDia) — pedido de la agencia 2026-09-06.
+   La demo apilaba todo abajo-izquierda; acá se reparte en dos columnas dentro
+   de `.hero__b` (que la demo deja al final del recuadro): identidad a la
+   izquierda, logística (cuándo + dónde) a la derecha. No se toca ninguna clase
+   de demo.css — solo se agrega la grilla y el bloque de la derecha.
+   ------------------------------------------------------------ */
+.hero--a .hero__grad {
+  /* degradé cargado a la izquierda para que el texto de la columna derecha se lea */
+  background: linear-gradient(
+    105deg,
+    rgba(14, 12, 11, 0.94) 30%,
+    rgba(14, 12, 11, 0.5) 62%,
+    rgba(14, 12, 11, 0.2) 100%
+  );
+}
+.hero--a .hero__b {
+  display: grid;
+  grid-template-columns: 1.35fr 0.85fr;
+  gap: 36px;
+  align-items: end;
+}
+.heroA__log {
+  color: #fff;
+}
+.heroA__lbl {
+  display: block;
+  margin-bottom: 12px;
+  font-size: var(--t-xs);
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.45);
+}
+.heroA__horas {
+  display: flex;
+  gap: 26px;
+  margin-bottom: 18px;
+}
+.heroA__horas b {
+  display: block;
+  font-family: var(--display);
+  font-size: 30px;
+  line-height: 0.9;
+}
+.heroA__horas span {
+  display: block;
+  margin-top: 5px;
+  font-size: var(--t-sm);
+  color: rgba(255, 255, 255, 0.55);
+}
+.heroA__sede {
+  display: grid;
+  gap: 6px;
+  font-size: var(--t-md);
+  color: rgba(255, 255, 255, 0.7);
+}
+.heroA__sede span {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+@media (max-width: 720px) {
+  .hero--a .hero__b {
+    grid-template-columns: 1fr;
+    gap: 22px;
+  }
+  .hero--a .hero__grad {
+    background: linear-gradient(
+      to top,
+      rgba(14, 12, 11, 0.95) 6%,
+      rgba(14, 12, 11, 0.44) 56%,
+      rgba(14, 12, 11, 0.06) 100%
+    );
+  }
+}

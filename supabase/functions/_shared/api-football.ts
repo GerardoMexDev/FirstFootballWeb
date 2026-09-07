@@ -25,7 +25,7 @@ export interface FixtureApiFootball {
     id: number;
     date: string; // ISO con offset — instante ya resuelto, sin que haga falta convertir zona
     status: { short: string };
-    venue: { name: string | null; city: string | null };
+    venue: { id: number | null; name: string | null; city: string | null };
   };
   league: { id: number; round: string | null };
   teams: {
@@ -147,6 +147,32 @@ export async function obtenerFixturePorId(apiKey: string, fixtureId: string): Pr
     estadoCorto: String(fx.fixture.status?.short ?? ''),
     marcadorLocal: fx.goals?.home ?? null,
     marcadorVisitante: fx.goals?.away ?? null,
+  };
+}
+
+/** Datos de una sede — `GET /venues?id=` (endpoint de referencia, anda en free). */
+export interface SedeExterna {
+  nombre: string | null;
+  ciudad: string | null;
+  /** País en INGLÉS, como lo devuelve API-Football ("Brazil", "Saudi Arabia", "USA", …). */
+  pais: string | null;
+}
+
+/**
+ * Consulta una sede puntual por su id de API-Football. Se usa como último recurso para
+ * deducir la zona horaria de la sede en copas continentales (donde el país de la
+ * competencia es un continente) y, de paso, para rellenar estadio/ciudad cuando el fixture
+ * no los trae. `null` si la API no devuelve nada.
+ */
+export async function obtenerSede(apiKey: string, venueId: number): Promise<SedeExterna | null> {
+  const response = await getResponse(apiKey, `/venues?id=${venueId}`);
+  // deno-lint-ignore no-explicit-any
+  const v = response[0] as any;
+  if (!v) return null;
+  return {
+    nombre: v.name ?? null,
+    ciudad: v.city ?? null,
+    pais: v.country ?? null,
   };
 }
 

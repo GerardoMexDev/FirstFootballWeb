@@ -136,6 +136,40 @@ diseñador → Community Manager.
 
 ## 4. Hecho (por fecha, más reciente primero)
 
+### 2026-09-06 — Sesión 4 (cont.: feedback de la agencia — hero + hora local)
+
+- **Hero "Variante A"** (`HeroPartidoDelDia` + `styles/app.css`): la demo apilaba todo
+  abajo-izquierda; ahora es una grilla dentro de `.hero__b` — IZQUIERDA identidad
+  (competición, duelo, jugador), DERECHA logística (etiqueta del día + **las dos horas** en
+  grande + sede). Degradé cargado a la izquierda para que el texto derecho se lea. En ≤720px
+  vuelve a una sola columna. No se tocó ninguna clase de `demo.css` (solo `.hero--a` +
+  `.heroA__*` nuevas).
+- **Hora local de la sede SIEMPRE** (la agencia la necesita para los pósters). Antes solo
+  aparecía en partidos de local (nuestros 6 clubes tienen zona; un rival de la API, no):
+  - `_shared/zona-pais.ts` (`zonaDePais`, puro, **7 tests**): país → zona IANA representativa.
+  - `sync-partidos` → `deducirZonaSede`: cadena de respaldo **1)** zona del club local
+    **2)** país de la competencia **3)** `GET /venues?id=` (copas continentales + rellena
+    estadio/ciudad si faltan). Nunca inventa: si nada resuelve, queda NULL.
+  - `sync-partidos` ya **no pisa con NULL** un `estadio` / `ciudad` / `zona_horaria_evento`
+    que ya teníamos (de un sync mejor o de carga manual) — `estado`/marcador/ronda sí siguen
+    actualizándose.
+  - Migración `0010`: backfill de los partidos ya sincronizados con la zona del país de su
+    competencia (cubre todas las ligas domésticas).
+  - Display: `TarjetaPartido` y `PanelPartido` muestran la hora local siempre que se conozca
+    la zona; cuando coincide con la de Uruguay (Brasil/Chile, UTC−3 sin DST) se aclara
+    "misma hora que Uruguay" para que no parezca un bug.
+- **Sin vista de resultados** (Gerardo: no hace falta ahora) — un partido finalizado sigue
+  desapareciendo de la lista ("próximos").
+- **Caso Toluca vs Monterrey (Leagues Cup, final)**: API-Football devuelve `venue: {id:0,
+  name:null, city:null}` — no tiene la sede asignada todavía. El hero muestra "Sede a
+  confirmar", el panel "Sin datos". Cuando la API la asigne, el sync diario la toma sola (y si
+  Gerardo la carga a mano, ya no se pisa).
+- **Verificado con `browser-automation`** (login real): hero en 2 columnas con las dos horas;
+  las 5 tarjetas muestran hora local ("19:00 hora local", "misma hora que Uruguay" para
+  Colo-Colo, etc.); panel de partido con las dos horas + aviso de diferencia. Sync real
+  corrido (deploy de `sync-partidos`): los 7 partidos quedan con `zona_horaria_evento`.
+  **69 tests**, build + lint OK, 0 errores de consola.
+
 ### 2026-09-06 — Sesión 4 (cont.: DEPLOY a Vercel + QA de producción)
 
 - **`https://first-football-web.vercel.app`** — Fase 1 en producción. Vercel importa el repo,
