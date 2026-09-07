@@ -18,16 +18,20 @@ En Claude Code **no hay memoria entre sesiones**, así que este protocolo es obl
 3. Rutina de cierre Git: `git add . && git commit -m "Sesión N: ..." && git push`.
 4. La sesión no se cierra hasta que `git push` terminó OK.
 
-**Última actualización:** 2026-09-06 (Sesión 4: Fase 1 desplegada + feedback agencia + spike ESPN)
+**Última actualización:** 2026-09-07 (Sesión 5: `sync-fixtures-espn` — ventana de fixtures completa)
 **Estado general:** **Fase 1 en producción**: `https://first-football-web.vercel.app`. 3 vistas
 con datos reales (`partidos`, `calendario`, `jugadores`) + panel lateral (partido / jugador /
-perfil) + buscador ⌘K + toggle de tema. Auth, RLS, 3 Edge Functions + cron, motor de hitos
-(0 hoy). Migraciones hasta `0010`. QA de producción OK (incl. mobile 390px, 0 errores).
+perfil) + buscador ⌘K + toggle de tema. Auth, RLS, **4 Edge Functions + cron**, motor de hitos
+(0 hoy). Migraciones hasta `0012`. QA de producción OK (incl. mobile 390px, 0 errores).
 **Feedback de la agencia resuelto y desplegado:** hero "Variante A" (identidad izq. / horas +
 sede der.) · **hora local de la sede en TODO partido** (derivada del país de la competencia →
 `_shared/zona-pais.ts` + `GET /venues`; `sync-partidos` ya no pisa con NULL datos que ya tenía).
-**Próximo (aprobado, sin implementar):** `sync-fixtures-espn` para la ventana de fixtures
-completa — diseño en §5. **Falta (post-lanzamiento):** Lighthouse formal en warm; rotar
+**`sync-fixtures-espn` DESPLEGADO (Sesión 5):** trae la temporada doméstica completa desde el
+*core* API de ESPN (gratis) → "próximos partidos" pasa de ~3 días a toda la temporada (verificado
+en prod: 100+ partidos hasta may-2027). Cron diario 03:30 UTC. Vistas `proximos_partidos` y
+`agenda_anual` de-duplicadas por (jugador, día_uy, con_selección), prefiriendo API-Football.
+Es un PUENTE hasta API-Football Pro; todo aditivo y reversible.
+**Falta (post-lanzamiento):** Lighthouse formal en warm; rotar
 `SUPABASE_SERVICE_ROLE_KEY` + `SUPABASE_DB_PASSWORD`; fotos definitivas de jugadores;
 estadísticas de jugador vía FBref/Transfermarkt cuando la agencia las pida; toast de tema.
 
@@ -127,6 +131,9 @@ diseñador → Community Manager.
 | `components/layout/BarraSuperior.tsx` · `Nav.tsx` | Barra superior + nav (marca/nav OK; **menú de usuario real + cerrar sesión OK S2**; buscador/tema stub) | ✅ |
 | `supabase/functions/sync-partidos/index.ts` + `_shared/{api-football,estado-partido}.ts` | Edge Function real: trae fixtures de la cartera y hace upsert en `partidos`/`partidos_jugadores`/`clubes` | ✅ **desplegada y corriendo** S2 |
 | `supabase/migrations/0002_cron_sync_partidos.sql` | `pg_cron` diario (03:00 UTC) → `pg_net` → `sync-partidos`, secreto vía Vault | ✅ aplicada y probada S2 |
+| `supabase/functions/sync-fixtures-espn/index.ts` + `_shared/{espn-api,espn-partido}.ts` (+ `espn-partido.test.ts`, 13 tests) | Edge Function: temporada doméstica completa desde el *core* API de ESPN → upsert en `partidos` (`proveedor_externo='espn'`). Puente a la lógica de zona/estado ya existente. | ✅ **desplegada y corriendo** S5 |
+| `supabase/migrations/0011_dedup_proximos_partidos.sql` | `create or replace` de `proximos_partidos` (+`distinct on` jugador/día_uy/con_selección, prefiere API-Football) y `agenda_anual` (su bloque de partidos ahora lee de `proximos_partidos`) | ✅ aplicada S5 |
+| `supabase/migrations/0012_cron_sync_fixtures_espn.sql` | `pg_cron` diario (03:30 UTC) → `pg_net` → `sync-fixtures-espn`, secreto vía Vault, timeout 300 s | ✅ aplicada y probada S5 |
 | `scripts/configurar-vault-cron.mjs` | Guarda/rota `sync_functions_secret` en Supabase Vault (consulta parametrizada) | ✅ creado y corrido S2 |
 | `scripts/seed-usuarios.mjs` | 4 cuentas (`service_role`), idempotente | ✅ creado y corrido S2 |
 | `scripts/consultar-ligas.mjs` | Solo lectura: consulta `GET /leagues` por país + búsquedas de continentales | ✅ creado S2 |
@@ -137,6 +144,50 @@ diseñador → Community Manager.
 | `components/paneles/PanelPerfil.tsx` | Panel "Mi cuenta" (Mi perfil / Cambiar contraseña / Notificaciones) — necesita forms de Supabase | ⬜ |
 
 ## 4. Hecho (por fecha, más reciente primero)
+
+### 2026-09-07 — Sesión 5 (`sync-fixtures-espn` — ventana de fixtures completa)
+
+Implementado el diseño aprobado en Sesión 4. **El plan free de API-Football solo deja ver ~3
+días** (`fixtures?date=`); ESPN, gratis, da la temporada entera. Es un PUENTE hasta que entre
+API-Football Pro — todo lo que agrega es aditivo y reversible.
+
+- **`_shared/espn-partido.ts` (+ `.test.ts`, 13 tests `node --test`) — lógica pura, testeada:**
+  `normalizarEvento(evento, nuestroEspnTeamId)` (identifica NUESTRO club por su id de ESPN en
+  `competitors[]`, nunca por nombre; rival + sede + `$ref` de estado), `nombreRivalDesdeName`
+  (corta el `name` "{visitante} at {local}" por el ÚLTIMO " at "), `mapearEstadoEspn`
+  (`type.state` pre/in/post → enum `estado_partido`; nunca inventa).
+- **`_shared/espn-api.ts` — cliente fetch fino (sin tests, como `api-football.ts`):**
+  `obtenerTemporadaVigente` (`/leagues/<slug>` → `season.year`; ESPN resuelve solo año
+  calendario vs temporada partida), `listarEventosDeTemporada` (con filtro `dates=` nativo),
+  `obtenerEvento`, `obtenerEstadoEvento`. Pace 150 ms. `getJson` trata `{error}` en un 200 y
+  cuerpo no-parseable como fallo ruidoso.
+- **`sync-fixtures-espn/index.ts` — Edge Function:** por cada club de la cartera mapeado a
+  ESPN (`CLUBES_ESPN`, 6 hardcodeados: af-id → `{espnTeamId, ligaSlug, ligaExternoAF}`),
+  temporada vigente → eventos en `[hoy−3d, hoy+300d]` → detalle de los nuevos o en `[−7d,+14d]`
+  → upsert en `partidos` (`proveedor_externo='espn'`) + puente `partidos_jugadores`. Zona =
+  `zonaDePais(sedePais) ?? zona del club de cartera` (liga doméstica: misma país). Estado =
+  `programado` si no empezó (sin gastar llamada), si no resuelve el `$ref`. `try/catch` por
+  evento (uno raro no tira la corrida; bitácora `parcial`). Deploy `--no-verify-jwt`, header
+  `x-sync-secret` (mismo secreto que las otras funciones).
+- **`asegurarClubEspn`:** 1) si el id de ESPN es uno de los 6 de cartera → su uuid real (no
+  duplica); 2) si ya existe como club ESPN → ese; 3) si no → lo crea. `guardarPartido` busca
+  por clave natural `(proveedor_externo='espn', id_externo)` ANTES de decidir insert/update —
+  necesario para el derby (Toluca vs Atlante: el evento entra por la lista de los dos clubes,
+  el mapa precargado no lo tendría en la 2ª pasada).
+- **Migración 0011:** `create or replace` de `proximos_partidos` con `distinct on (jugador,
+  con_selección, día_uy)` — un mismo partido llega por API-Football (con `fixture_id`) y por
+  ESPN, no se puede cruzar por club (ids de rival distintos entre fuentes), así que se colapsa
+  por jugador+día y gana API-Football. `agenda_anual` (bloque de partidos) pasa a leer de
+  `proximos_partidos` (ya de-duplicada) en vez de `partidos` en crudo — 5 joins menos.
+- **Migración 0012:** cron diario 03:30 UTC (entre `sync-partidos` 03:00 y `sync-roster` lun
+  04:00). `timeout_milliseconds := 300000` (la 1ª corrida hace ~200 llamadas de detalle).
+- **Verificado en producción:** 1ª corrida manual → `ok` / 103 partidos / 0 errores / 132 s.
+  `proximos_partidos` sin duplicados (0 filas jugador+día repetidas). `/partidos` en prod
+  (login real, Maxi): "100 partidos", ventana de **sep-2026 a may-2027** (antes ~3 días), las
+  dos horas, sede + ciudad, 0 errores de consola. `agenda_anual` sin inflarse. 82 tests, build
+  + lint OK. Cron `sync-fixtures-espn-diario` activo.
+- **Consecuencia conocida (no visible en UI):** quedan filas de clubes rivales duplicadas en
+  `clubes` (una por fuente — 71 de ESPN). Se limpia con un script cuando entre el plan pago.
 
 ### 2026-09-06 — Sesión 4 (cont.: spike ESPN + investigación de fuentes de datos)
 
@@ -846,22 +897,18 @@ Charla con Gerardo (no se codeó nada): tres preguntas de la agencia / de él.
       en la UI (contexto.md: badge "Datos actualizados el {fecha}. No pudimos contactar la
       fuente."). Por ahora solo queda en la bitácora de la tabla. — media
 - [ ] Revisar cada tanto si el plan free amplía la ventana de fechas de `GET /fixtures?date=`
-      (hoy ~3 días) — afecta cuánto por delante puede ver "próximos partidos". — baja
-- [ ] **`sync-fixtures-espn` — ventana de fixtures completa (APROBADO, falta implementar).**
-      Spike hecho 2026-09-06 (ver §4). Diseño acordado:
-      1. Edge Function nueva + cron diario: por cada uno de los 6 clubes, `core.api.espn.com`
-         → lista de eventos de la temporada de su liga doméstica → detalle de cada evento
-         nuevo (o futuro) → upsert en `partidos` con `proveedor_externo='espn'`, `origen='api'`.
-         Zona/estadio/ciudad de la sede que trae ESPN (`_shared/zona-pais.ts` para la zona).
-         Rival = parsear el `name` "Away at Home". `partidos_jugadores` para el representado.
-      2. `proximos_partidos` (migración nueva): `distinct on (club_local_id, club_visitante_id,
-         (inicio_utc at time zone 'America/Montevideo')::date)` que colapsa el duplicado,
-         prefiriendo la fila de API-Football (tiene el `fixture_id` que usa `sync-estadisticas`).
-      3. Alcance v1: **solo ligas domésticas** (posters semanales). Copas/continentales/selección
-         siguen con API-Football en su ventana corta.
-      4. Sin tocar el esquema de `partidos` ni `sync-estadisticas`. Todo aditivo.
-      IDs ESPN en §4. Sólo pacear las llamadas (sin rate limit documentado) y cachear:
-      traer detalle solo de eventos que no estén ya en `partidos` o que sean futuros. — media
+      (hoy ~3 días) — ya no es bloqueante (ESPN cubre el hueco), pero si Pro entra, `sync-partidos`
+      solo alcanza y se puede apagar el cron de ESPN. — baja
+- [x] ~~**`sync-fixtures-espn` — ventana de fixtures completa**~~ — hecho 2026-09-07 (Sesión 5,
+      ver §4). Desplegado y verificado en prod. Diferencia con el diseño de la Sesión 4: la
+      de-duplicación es por **`(jugador, día_uy, con_selección)`**, NO por
+      `(club_local, club_visitante, fecha)` — los clubes rivales de ESPN tienen otro `id_externo`
+      que los de API-Football, ese trío nunca coincidiría. También se de-duplicó `agenda_anual`.
+      Ventana `dates=` de ESPN: máx ~1 año, se pide 300 días.
+- [ ] **Cuando entre API-Football Pro:** apagar el cron `sync-fixtures-espn-diario`
+      (`select cron.unschedule('sync-fixtures-espn-diario')`); script de merge de clubes rivales
+      duplicados (`clubes` con `proveedor_externo='espn'` que matchean uno de API-Football por
+      nombre normalizado); opcionalmente revertir 0011. Todo el puente es aditivo. — baja
 - [ ] **Estadísticas de jugador por partido/temporada — FBref** (para cuando la agencia las
       pida). Job diario contra FBref (Opta-powered, cubre las 5 ligas + Arabia), cacheado,
       `origen='derivado'`. Alternativa/complemento: reconciliación Transfermarkt (arriba). — media
@@ -1257,6 +1304,39 @@ Charla con Gerardo (no se codeó nada): tres preguntas de la agencia / de él.
   Lambda + `getUser()` del middleware + render dinámico). Warm = ~1-2s. Los tests de
   browser-automation contra producción hay que "calentarlos" (un `curl` a cada ruta antes) o
   usar timeouts de 40-60s, si no fallan por lentitud y parece un bug que no es.
+- **ESPN *core* API (`sports.core.api.espn.com`), no oficial, sin key ni rate limit publicado**:
+  el endpoint bueno es `/leagues/<slug>/seasons/<year>/teams/<id>/events` (lista de `$ref`),
+  NO `site.api.espn.com/.../schedule` (solo pasado reciente). `/leagues/<slug>` da la temporada
+  vigente ya resuelta (año calendario para bra.1/chi.1, temporada partida para bel.1/mex.1/ksa.1)
+  — no hay que adivinar el año. El filtro `dates=YYYYMMDD-YYYYMMDD` es nativo pero **rechaza
+  rangos de más de ~1 año** ("dates range specified is too large") — se piden 300 días. El
+  `name` del evento es **"{visitante} at {local}"** en las 5 ligas (consistente). El `status`
+  es un `$ref` aparte (no inline) — solo se resuelve para partidos ya empezados; los futuros
+  son `programado` sin gastar la llamada. `score` también es `$ref` — fuera de alcance v1
+  (marcadores los pone API-Football / `sync-estadisticas`). El país de la sede viene inline
+  (`competitions[0].venue.address.country`, en inglés) → `zonaDePais` lo entiende.
+- **De-duplicar dos fuentes de fixtures que NO comparten ids de club**: API-Football y ESPN
+  crean cada una su propia ficha de club rival (`id_externo` distinto), así que un partido que
+  llega por las dos NO se puede cruzar por `(club_local, club_visitante, fecha)`. La clave que
+  sí sirve es **`(jugador, día en Uruguay, con_selección)`** — un representado no juega dos
+  partidos de club el mismo día. Se resuelve en la vista (`distinct on`), read-time, así ninguna
+  de las dos Edge Functions necesita saber de la otra. Costo: fichas de club rival duplicadas en
+  `clubes` (no visible en UI).
+- **`create or replace view` con `distinct on`**: se puede pasar de una vista sin `distinct` a
+  una con `distinct on` + `order by` mientras las **columnas de salida no cambien** (nombre,
+  tipo, orden). El `order by` tiene que empezar con las mismas expresiones del `distinct on`;
+  los términos que siguen deciden qué fila gana. Para no colapsar dos partidos SIN fecha del
+  mismo jugador, la clave de día usa `coalesce(dia_uy::text, 'sinfecha:'||p.id::text)`.
+- **`partidos.es_local` sigue quedando NULL** (ni `sync-partidos` ni `sync-fixtures-espn` lo
+  escriben — es ambiguo en un derby entre dos representados). El panel de partido no muestra la
+  línea "Local/Visitante" para partidos de API-Football NI de ESPN; la tarjeta y el hero
+  siempre muestran "{club} vs {rival}" (club primero). Si la agencia lo pide, es tarea aparte
+  (poblar `es_local` cuando es inequívoco, en las dos funciones + manejar el derby).
+- **Edge Function larga (~132 s la 1ª corrida de `sync-fixtures-espn`)**: `pg_net` necesita
+  `timeout_milliseconds` explícito (default 5000) — se puso 300000. Las corridas siguientes son
+  cortas (solo re-consultan la ventana `[−7d, +14d]`). El reloj de la Edge Function puede ir
+  desviado del de la máquina que la prueba (ya visto con `sync-partidos`), pero acá no importa:
+  la ventana `dates=` tiene 3 días de margen hacia atrás.
 
 ## 11. Dudas abiertas (de `contexto.md` §12)
 
@@ -1279,11 +1359,11 @@ Charla con Gerardo (no se codeó nada): tres preguntas de la agencia / de él.
   respaldo de fixtures. footballdata.io / thestatsapi / Yahoo = descartables para nuestro
   caso (poca stat por jugador en nuestras ligas). FBref = lo mejor gratis por-stat pero
   frágil (scraping, sin API) y flojo en Arabia — "para más adelante".
-- ~~Con el plan free de API-Football hay que ver si alcanza~~ → resuelto (parcialmente) 2026-09-05:
-  el límite real no es el de 100 req/día sino que `GET /fixtures?date=` solo deja ver ~3 días
-  alrededor de "hoy" (ver §4 y §10). `sync-partidos` ya lo tolera (salta el día que rechacen), pero
-  esto significa que "próximos partidos" en Fase 1, con este plan, en la práctica no va a poder
-  mostrar mucho más allá de esa ventana corta — para un horizonte de semanas hay que subir de plan
-  o apoyarse en ESPN como respaldo (todavía sin escribir).
+- ~~Con el plan free de API-Football hay que ver si alcanza~~ → **resuelto 2026-09-07 (Sesión 5)**:
+  `GET /fixtures?date=` del plan free solo deja ver ~3 días alrededor de "hoy" (ver §10).
+  `sync-fixtures-espn` cubre el hueco: trae la temporada doméstica completa desde ESPN (gratis).
+  "Próximos partidos" en prod ya muestra hasta may-2027. `sync-partidos` (API-Football) sigue a
+  cargo de copas/continentales/selección en su ventana corta + el `fixture_id` para estadísticas.
+  Subir a API-Football Pro deja de ser bloqueante (pasa a "cuando la agencia confirme").
 - ¿La preferencia de tema se persiste por usuario (`perfiles`) o solo en `localStorage` del dispositivo?
 - Versión de Next: se usó **14.2.x** (contexto.md pide "14+"). Migrar a 15 es opción, no urgencia.
