@@ -18,16 +18,18 @@ En Claude Code **no hay memoria entre sesiones**, así que este protocolo es obl
 3. Rutina de cierre Git: `git add . && git commit -m "Sesión N: ..." && git push`.
 4. La sesión no se cierra hasta que `git push` terminó OK.
 
-**Última actualización:** 2026-09-06 (Sesión 4: Fase 1 completa — **desplegada en Vercel**)
+**Última actualización:** 2026-09-06 (Sesión 4: Fase 1 desplegada + feedback agencia + spike ESPN)
 **Estado general:** **Fase 1 en producción**: `https://first-football-web.vercel.app`. 3 vistas
 con datos reales (`partidos`, `calendario`, `jugadores`) + panel lateral (partido / jugador /
 perfil) + buscador ⌘K + toggle de tema. Auth, RLS, 3 Edge Functions + cron, motor de hitos
-(0 hoy). Migraciones hasta `0009`. **QA de producción OK** (login, las 3 vistas, panel,
-buscador, tema, perfil, mobile 390px sin overflow, fotos, 0 errores de consola).
-**Falta (post-lanzamiento / Fase 2):** correr un Lighthouse formal en warm; higiene de
-secretos (rotar `SUPABASE_SERVICE_ROLE_KEY` + `SUPABASE_DB_PASSWORD`); fotos definitivas de
-jugadores (las manda la agencia); toast "Modo oscuro/claro"; hacer clicables los `.pm` de la
-ficha y los cumpleaños del calendario.
+(0 hoy). Migraciones hasta `0010`. QA de producción OK (incl. mobile 390px, 0 errores).
+**Feedback de la agencia resuelto y desplegado:** hero "Variante A" (identidad izq. / horas +
+sede der.) · **hora local de la sede en TODO partido** (derivada del país de la competencia →
+`_shared/zona-pais.ts` + `GET /venues`; `sync-partidos` ya no pisa con NULL datos que ya tenía).
+**Próximo (aprobado, sin implementar):** `sync-fixtures-espn` para la ventana de fixtures
+completa — diseño en §5. **Falta (post-lanzamiento):** Lighthouse formal en warm; rotar
+`SUPABASE_SERVICE_ROLE_KEY` + `SUPABASE_DB_PASSWORD`; fotos definitivas de jugadores;
+estadísticas de jugador vía FBref/Transfermarkt cuando la agencia las pida; toast de tema.
 
 ---
 
@@ -135,6 +137,37 @@ diseñador → Community Manager.
 | `components/paneles/PanelPerfil.tsx` | Panel "Mi cuenta" (Mi perfil / Cambiar contraseña / Notificaciones) — necesita forms de Supabase | ⬜ |
 
 ## 4. Hecho (por fecha, más reciente primero)
+
+### 2026-09-06 — Sesión 4 (cont.: spike ESPN + investigación de fuentes de datos)
+
+Charla con Gerardo (no se codeó nada): tres preguntas de la agencia / de él.
+
+- **API gratis con ventana de fixtures más grande.** API-Football free solo deja ver ~3 días
+  (`fixtures?date=`). Opciones evaluadas:
+  - **ESPN (no oficial)** — **spike hecho, FUNCIONA** para las 5 ligas de la cartera. El
+    endpoint bueno es el *core* API: `sports.core.api.espn.com/v2/sports/soccer/leagues/<slug>/
+    seasons/<año>/teams/<teamId>/events?limit=100` → lista de IDs de toda la temporada; luego
+    `.../leagues/<slug>/events/<eventId>` por cada uno → fecha, `name` ("Away at Home"),
+    `venue` con **nombre + ciudad + país inline** (→ zona con `_shared/zona-pais.ts`),
+    `competitors[].homeAway` + `team.$ref` (id ESPN). El endpoint `site.api.espn.com/.../schedule`
+    NO sirve: solo devuelve partidos pasados recientes.
+    IDs de equipo ESPN: Genk `938` (bel.1), Toluca `223` (mex.1), Atlante `226` (mex.1),
+    RB Bragantino `6079` (bra.1), Colo-Colo `2688` (chi.1), Al-Qadsiah `22022` (ksa.1).
+  - **TheSportsDB** `eventsseason.php` / `eventsnextleague.php` — temporada completa, cobertura
+    ok, gratis (o Patreon ~US$3). Horarios a veces imprecisos.
+  - **football-data.org** — descartado: solo top-5 de Europa, no cubre Liga MX / Brasil /
+    Bélgica / Arabia.
+  - **API-Football Pro (~US$19/mes)** — borra el problema de raíz (sin límite de ventana,
+    `next`/`last` por equipo). Entra en el tope de 20-30 acordado. Es la opción limpia si se
+    paga.
+- **De dónde saca Google los datos.** Licencia **Opta/Stats Perform** y **Sportradar** —
+  feeds enterprise, miles a decenas de miles de USD/año, no accesibles. Lo que sí baja:
+  **FBref** (Sports Reference, *potenciado por Opta*, stats por partido/temporada, cubre Liga MX
+  / Brasil / Bélgica / Arabia / Chile, sin API pero tablas HTML + CSV) — **mejor fuente gratis
+  para las estadísticas de jugador que faltan**; **Transfermarkt** (totales de carrera,
+  traspasos); **Sofascore** (API JSON no oficial, rica, frágil por Cloudflare, ToS gris).
+- **Sitios oficiales de los clubes.** Descartado: un scraper por club, frágil, se rehace en
+  cada traspaso, no escala. FBref/Transfermarkt cubren los 6 con una sola integración.
 
 ### 2026-09-06 — Sesión 4 (cont.: feedback de la agencia — hero + hora local)
 
@@ -814,6 +847,24 @@ diseñador → Community Manager.
       fuente."). Por ahora solo queda en la bitácora de la tabla. — media
 - [ ] Revisar cada tanto si el plan free amplía la ventana de fechas de `GET /fixtures?date=`
       (hoy ~3 días) — afecta cuánto por delante puede ver "próximos partidos". — baja
+- [ ] **`sync-fixtures-espn` — ventana de fixtures completa (APROBADO, falta implementar).**
+      Spike hecho 2026-09-06 (ver §4). Diseño acordado:
+      1. Edge Function nueva + cron diario: por cada uno de los 6 clubes, `core.api.espn.com`
+         → lista de eventos de la temporada de su liga doméstica → detalle de cada evento
+         nuevo (o futuro) → upsert en `partidos` con `proveedor_externo='espn'`, `origen='api'`.
+         Zona/estadio/ciudad de la sede que trae ESPN (`_shared/zona-pais.ts` para la zona).
+         Rival = parsear el `name` "Away at Home". `partidos_jugadores` para el representado.
+      2. `proximos_partidos` (migración nueva): `distinct on (club_local_id, club_visitante_id,
+         (inicio_utc at time zone 'America/Montevideo')::date)` que colapsa el duplicado,
+         prefiriendo la fila de API-Football (tiene el `fixture_id` que usa `sync-estadisticas`).
+      3. Alcance v1: **solo ligas domésticas** (posters semanales). Copas/continentales/selección
+         siguen con API-Football en su ventana corta.
+      4. Sin tocar el esquema de `partidos` ni `sync-estadisticas`. Todo aditivo.
+      IDs ESPN en §4. Sólo pacear las llamadas (sin rate limit documentado) y cachear:
+      traer detalle solo de eventos que no estén ya en `partidos` o que sean futuros. — media
+- [ ] **Estadísticas de jugador por partido/temporada — FBref** (para cuando la agencia las
+      pida). Job diario contra FBref (Opta-powered, cubre las 5 ligas + Arabia), cacheado,
+      `origen='derivado'`. Alternativa/complemento: reconciliación Transfermarkt (arriba). — media
 - [x] ~~lista de APIs alternativas~~ — Gerardo pasó 7 (hoja 2 del Excel), evaluadas en
       Sesión 3 (ver §11). Conclusión: nada reemplaza a API-Football como primaria; lo que
       suma es **Transfermarkt** (totales de carrera en todas las ligas, Arabia incluida) y
