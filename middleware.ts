@@ -59,6 +59,9 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  // Todo menos assets estáticos, imágenes de next/image y el favicon.
-  matcher: ['/((?!_next/static|_next/image|favicon.ico).*)'],
+  // Todo MENOS: los internos de Next, el favicon, y cualquier archivo con extensión de
+  // asset (las fotos de `public/jugadores` y `public/heroes`, fuentes, etc.). Sin la parte
+  // de la extensión, el middleware corría sobre `/jugadores/nandez.webp` y lo redirigía a
+  // /login (307) — en Vercel las fotos no cargaban.
+  matcher: ['/((?!_next/static|_next/image|favicon.ico|.*\\.(?:webp|png|jpg|jpeg|gif|svg|ico|avif|woff2?)$).*)'],
 };
