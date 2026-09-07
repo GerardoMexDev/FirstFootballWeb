@@ -10,7 +10,10 @@ import { useRouter } from 'next/navigation';
 import { Ico } from '@/components/comunes/Ico';
 import { crearClienteNavegador } from '@/lib/supabase/cliente-navegador';
 
-const DOMINIO_LOGIN = process.env.NEXT_PUBLIC_DOMINIO_LOGIN;
+// El dominio es fijo e interno; la env var es solo para poder cambiarlo sin tocar código.
+// El fallback evita que un deploy sin la variable arme `usuario@undefined` (falla silenciosa
+// que se ve como "usuario o contraseña incorrectos").
+const DOMINIO_LOGIN = process.env.NEXT_PUBLIC_DOMINIO_LOGIN || 'footballfirst.uy';
 
 /** Traduce los mensajes de Supabase Auth a lenguaje humano (doc 19: content design). */
 function mensajeError(mensajeOriginal: string): string {
