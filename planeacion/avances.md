@@ -18,14 +18,16 @@ En Claude Code **no hay memoria entre sesiones**, así que este protocolo es obl
 3. Rutina de cierre Git: `git add . && git commit -m "Sesión N: ..." && git push`.
 4. La sesión no se cierra hasta que `git push` terminó OK.
 
-**Última actualización:** 2026-09-06 (Sesión 4: `jugadores` + ficha + panel lateral + ⌘K + tema + **perfil**)
-**Estado general:** 3 vistas conectadas a datos reales (`partidos`, `calendario`, `jugadores`)
-+ **panel lateral** (partido / jugador / **perfil**, estado en la URL) + **buscador ⌘K** +
-**toggle de tema**. El panel de perfil ("Mi cuenta", desde el menú de usuario) tiene las 3
-pestañas: Datos (editar nombre; correo/rol solo lectura), Contraseña (`auth.updateUser`),
-Notificaciones (`perfiles.avisos`, el envío es Fase 2). Migraciones hasta `0009`. Motor de
-hitos sigue dando 0 hoy. **Falta:** deploy a Vercel + QA final. `debut`/`fichaje`/`instagram`
-de los 6 cargados. Pendiente de Gerardo: fotos definitivas de jugadores (las manda la agencia).
+**Última actualización:** 2026-09-06 (Sesión 4: Fase 1 completa — **desplegada en Vercel**)
+**Estado general:** **Fase 1 en producción**: `https://first-football-web.vercel.app`. 3 vistas
+con datos reales (`partidos`, `calendario`, `jugadores`) + panel lateral (partido / jugador /
+perfil) + buscador ⌘K + toggle de tema. Auth, RLS, 3 Edge Functions + cron, motor de hitos
+(0 hoy). Migraciones hasta `0009`. **QA de producción OK** (login, las 3 vistas, panel,
+buscador, tema, perfil, mobile 390px sin overflow, fotos, 0 errores de consola).
+**Falta (post-lanzamiento / Fase 2):** correr un Lighthouse formal en warm; higiene de
+secretos (rotar `SUPABASE_SERVICE_ROLE_KEY` + `SUPABASE_DB_PASSWORD`); fotos definitivas de
+jugadores (las manda la agencia); toast "Modo oscuro/claro"; hacer clicables los `.pm` de la
+ficha y los cumpleaños del calendario.
 
 ---
 
@@ -133,6 +135,37 @@ diseñador → Community Manager.
 | `components/paneles/PanelPerfil.tsx` | Panel "Mi cuenta" (Mi perfil / Cambiar contraseña / Notificaciones) — necesita forms de Supabase | ⬜ |
 
 ## 4. Hecho (por fecha, más reciente primero)
+
+### 2026-09-06 — Sesión 4 (cont.: DEPLOY a Vercel + QA de producción)
+
+- **`https://first-football-web.vercel.app`** — Fase 1 en producción. Vercel importa el repo,
+  build Next 14 estándar, root `./`.
+- **Env vars en Vercel (SOLO 3)**: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`,
+  `NEXT_PUBLIC_DOMINIO_LOGIN=footballfirst.uy`. El `service_role` / DB pass / API key NO van
+  (la app solo habla con Supabase con anon key + cookie). Documentado en `README.md` +
+  `.env.local.example` (separadas de las de servidor).
+- **2 bugs de producción encontrados y arreglados en el QA:**
+  1. Faltaba `NEXT_PUBLIC_DOMINIO_LOGIN` → el login armaba `usuario@undefined` → "credenciales
+     inválidas". Fix: `FormularioLogin` usa fallback `'footballfirst.uy'` si la env var no está
+     (dominio interno fijo; la variable queda para override).
+  2. El `matcher` del `middleware` no excluía archivos con extensión → en Vercel corría sobre
+     `/jugadores/*.webp` y `/heroes/*.webp` y los redirigía a `/login` (307) → las fotos no
+     cargaban. Fix: se agregó `.*\.(?:webp|png|jpg|...)$` a la exclusión del matcher.
+- **`Deployment Protection` de Vercel** (login de Vercel sobre el sitio) → apagado: la app ya
+  tiene su propio login. `Settings → Deployment Protection → Vercel Authentication → Off`.
+- **NO hizo falta tocar Supabase Auth URL Configuration**: el login es `signInWithPassword`,
+  no usa redirect URLs. Si más adelante entra recuperación de contraseña / magic links / OAuth,
+  ahí sí hay que agregar el dominio de Vercel al Site URL.
+- **QA de producción (browser-automation, login real como `alexis`)**: login 1.9s (warm);
+  `partidos` con hero + 4 tarjetas + KPIs; panel de jugador (5 bloques) y de partido; buscador
+  ⌘K ("colo" → Javier Méndez + Colo-Colo vs Huachipato); tema light→dark persiste tras recarga;
+  panel "Mi cuenta" con las 3 pestañas; calendario 42 celdas + 6 `.ev` de partido; las 6 fotos
+  de jugadores cargan (200 `image/webp`, `naturalWidth` 600); **mobile 390px sin scroll
+  horizontal** en las 3 vistas, panel a pantalla completa. **0 errores de consola.**
+- **Limitación conocida (no bug)**: Vercel serverless — el primer hit tras un rato de inactividad
+  tarda 20-35s (cold start); en warm todo es ~1-2s. Para ~4 usuarios internos es tolerable en
+  Fase 1. Si molesta: Vercel Pro con "Fluid Compute" / cron de keep-warm, o pasar rutas a
+  `edge` runtime donde se pueda.
 
 ### 2026-09-06 — Sesión 4 (cont.: panel de perfil "Mi cuenta")
 
@@ -1121,6 +1154,24 @@ diseñador → Community Manager.
 - **`[data-theme]` en `<html>` tiene que ser un valor EXPLÍCITO** (`light` o `dark`), no
   ausente: el CSS de la demo alterna el ícono sol/luna con `[data-theme="dark"] .sol{...}` /
   `[data-theme="light"] .luna{...}` — sin atributo no se oculta ninguno.
+- **El `matcher` del middleware tiene que excluir los archivos con extensión**, no solo
+  `_next/static`: `matcher: ['/((?!_next/static|_next/image|favicon.ico).*)']` deja pasar el
+  middleware sobre `/jugadores/nandez.webp` — en `next dev` no se nota (sirve `public/` antes),
+  pero en Vercel redirige el asset a `/login` (307). Hay que sumar
+  `|.*\.(?:webp|png|jpg|jpeg|gif|svg|ico|avif|woff2?)$` a la exclusión.
+- **Una env var `NEXT_PUBLIC_*` que falta en Vercel no da error de build** — queda `undefined`
+  en runtime. `${nombre}@${process.env.NEXT_PUBLIC_DOMINIO_LOGIN}` → `alexis@undefined` →
+  "credenciales inválidas", que despista. Para valores fijos e internos, poner un fallback
+  en código (`|| 'footballfirst.uy'`) y dejar la env var solo para override.
+- **`router.push('?param=…')` en una ruta dinámica es un round-trip al servidor** (re-renderiza
+  toda la página). En dev es instantáneo; en Vercel serverless en cold start puede tardar
+  segundos. Para overlays que ya traen su contenido por su cuenta (el panel lo pide a
+  `/api/paneles/*`), conviene `window.history.pushState` (Next 14.1+ actualiza
+  `useSearchParams` sin re-render) — pendiente si el lag molesta.
+- **Cold start de Vercel serverless**: primer hit tras inactividad = 20-35s (arranque del
+  Lambda + `getUser()` del middleware + render dinámico). Warm = ~1-2s. Los tests de
+  browser-automation contra producción hay que "calentarlos" (un `curl` a cada ruta antes) o
+  usar timeouts de 40-60s, si no fallan por lentitud y parece un bug que no es.
 
 ## 11. Dudas abiertas (de `contexto.md` §12)
 
