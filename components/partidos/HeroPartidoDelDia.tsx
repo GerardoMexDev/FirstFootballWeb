@@ -104,8 +104,8 @@ export function HeroPartidoDelDia({ partidos, hitos }: { partidos: PartidoProxim
               <Escudo nombre={p.clubNombre ?? '?'} url={p.clubEscudoUrl} clase="crest crest--lg" />
               {mostrar(p.clubNombre)}
             </span>
+            <em className="vs">vs</em>
             <span className="heroA__eq">
-              <em className="vs">vs</em>
               <Escudo nombre={p.rivalNombre ?? '?'} url={p.rivalEscudoUrl} clase="crest crest--lg" />
               {mostrar(p.rivalNombre)}
             </span>

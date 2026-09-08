@@ -102,15 +102,15 @@
   align-items: center;
   gap: 8px;
 }
-/* Duelo del hero: cada escudo a la izquierda de SU equipo (pedido de la agencia 2026-09-08).
-   `.hero__t` es el título grande en mayúsculas; acá se vuelve una fila con dos bloques
-   "escudo + nombre" separados por "vs". */
+/* Duelo del hero (pedido de la agencia 2026-09-08): tres líneas apiladas —
+   "[escudo] EQUIPO 1" / "vs" / "[escudo] EQUIPO 2". Cada escudo a la izquierda de su equipo.
+   `.hero__t` es el título grande en mayúsculas; acá se vuelve una columna. */
 .heroA__duelo {
   display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 8px 16px;
-  max-width: none; /* `.hero__t` limita a 16ch; con escudos + dos nombres no alcanza */
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  max-width: none; /* `.hero__t` limita a 16ch; con escudo + nombre no alcanza */
 }
 .heroA__eq {
   display: inline-flex;
@@ -131,8 +131,9 @@
   font-style: normal;
   font-weight: 500;
   text-transform: lowercase;
-  font-size: 0.4em;
-  color: rgba(255, 255, 255, 0.6);
+  font-size: 0.34em;
+  color: rgba(255, 255, 255, 0.55);
+  margin: 2px 0 2px 4px;
 }
 
 @media (max-width: 720px) {
