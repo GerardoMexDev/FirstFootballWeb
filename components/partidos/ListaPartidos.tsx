@@ -1,7 +1,8 @@
 /**
- * Lista de partidos agrupada por día, en zona de Uruguay: `renderPartidos()` de la demo.
+ * Lista de partidos agrupada por día de la sede: `renderPartidos()` de la demo.
  * `partidos` ya viene filtrado (por `SeccionPartidos`) y ordenado por `inicioUtc` desde el
- * repositorio — acá solo se agrupa y se pinta.
+ * repositorio — acá solo se agrupa y se pinta. El día es el de la sede del partido
+ * (`agruparPorDia` de `lib/partidos/utilidades`), no el de Uruguay (punto I).
  */
 import { EstadoSinDatos } from '@/components/comunes/EstadoSinDatos';
 import { TarjetaPartido } from '@/components/partidos/TarjetaPartido';
@@ -29,12 +30,12 @@ export function ListaPartidos({
 
   return (
     <>
-      {agruparPorDia(partidos).map(([diaUy, partidosDelDia]) => {
-        const hoy = diaUy !== 'sin-fecha' && diasDesdeHoyUy(diaUy) === 0;
+      {agruparPorDia(partidos).map(([dia, partidosDelDia]) => {
+        const hoy = dia !== 'sin-fecha' && diasDesdeHoyUy(dia) === 0;
         return (
-          <section key={diaUy} className={`grupo ${hoy ? 'grupo--hoy' : ''}`}>
+          <section key={dia} className={`grupo ${hoy ? 'grupo--hoy' : ''}`}>
             <div className="grupo__t">
-              <h2 className="d3">{diaUy === 'sin-fecha' ? 'Sin fecha confirmada' : etiquetaDiaUy(diaUy)}</h2>
+              <h2 className="d3">{dia === 'sin-fecha' ? 'Sin fecha confirmada' : etiquetaDiaUy(dia)}</h2>
               <span>
                 {partidosDelDia.length} partido{partidosDelDia.length !== 1 ? 's' : ''}
               </span>

@@ -7,11 +7,13 @@ import assert from 'node:assert/strict';
 import { agruparPorDia, partidosPorMes, celdasDelMes, type EventoCalendario } from './eventos.ts';
 
 function ev(p: Partial<EventoCalendario>): EventoCalendario {
-  return {
-    fuente: 'partido', refId: null, titulo: 'x', diaUy: '2026-09-09',
+  const base = {
+    fuente: 'partido' as const, refId: null, titulo: 'x', diaUy: '2026-09-09',
     cuandoUtc: null, competenciaCodigo: null, esInternacional: false, tentativo: false,
     ...p,
   };
+  // `diaLocalSede` por defecto sigue a `diaUy` salvo que el test lo fije aparte.
+  return { diaLocalSede: base.diaUy, ...base };
 }
 
 test('agruparPorDia deduplica partidos por refId dentro del mismo día', () => {
@@ -22,6 +24,24 @@ test('agruparPorDia deduplica partidos por refId dentro del mismo día', () => {
   ];
   const porDia = agruparPorDia(eventos);
   assert.equal(porDia.get('2026-09-09')?.length, 2); // el partido una sola vez + el aniversario
+});
+
+test('agruparPorDia ubica el partido por diaLocalSede, no por diaUy', () => {
+  // Partido del viernes en la sede que en Uruguay ya es sábado.
+  const eventos = [
+    ev({ fuente: 'partido', refId: 'p1', titulo: 'Atlante vs Pachuca', diaUy: '2026-09-12', diaLocalSede: '2026-09-11' }),
+    ev({ fuente: 'cumpleanos', titulo: 'Zulma', diaUy: '2026-09-11', diaLocalSede: '2026-09-11' }),
+  ];
+  const porDia = agruparPorDia(eventos);
+  assert.equal(porDia.get('2026-09-11')?.length, 2);
+  assert.equal(porDia.has('2026-09-12'), false);
+});
+
+test('partidosPorMes cuenta por el mes de diaLocalSede', () => {
+  // Partido que en la sede es 31/08 pero en Uruguay 01/09 → cuenta en agosto.
+  const c = partidosPorMes([ev({ fuente: 'partido', refId: 'x', diaUy: '2026-09-01', diaLocalSede: '2026-08-31' })], 2026);
+  assert.equal(c[7], 1); // agosto
+  assert.equal(c[8], 0); // septiembre
 });
 
 test('agruparPorDia ordena: con hora primero, después por título', () => {

@@ -24,6 +24,8 @@ type FilaAgendaCal = FilaAgenda & {
   competencia_codigo: string | null;
   es_internacional: boolean | null;
   tentativo: boolean | null;
+  /** Día en la sede (0013). Puede no venir si la migración aún no corrió → se cae a `dia_uy`. */
+  dia_local_sede: string | null;
 };
 
 export class RepositorioAgendaSupabase {
@@ -58,9 +60,12 @@ export class RepositorioAgendaSupabase {
    * franja de densidad de la vista `calendario`.
    */
   async listarEventos(desdeIso: string, hastaIso: string): Promise<EventoCalendario[]> {
+    // `select('*')` (no lista de columnas) para que `dia_local_sede` (0013) entre solo, y
+    // para que si la migración todavía no corrió la ausencia de esa columna no rompa la
+    // consulta — simplemente se cae a `dia_uy` en el map de abajo.
     const { data, error } = await this.supabase
       .from('agenda_anual')
-      .select('fuente, ref_id, titulo, cuando_utc, dia_uy, competencia_codigo, es_internacional, tentativo')
+      .select('*')
       .gte('dia_uy', desdeIso)
       .lte('dia_uy', hastaIso)
       .returns<FilaAgendaCal[]>();
@@ -75,6 +80,7 @@ export class RepositorioAgendaSupabase {
         refId: r.ref_id,
         titulo: r.titulo,
         diaUy: r.dia_uy,
+        diaLocalSede: r.dia_local_sede ?? r.dia_uy,
         cuandoUtc: r.cuando_utc,
         competenciaCodigo: r.competencia_codigo,
         esInternacional: r.es_internacional ?? false,

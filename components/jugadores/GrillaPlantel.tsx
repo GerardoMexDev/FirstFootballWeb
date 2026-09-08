@@ -7,8 +7,9 @@
  * (`?panel=jugador&id=…`). La ruta `/jugadores/[id]` sigue existiendo como enlace directo.
  *
  * Diferencia con la demo: `.jug__pos` mostraba "posición · liga". No hay una "liga principal"
- * por jugador en el modelo (un club juega varias competencias), así que se muestra
- * "posición · país del club".
+ * por jugador en el modelo (un club juega varias competencias). Se muestra
+ * "posición · nacionalidad del jugador" — el país del club ya va en la píldora sobre la
+ * foto, así que repetirlo acá era redundante (pedido de la agencia 2026-09-08, punto G).
  *
  * Football First (Fase 1). Creado 2026-09-06.
  */
@@ -24,9 +25,9 @@ function numero(valor: number | null): string {
   return valor === null || valor === undefined ? '—' : String(valor);
 }
 
-/** "Mediocampista · Chile", saltándose las partes que falten. */
-function posicionYPais(jugador: JugadorPlantel): string {
-  return [jugador.posicion, jugador.clubPais].filter(Boolean).join(' · ');
+/** "Mediocampista · Uruguay" (posición · nacionalidad), saltándose las partes que falten. */
+function posicionYNacionalidad(jugador: JugadorPlantel): string {
+  return [jugador.posicion, jugador.nacionalidad].filter(Boolean).join(' · ');
 }
 
 function TarjetaJugador({
@@ -39,7 +40,9 @@ function TarjetaJugador({
   onAbrir: () => void;
 }) {
   const [fotoFallo, setFotoFallo] = useState(false);
-  const pill = jugador.clubPais ?? jugador.nacionalidad;
+  // Píldora sobre la foto = país del club (dónde juega). La nacionalidad va abajo, junto a
+  // la posición — sin fallback a nacionalidad acá para no repetir el mismo dato (punto G).
+  const pill = jugador.clubPais;
 
   return (
     <button className="jug" type="button" onClick={onAbrir}>
@@ -65,7 +68,7 @@ function TarjetaJugador({
           <Escudo nombre={jugador.clubNombre ?? '?'} url={jugador.clubEscudoUrl} clase="crest crest--sm" />
           {jugador.clubNombre ?? 'Sin club'}
         </span>
-        <span className="jug__pos">{posicionYPais(jugador)}</span>
+        <span className="jug__pos">{posicionYNacionalidad(jugador)}</span>
       </div>
 
       <div className="jug__stats">

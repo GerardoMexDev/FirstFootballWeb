@@ -79,7 +79,6 @@ export function BarraSuperior({ perfil }: { perfil: PerfilBarra }) {
             </svg>
           </span>
           <b>Football First</b>
-          <span className="fase">Fase 1</span>
         </div>
 
         <Nav />

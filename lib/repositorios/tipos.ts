@@ -36,8 +36,16 @@ export interface PartidoProximo {
   inicioUtc: string | null;
   /** Nombre IANA de la sede, p.ej. 'Europe/Brussels'. */
   zonaHorariaEvento: string | null;
-  /** Día calendario en Uruguay (YYYY-MM-DD) — clave de agrupación de la lista. */
+  /** Día calendario en Uruguay (YYYY-MM-DD). Se usa para ventanas "operativas" en zona de la agencia. */
   diaUy: string | null;
+  /**
+   * Día calendario en la SEDE del partido (YYYY-MM-DD) — clave con la que se agrupan y
+   * rotulan los partidos en la lista y el calendario (un partido de México a las 21:00 del
+   * viernes es "viernes", aunque en Uruguay ya sea sábado). La vista `proximos_partidos` cae
+   * a `diaUy` cuando no conoce la zona de la sede; el mapeo del repositorio repite ese
+   * fallback por si la migración 0013 todavía no corrió.
+   */
+  diaLocalSede: string | null;
   estado: 'programado' | 'en_juego' | 'finalizado' | 'suspendido' | 'sin_datos' | null;
   ronda: string | null;
   estadio: string | null;

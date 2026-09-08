@@ -1,8 +1,9 @@
 /**
  * Vista `calendario` conectada a `agenda_anual`: franja de densidad anual (12 meses) +
- * grilla del mes con los eventos por día + leyenda. Client Component porque la navegación
- * de mes es estado local (el server ya trajo TODOS los eventos de la ventana de proyección,
- * así que moverse entre meses/años no vuelve a pedir nada).
+ * grilla del mes con los eventos por día + leyenda. Los partidos se ubican por el día en su
+ * sede (punto I); cumpleaños y aniversarios, por su fecha civil. Client Component porque la
+ * navegación de mes es estado local (el server ya trajo TODOS los eventos de la ventana de
+ * proyección, así que moverse entre meses/años no vuelve a pedir nada).
  *
  * Marcado y clases 1:1 con la demo (`renderAnio()` / `renderCal()`). Los `.ev` de partido
  * abren el panel de detalle (`<button>`); los de cumpleaños / aniversario quedan como `<div>`

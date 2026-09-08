@@ -29,6 +29,7 @@ function fila(over: Partial<PartidoProximo>): PartidoProximo {
     inicioUtc: '2026-09-10T02:00:00.000Z',
     zonaHorariaEvento: 'America/Mexico_City',
     diaUy: '2026-09-09',
+    diaLocalSede: '2026-09-09',
     estado: 'programado',
     ronda: 'Jornada 8',
     estadio: 'Nemesio Díez',
@@ -109,4 +110,12 @@ test('conserva competencia, sede, ronda y hora del partido', () => {
   assert.equal(d.ronda, 'Jornada 8');
   assert.equal(d.inicioUtc, '2026-09-10T02:00:00.000Z');
   assert.equal(d.zonaHorariaEvento, 'America/Mexico_City');
+});
+
+test('diaLocalSede se toma de la fila base; cae a diaUy si viene null', () => {
+  assert.equal(plegarDetallePartido([fila({ diaLocalSede: '2026-09-11' })])!.diaLocalSede, '2026-09-11');
+  assert.equal(
+    plegarDetallePartido([fila({ diaLocalSede: null as unknown as string, diaUy: '2026-09-09' })])!.diaLocalSede,
+    '2026-09-09',
+  );
 });

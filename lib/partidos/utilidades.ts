@@ -1,16 +1,24 @@
 /**
  * Reglas de negocio puras sobre `PartidoProximo[]` — sin JSX, sin fetch. Mismo criterio que
- * la demo (`peso`, `filtrar`, agrupar por día), pero basado en `diaUy` (ya calculado por la
- * vista `proximos_partidos` en zona de Uruguay) en vez de aritmética sobre `new Date()`.
+ * la demo (`peso`, `filtrar`, agrupar por día), pero basado en `diaLocalSede` (día civil en
+ * la sede, ya calculado por la vista `proximos_partidos`) en vez de aritmética sobre
+ * `new Date()`. Se agrupa y se cuenta por el día de la sede porque así lo piensa la agencia:
+ * un partido de México del viernes a la noche es "del viernes", no del sábado (punto I).
  */
 import { diasDesdeHoyUy } from '@/lib/fechas/zonas';
 import type { PartidoProximo } from '@/lib/repositorios/tipos';
 
 export type FiltroPartidos = 'todos' | 'hoy' | 'semana' | 'int' | 'hito';
 
-/** ¿Es hoy, en zona de Uruguay? */
-export function esHoyUy(p: PartidoProximo): boolean {
-  return p.diaUy !== null && diasDesdeHoyUy(p.diaUy) === 0;
+/** Día con el que se agrupa/cuenta el partido: el de la sede, con fallback al de Uruguay. */
+export function diaDePartido(p: PartidoProximo): string | null {
+  return p.diaLocalSede ?? p.diaUy;
+}
+
+/** ¿El partido se juega hoy (por el día de su sede)? */
+export function esHoy(p: PartidoProximo): boolean {
+  const dia = diaDePartido(p);
+  return dia !== null && diasDesdeHoyUy(dia) === 0;
 }
 
 /**
@@ -39,9 +47,12 @@ export function filtrarPartidos(
 ): PartidoProximo[] {
   switch (filtro) {
     case 'hoy':
-      return lista.filter(esHoyUy);
+      return lista.filter(esHoy);
     case 'semana':
-      return lista.filter((p) => p.diaUy !== null && diasDesdeHoyUy(p.diaUy) < 7);
+      return lista.filter((p) => {
+        const dia = diaDePartido(p);
+        return dia !== null && diasDesdeHoyUy(dia) < 7;
+      });
     case 'int':
       return lista.filter((p) => p.esInternacional);
     case 'hito':
@@ -52,11 +63,11 @@ export function filtrarPartidos(
   }
 }
 
-/** Agrupa por `diaUy`, preservando el orden (la lista ya viene ordenada por `inicioUtc`). */
+/** Agrupa por día de la sede, preservando el orden (la lista ya viene ordenada por `inicioUtc`). */
 export function agruparPorDia(lista: PartidoProximo[]): Array<[string, PartidoProximo[]]> {
   const grupos = new Map<string, PartidoProximo[]>();
   for (const p of lista) {
-    const clave = p.diaUy ?? 'sin-fecha';
+    const clave = diaDePartido(p) ?? 'sin-fecha';
     const grupo = grupos.get(clave);
     if (grupo) grupo.push(p);
     else grupos.set(clave, [p]);

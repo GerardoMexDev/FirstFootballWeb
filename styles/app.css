@@ -111,3 +111,68 @@
     );
   }
 }
+
+/* ------------------------------------------------------------
+   Toast vacío — pedido de la agencia 2026-09-08 (Sesión 6, punto C).
+   El sistema de toasts todavía no está cableado: el <div class="toast"> del
+   layout va sin contenido, pero demo.css lo deja en `display:flex` con fondo
+   `var(--text)` (negro) y el transform no lo esconde del todo → asoma una
+   píldora negra al pie de todas las páginas. Mientras no haya toast, se oculta.
+   Se revierte solo cuando el toast tenga contenido (`:empty` deja de aplicar).
+   ------------------------------------------------------------ */
+.toast:empty {
+  display: none;
+}
+
+/* ------------------------------------------------------------
+   Par de escudos (club vs rival) en un resultado de partido del buscador —
+   pedido de la agencia 2026-09-08 (Sesión 6, punto F). demo.css fuerza
+   `.res img` / `.res .ph` a 32px; acá el par se muestra a 22px para que
+   ocupe aproximadamente el ancho de un avatar y no empuje el texto.
+   ------------------------------------------------------------ */
+.res__escudos {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+.res__escudos .crest {
+  width: 22px;
+  height: 22px;
+  font-size: 7px;
+}
+
+/* ------------------------------------------------------------
+   Marca "+1" / "-1" estilo vuelos junto a la hora de Uruguay — pedido de la
+   agencia 2026-09-08 (Sesión 6, punto I). Aparece cuando el partido, ubicado
+   en el día de su sede, en Uruguay cae en otro día (p.ej. partido de la noche
+   en México → acá ya es pasada la medianoche). Va dentro de un <sup>.
+   ------------------------------------------------------------ */
+.hora__d {
+  margin-left: 3px;
+  font-size: 0.5em;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: 0;
+  color: var(--accent);
+}
+
+/* ------------------------------------------------------------
+   Botón de tema: mostrar el DESTINO, no el estado actual — pedido de la
+   agencia 2026-09-08 (Sesión 6, punto D). En fondo claro se ve la luna
+   ("pasar a oscuro"); en fondo oscuro, el sol ("pasar a claro").
+   demo.css (línea 85) hace lo inverso; acá se invierte sin tocar la demo.
+   app.css se carga después → gana a igualdad de especificidad.
+   ------------------------------------------------------------ */
+[data-theme="light"] .luna {
+  display: revert;
+}
+[data-theme="light"] .sol {
+  display: none;
+}
+[data-theme="dark"] .sol {
+  display: revert;
+}
+[data-theme="dark"] .luna {
+  display: none;
+}

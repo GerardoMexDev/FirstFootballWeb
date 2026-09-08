@@ -6,6 +6,9 @@
  * - La hora local se muestra SIEMPRE que se conozca la zona de la sede (la agencia la
  *   necesita para los pósters). Cuando coincide con la de Uruguay (Brasil/Chile, mismo
  *   UTC−3 sin DST) se aclara "misma hora que Uruguay" para que no parezca un error.
+ * - Si el partido, ubicado en el día de su sede, en Uruguay cae en otro día (partido de la
+ *   noche en México → pasada la medianoche acá), la hora de Uruguay lleva una marca "+1"
+ *   al estilo de los vuelos.
  * - Sin "· país" en la competencia: la vista `proximos_partidos` no expone el país de la
  *   competencia (no se le agregó esa columna); si hace falta, es un cambio de vista, no de acá.
  * - Con `onAbrir`, la tarjeta abre el panel de detalle del partido (clic, Enter o Espacio),
@@ -15,9 +18,9 @@
 import { Ico } from '@/components/comunes/Ico';
 import { Escudo } from '@/components/comunes/Escudo';
 import { CaraJugador } from '@/components/comunes/CaraJugador';
-import { horaCortaEnUruguay, horaCortaEnSede } from '@/lib/fechas/zonas';
+import { horaCortaEnUruguay, horaCortaEnSede, marcadorCambioDeDia } from '@/lib/fechas/zonas';
 import { mostrar } from '@/lib/formato/valores';
-import { esHoyUy, claseTarjeta } from '@/lib/partidos/utilidades';
+import { esHoy, claseTarjeta } from '@/lib/partidos/utilidades';
 import type { PartidoProximo } from '@/lib/repositorios/tipos';
 
 export function TarjetaPartido({
@@ -29,12 +32,14 @@ export function TarjetaPartido({
   tieneHito?: boolean;
   onAbrir?: () => void;
 }) {
-  const hoy = esHoyUy(p);
+  const hoy = esHoy(p);
   const tieneHorario = p.inicioUtc !== null;
   const tieneSede = tieneHorario && p.zonaHorariaEvento !== null;
   const horaUy = tieneHorario ? horaCortaEnUruguay(p.inicioUtc!) : null;
   const horaSede = tieneSede ? horaCortaEnSede(p.inicioUtc!, p.zonaHorariaEvento!) : null;
   const mismaHora = horaSede !== null && horaSede === horaUy;
+  // "+1" / "-1" si en Uruguay el partido cae en otro día que en su sede (el día del grupo).
+  const cambioDia = marcadorCambioDeDia(p.diaLocalSede, p.diaUy);
 
   return (
     <article
@@ -54,7 +59,14 @@ export function TarjetaPartido({
       })}
     >
       <div className="hora">
-        <b>{horaUy ?? '—'}</b>
+        <b>
+          {horaUy ?? '—'}
+          {cambioDia && (
+            <sup className="hora__d" title={`En Uruguay es ${cambioDia === '+1' ? 'el día siguiente' : cambioDia === '-1' ? 'el día anterior' : `${cambioDia} días`}`}>
+              {cambioDia}
+            </sup>
+          )}
+        </b>
         <div className={`uy ${p.tentativo ? 'tent' : ''}`}>
           {p.tentativo ? (
             <>

@@ -16,14 +16,21 @@ import type { Hito } from '@/lib/motor-hitos/tipos';
 
 const MAXIMO_VISIBLE = 8;
 
+/** Día del partido asociado al hito: el de la sede, con fallback al de Uruguay (punto I). */
+function diaHito(hito: Hito): string | null {
+  return hito.partido ? hito.partido.diaLocalSede ?? hito.partido.diaUy : null;
+}
+
 function esInminente(hito: Hito): boolean {
-  if (hito.partido?.diaUy) return diasDesdeHoyUy(hito.partido.diaUy) <= 7;
+  const dia = diaHito(hito);
+  if (dia) return diasDesdeHoyUy(dia) <= 7;
   return hito.falta <= 10;
 }
 
 function ContextoHito({ hito }: { hito: Hito }) {
   if (hito.partido) {
-    const dia = hito.partido.diaUy ? etiquetaDiaUy(hito.partido.diaUy) : mostrar(null);
+    const diaP = diaHito(hito);
+    const dia = diaP ? etiquetaDiaUy(diaP) : mostrar(null);
     const hora = hito.partido.inicioUtc ? `${horaCortaEnUruguay(hito.partido.inicioUtc)} UY` : '';
     return (
       <>

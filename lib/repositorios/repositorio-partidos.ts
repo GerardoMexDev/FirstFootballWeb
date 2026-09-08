@@ -3,12 +3,17 @@
  * Cualquier otra fuente futura (caché, mock de test) implementa la misma interfaz
  * `RepositorioPartidos` — el resto de la app no sabe que esto es Supabase.
  *
- * Nota sobre el filtro `estado != 'finalizado'`: la vista `proximos_partidos` (migración 0001)
- * no filtra por fecha ni por estado — es un JOIN de todos los partidos de cada representado.
- * "Próximos" se aplica acá, en el repositorio, no en el esquema: un partido finalizado no es
- * un "próximo partido". Si en el futuro se necesita el historial, es un método nuevo
- * (`listarHistorial`), no tocar este.
+ * Nota sobre los filtros de "próximo": la vista `proximos_partidos` (migración 0001) no filtra
+ * por fecha ni por estado — es un JOIN de todos los partidos de cada representado. "Próximos"
+ * se aplica acá, en el repositorio:
+ *   · `estado != 'finalizado'` — un partido terminado no es un "próximo".
+ *   · `dia_uy >= hoy` (o sin fecha) — un partido cuya fecha ya pasó tampoco lo es, aunque su
+ *     `estado` nunca se haya actualizado (caso real: Toluca vs Puebla del 4-sep, cancelado,
+ *     seguía apareciendo — pedido de la agencia 2026-09-08, punto H). Los partidos sin fecha
+ *     (`dia_uy` NULL: p.ej. una final con sede/fecha a confirmar) SÍ se muestran.
+ * Si en el futuro se necesita el historial, es un método nuevo (`listarHistorial`), no tocar este.
  */
+import { hoyEnUruguay } from '@/lib/fechas/zonas';
 import type { Database } from '@/lib/supabase/tipos-db';
 import type { crearClienteServidor } from '@/lib/supabase/cliente-servidor';
 import type { PartidoProximo, RepositorioPartidos } from './tipos';
@@ -54,6 +59,9 @@ function aPartidoProximo(fila: FilaProximoPartido): PartidoProximo | null {
     inicioUtc: fila.inicio_utc,
     zonaHorariaEvento: fila.zona_horaria_evento,
     diaUy: fila.dia_uy,
+    // `?? dia_uy`: si la migración 0013 aún no corrió, la vista no trae la columna y esto
+    // degrada al día en Uruguay (comportamiento previo) en vez de romper.
+    diaLocalSede: fila.dia_local_sede ?? fila.dia_uy,
     estado: fila.estado,
     ronda: fila.ronda,
     estadio: fila.estadio,
@@ -72,6 +80,7 @@ export class RepositorioPartidosSupabase implements RepositorioPartidos {
       .from('proximos_partidos')
       .select('*')
       .neq('estado', 'finalizado')
+      .or(`dia_uy.gte.${hoyEnUruguay()},dia_uy.is.null`)
       .order('inicio_utc', { ascending: true, nullsFirst: false });
 
     if (error) throw new Error(`No se pudo leer proximos_partidos: ${error.message}`);
@@ -87,6 +96,7 @@ export class RepositorioPartidosSupabase implements RepositorioPartidos {
       .select('*')
       .eq('jugador_id', jugadorId)
       .neq('estado', 'finalizado')
+      .or(`dia_uy.gte.${hoyEnUruguay()},dia_uy.is.null`)
       .order('inicio_utc', { ascending: true, nullsFirst: false });
 
     if (error) throw new Error(`No se pudo leer proximos_partidos de ${jugadorId}: ${error.message}`);

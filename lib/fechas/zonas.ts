@@ -70,6 +70,29 @@ export function diaEnUruguay(inicioUtc: string): string {
   return DateTime.fromISO(inicioUtc, { zone: 'utc' }).setZone(ZONA_AGENCIA).toISODate() ?? '';
 }
 
+/** Día calendario de hoy (YYYY-MM-DD) en zona de Uruguay. Para filtrar "de hoy en adelante". */
+export function hoyEnUruguay(): string {
+  return DateTime.now().setZone(ZONA_AGENCIA).toISODate() ?? '';
+}
+
+/**
+ * Marca al estilo de los vuelos para cuando el partido, ubicado en el día de su sede, cae en
+ * OTRO día en Uruguay: `"+1"` si en Uruguay ya es el día siguiente (típico: partido de la
+ * noche en América → pasada la medianoche acá), `"-1"` si es el anterior (partido de
+ * madrugada en Asia → todavía es "ayer" acá), `""` si es el mismo día.
+ * `diaSede` y `diaUy` son fechas civiles YYYY-MM-DD (las trae la vista `proximos_partidos`).
+ * No es "aritmética sobre new Date()" prohibida por contexto.md §6: son fechas de calendario
+ * ya resueltas, se restan directo.
+ */
+export function marcadorCambioDeDia(diaSede: string | null, diaUy: string | null): string {
+  if (!diaSede || !diaUy || diaSede === diaUy) return '';
+  const sede = DateTime.fromISO(diaSede, { zone: 'utc' }).startOf('day');
+  const uy = DateTime.fromISO(diaUy, { zone: 'utc' }).startOf('day');
+  if (!sede.isValid || !uy.isValid) return '';
+  const delta = Math.round(uy.diff(sede, 'days').days);
+  return delta > 0 ? `+${delta}` : delta < 0 ? String(delta) : '';
+}
+
 /**
  * Cuántos días faltan (en Uruguay) desde hoy hasta `diaUy` (YYYY-MM-DD). Negativo si ya pasó.
  * Es la base para "Hoy"/"Mañana"/agrupar por cercanía — nunca aritmética sobre `new Date()`.

@@ -19,18 +19,25 @@
 import { Ico } from '@/components/comunes/Ico';
 import { CaraJugador } from '@/components/comunes/CaraJugador';
 import { usePanel } from '@/lib/paneles/use-panel';
-import { diasDesdeHoyUy, etiquetaDiaUy, horaCortaEnSede, horaCortaEnUruguay } from '@/lib/fechas/zonas';
+import {
+  diasDesdeHoyUy,
+  etiquetaDiaUy,
+  horaCortaEnSede,
+  horaCortaEnUruguay,
+  marcadorCambioDeDia,
+} from '@/lib/fechas/zonas';
 import { mostrar } from '@/lib/formato/valores';
 import { imagenHero } from '@/lib/partidos/hero-imagen';
-import { pesoPartido } from '@/lib/partidos/utilidades';
+import { pesoPartido, diaDePartido } from '@/lib/partidos/utilidades';
 import type { Hito } from '@/lib/motor-hitos/tipos';
 import type { PartidoProximo } from '@/lib/repositorios/tipos';
 
 export function HeroPartidoDelDia({ partidos, hitos }: { partidos: PartidoProximo[]; hitos: Hito[] }) {
   const { abrir } = usePanel();
-  const candidatos = partidos.filter(
-    (p) => p.diaUy !== null && diasDesdeHoyUy(p.diaUy) >= 0 && diasDesdeHoyUy(p.diaUy) <= 3,
-  );
+  const candidatos = partidos.filter((p) => {
+    const dia = diaDePartido(p);
+    return dia !== null && diasDesdeHoyUy(dia) >= 0 && diasDesdeHoyUy(dia) <= 3;
+  });
   if (!candidatos.length) return null;
 
   const partidosConHito = new Set(hitos.filter((h) => h.partido).map((h) => h.partido!.partidoId));
@@ -44,11 +51,12 @@ export function HeroPartidoDelDia({ partidos, hitos }: { partidos: PartidoProxim
 
   const hitoDelPartido = hitos.find((h) => h.partido?.partidoId === p.partidoId) ?? null;
 
-  const dias = diasDesdeHoyUy(p.diaUy!);
+  const dias = diasDesdeHoyUy(diaDePartido(p)!);
   const esHoy = dias === 0;
   const horaUy = p.inicioUtc ? horaCortaEnUruguay(p.inicioUtc) : null;
   const horaSede = p.inicioUtc && p.zonaHorariaEvento ? horaCortaEnSede(p.inicioUtc, p.zonaHorariaEvento) : null;
   const mismaHora = horaSede !== null && horaSede === horaUy;
+  const cambioDia = marcadorCambioDeDia(p.diaLocalSede, p.diaUy);
   const fondo = imagenHero(p.competenciaTipo, p.partidoId);
   const tieneSede = Boolean(p.estadio || p.ciudad);
 
@@ -106,12 +114,15 @@ export function HeroPartidoDelDia({ partidos, hitos }: { partidos: PartidoProxim
 
         {/* Logística: cuándo y dónde */}
         <div className="heroA__log">
-          <span className="heroA__lbl">{esHoy ? 'Hoy' : etiquetaDiaUy(p.diaUy!)}</span>
+          <span className="heroA__lbl">{esHoy ? 'Hoy' : etiquetaDiaUy(diaDePartido(p)!)}</span>
           {horaUy && (
             <div className="heroA__horas">
               <div>
-                <b>{horaUy}</b>
-                <span>Hora Uruguay</span>
+                <b>
+                  {horaUy}
+                  {cambioDia && <sup className="hora__d">{cambioDia}</sup>}
+                </b>
+                <span>{cambioDia === '+1' ? 'Hora Uruguay (día siguiente)' : 'Hora Uruguay'}</span>
               </div>
               {horaSede && (
                 <div>

@@ -19,7 +19,12 @@ import { Escudo } from '@/components/comunes/Escudo';
 import { CaraJugador } from '@/components/comunes/CaraJugador';
 import { EstadoSinDatos } from '@/components/comunes/EstadoSinDatos';
 import { usePanel } from '@/lib/paneles/use-panel';
-import { etiquetaDiaUy, horaCortaEnSede, horaCortaEnUruguay } from '@/lib/fechas/zonas';
+import {
+  etiquetaDiaUy,
+  horaCortaEnSede,
+  horaCortaEnUruguay,
+  marcadorCambioDeDia,
+} from '@/lib/fechas/zonas';
 import { mostrar } from '@/lib/formato/valores';
 import type { DetallePartidoBundle } from '@/lib/paneles/cargar-detalle-partido';
 
@@ -33,6 +38,8 @@ export function PanelPartido({ bundle }: { bundle: DetallePartidoBundle }) {
   // La hora local se muestra siempre que se conozca la zona de la sede; el aviso de
   // "trabajen con la hora de Uruguay" solo cuando realmente difiere.
   const hayDiferencia = horaSede !== null && horaSede !== horaUy;
+  // "+1" / "-1" si en Uruguay el partido cae en otro día que en su sede (día del grupo).
+  const cambioDia = marcadorCambioDeDia(d.diaLocalSede, d.diaUy);
 
   return (
     <>
@@ -76,8 +83,11 @@ export function PanelPartido({ bundle }: { bundle: DetallePartidoBundle }) {
           <>
             <div className="datos">
               <div className="dato dato--a">
-                <b>{horaUy}</b>
-                <span>Hora Uruguay</span>
+                <b>
+                  {horaUy}
+                  {cambioDia && <sup className="hora__d">{cambioDia}</sup>}
+                </b>
+                <span>{cambioDia === '+1' ? 'Hora Uruguay (día siguiente)' : 'Hora Uruguay'}</span>
               </div>
               {horaSede !== null && (
                 <div className="dato">
@@ -89,7 +99,13 @@ export function PanelPartido({ bundle }: { bundle: DetallePartidoBundle }) {
             {hayDiferencia && (
               <div className="aviso" style={{ marginTop: 12 }}>
                 <Ico nombre="alerta" clase="ico ico--sm" />
-                <span>Hay diferencia horaria con la sede. El equipo trabaja con la hora de Uruguay.</span>
+                <span>
+                  {cambioDia === '+1'
+                    ? 'En la sede el partido se juega un día antes que en Uruguay (acá cae pasada la medianoche). El equipo trabaja con la hora de Uruguay.'
+                    : cambioDia === '-1'
+                      ? 'En la sede el partido se juega un día después que en Uruguay. El equipo trabaja con la hora de Uruguay.'
+                      : 'Hay diferencia horaria con la sede. El equipo trabaja con la hora de Uruguay.'}
+                </span>
               </div>
             )}
           </>
@@ -109,10 +125,10 @@ export function PanelPartido({ bundle }: { bundle: DetallePartidoBundle }) {
             <Ico nombre="globo" clase="ico ico--sm" />
             {mostrar(d.ciudad)}
           </span>
-          {d.diaUy && (
+          {(d.diaLocalSede ?? d.diaUy) && (
             <span>
               <Ico nombre="calendario" clase="ico ico--sm" />
-              {etiquetaDiaUy(d.diaUy)}
+              {etiquetaDiaUy((d.diaLocalSede ?? d.diaUy)!)}
             </span>
           )}
         </div>

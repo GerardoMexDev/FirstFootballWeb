@@ -20,7 +20,7 @@ import { Escudo } from '@/components/comunes/Escudo';
 import { CaraJugador } from '@/components/comunes/CaraJugador';
 import { buscar } from '@/lib/buscador/indexar';
 import { rutaPanel } from '@/lib/paneles/use-panel';
-import { etiquetaDiaUy, horaCortaEnUruguay } from '@/lib/fechas/zonas';
+import { etiquetaDiaUy, horaCortaEnUruguay, marcadorCambioDeDia } from '@/lib/fechas/zonas';
 import { mostrar } from '@/lib/formato/valores';
 import type { JugadorPlantel, PartidoProximo } from '@/lib/repositorios/tipos';
 
@@ -116,7 +116,6 @@ export function Buscador() {
           <path d="m20 20-3.6-3.6" />
         </svg>
         <span>Buscar</span>
-        <kbd>⌘K</kbd>
       </button>
 
       {abierto && (
@@ -145,7 +144,10 @@ export function Buscador() {
                 value={consulta}
                 onChange={(evento) => setConsulta(evento.target.value)}
               />
-              <kbd>ESC</kbd>
+              {/* Botón de cierre explícito (además de Escape / clic en el fondo). */}
+              <button className="panel__x" type="button" aria-label="Cerrar" onClick={cerrar}>
+                <Ico nombre="cerrar" />
+              </button>
             </div>
 
             <div className="busca__r">
@@ -180,7 +182,11 @@ export function Buscador() {
                   </div>
                   {resultados.partidos.map((p) => (
                     <button className="res" type="button" key={p.partidoId} onClick={() => irA('partido', p.partidoId)}>
-                      <Escudo nombre={p.clubNombre ?? '?'} url={p.clubEscudoUrl} clase="crest" />
+                      {/* Los dos escudos (club del representado + rival), como en la tarjeta de partido. */}
+                      <span className="res__escudos" aria-hidden="true">
+                        <Escudo nombre={p.clubNombre ?? '?'} url={p.clubEscudoUrl} clase="crest" />
+                        <Escudo nombre={p.rivalNombre ?? '?'} url={p.rivalEscudoUrl} clase="crest" />
+                      </span>
                       <div>
                         <b>
                           {mostrar(p.clubNombre)} vs {mostrar(p.rivalNombre)}
@@ -188,8 +194,16 @@ export function Buscador() {
                         <span>
                           {[
                             p.competenciaNombre,
-                            p.diaUy ? etiquetaDiaUy(p.diaUy) : null,
-                            p.inicioUtc ? `${horaCortaEnUruguay(p.inicioUtc)} UY` : null,
+                            (p.diaLocalSede ?? p.diaUy)
+                              ? etiquetaDiaUy((p.diaLocalSede ?? p.diaUy)!)
+                              : null,
+                            p.inicioUtc
+                              ? `${horaCortaEnUruguay(p.inicioUtc)}${
+                                  marcadorCambioDeDia(p.diaLocalSede, p.diaUy)
+                                    ? ` ${marcadorCambioDeDia(p.diaLocalSede, p.diaUy)}`
+                                    : ''
+                                } UY`
+                              : null,
                           ]
                             .filter(Boolean)
                             .join(' · ')}

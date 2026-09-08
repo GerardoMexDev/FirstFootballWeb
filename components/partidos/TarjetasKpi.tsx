@@ -6,16 +6,19 @@
  * de jugadores completo (más allá de quién tiene partido) todavía no está conectado acá.
  */
 import { diasDesdeHoyUy } from '@/lib/fechas/zonas';
-import { esHoyUy } from '@/lib/partidos/utilidades';
+import { esHoy, diaDePartido } from '@/lib/partidos/utilidades';
 import type { PartidoProximo } from '@/lib/repositorios/tipos';
 
 export function TarjetasKpi({ partidos, cantidadHitos }: { partidos: PartidoProximo[]; cantidadHitos: number }) {
-  const conFecha = partidos.filter((p) => p.diaUy !== null);
+  // Se cuenta por el día de la sede (mismo criterio que la lista y el calendario, punto I).
+  const conDia = partidos
+    .map((p) => ({ p, dia: diaDePartido(p) }))
+    .filter((x): x is { p: PartidoProximo; dia: string } => x.dia !== null);
 
-  const hoy = conFecha.filter(esHoyUy).length;
-  const estaSemana = conFecha.filter((p) => diasDesdeHoyUy(p.diaUy!) < 7).length;
-  const internacionales30 = conFecha.filter(
-    (p) => p.esInternacional && diasDesdeHoyUy(p.diaUy!) < 30,
+  const hoy = conDia.filter((x) => esHoy(x.p)).length;
+  const estaSemana = conDia.filter((x) => diasDesdeHoyUy(x.dia) < 7).length;
+  const internacionales30 = conDia.filter(
+    (x) => x.p.esInternacional && diasDesdeHoyUy(x.dia) < 30,
   ).length;
 
   const jugadores = new Set(partidos.map((p) => p.jugadorId));

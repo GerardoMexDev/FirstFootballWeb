@@ -48,6 +48,7 @@ function partido(over: Partial<PartidoProximo>): PartidoProximo {
     inicioUtc: '2026-09-12T17:00:00.000Z',
     zonaHorariaEvento: 'Asia/Riyadh',
     diaUy: '2026-09-12',
+    diaLocalSede: '2026-09-12',
     estado: 'programado',
     ronda: 'Jornada 4',
     estadio: 'Kingdom Arena',

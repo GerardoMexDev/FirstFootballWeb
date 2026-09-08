@@ -34,16 +34,23 @@ function celda(valor: number | null): string {
   return valor === null || valor === undefined ? '—' : String(valor);
 }
 
+/** Día del partido del hito: el de la sede, con fallback al de Uruguay (punto I). */
+function diaHito(hito: Hito): string | null {
+  return hito.partido ? hito.partido.diaLocalSede ?? hito.partido.diaUy : null;
+}
+
 /** Igual criterio que `SeccionHitos`: inminente si el partido está a ≤7 días o faltan ≤10 unidades. */
 function esInminente(hito: Hito): boolean {
-  if (hito.partido?.diaUy) return diasDesdeHoyUy(hito.partido.diaUy) <= 7;
+  const dia = diaHito(hito);
+  if (dia) return diasDesdeHoyUy(dia) <= 7;
   return hito.falta <= 10;
 }
 
 function contextoHito(hito: Hito): string {
   if (!hito.partido) return 'Sin fecha — depende del rendimiento';
   const rival = mostrar(hito.partido.rivalNombre);
-  const dia = hito.partido.diaUy ? etiquetaDiaUy(hito.partido.diaUy) : 'sin fecha';
+  const diaP = diaHito(hito);
+  const dia = diaP ? etiquetaDiaUy(diaP) : 'sin fecha';
   return `${mostrar(hito.partido.clubNombre)} vs ${rival} · ${dia}`;
 }
 
@@ -248,7 +255,12 @@ export function FichaJugador({
                 />
                 <b>{mostrar(partido.rivalNombre)}</b>
                 <span>
-                  {[partido.competenciaCodigo, partido.diaUy ? etiquetaDiaUy(partido.diaUy) : null]
+                  {[
+                    partido.competenciaCodigo,
+                    (partido.diaLocalSede ?? partido.diaUy)
+                      ? etiquetaDiaUy((partido.diaLocalSede ?? partido.diaUy)!)
+                      : null,
+                  ]
                     .filter(Boolean)
                     .join(' · ')}
                 </span>

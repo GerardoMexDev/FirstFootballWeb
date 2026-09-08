@@ -19,6 +19,12 @@ export interface EventoCalendario {
   titulo: string;
   /** YYYY-MM-DD en zona de Uruguay (lo calcula la vista). */
   diaUy: string;
+  /**
+   * YYYY-MM-DD del día en la SEDE (para partidos) o el mismo `diaUy` (para cumpleaños /
+   * aniversarios, que no tienen sede). Es la clave con la que se ubica el evento en la
+   * grilla del mes (punto I). La vista cae a `diaUy` si no conoce la zona de la sede.
+   */
+  diaLocalSede: string;
   /** instante ISO UTC si el evento tiene hora (partidos); si no, null. */
   cuandoUtc: string | null;
   competenciaCodigo: string | null;
@@ -33,9 +39,11 @@ export const MESES = [
 export const MESES_CORTOS = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
 
 /**
- * Agrupa por día (YYYY-MM-DD). Los partidos vienen con una fila por representado en la vista;
- * acá se deduplican por `refId` para que un partido sea una entrada y no dos (ej. Toluca vs
- * Atlante). Cada día queda ordenado: primero los que tienen hora, después el resto por título.
+ * Agrupa por día en la sede (YYYY-MM-DD) — así un partido de México del viernes a la noche
+ * cae en el viernes del calendario, no en el sábado (punto I). Los partidos vienen con una
+ * fila por representado en la vista; acá se deduplican por `refId` para que un partido sea
+ * una entrada y no dos (ej. Toluca vs Atlante). Cada día queda ordenado: primero los que
+ * tienen hora, después el resto por título.
  */
 export function agruparPorDia(eventos: EventoCalendario[]): Map<string, EventoCalendario[]> {
   const porDia = new Map<string, EventoCalendario[]>();
@@ -43,13 +51,13 @@ export function agruparPorDia(eventos: EventoCalendario[]): Map<string, EventoCa
 
   for (const e of eventos) {
     if (e.fuente === 'partido' && e.refId) {
-      const clave = `${e.diaUy}:${e.refId}`;
+      const clave = `${e.diaLocalSede}:${e.refId}`;
       if (vistosPartido.has(clave)) continue;
       vistosPartido.add(clave);
     }
-    const lista = porDia.get(e.diaUy) ?? [];
+    const lista = porDia.get(e.diaLocalSede) ?? [];
     lista.push(e);
-    porDia.set(e.diaUy, lista);
+    porDia.set(e.diaLocalSede, lista);
   }
 
   for (const lista of porDia.values()) {
@@ -70,16 +78,16 @@ export function agruparPorDia(eventos: EventoCalendario[]): Map<string, EventoCa
   return porDia;
 }
 
-/** Partidos por mes del año dado (deduplicados). Alimenta la franja de densidad. */
+/** Partidos por mes del año dado (deduplicados), por el día de la sede. Alimenta la franja de densidad. */
 export function partidosPorMes(eventos: EventoCalendario[], anio: number): number[] {
   const conteo = Array<number>(12).fill(0);
   const vistos = new Set<string>();
 
   for (const e of eventos) {
     if (e.fuente !== 'partido') continue;
-    const [y, m] = e.diaUy.split('-').map(Number);
+    const [y, m] = e.diaLocalSede.split('-').map(Number);
     if (y !== anio) continue;
-    const clave = e.refId ?? `${e.diaUy}:${e.titulo}`;
+    const clave = e.refId ?? `${e.diaLocalSede}:${e.titulo}`;
     if (vistos.has(clave)) continue;
     vistos.add(clave);
     conteo[m - 1] += 1;

@@ -51,6 +51,8 @@ export interface DetallePartido {
   inicioUtc: string | null;
   zonaHorariaEvento: string | null;
   diaUy: string | null;
+  /** Día en la sede del partido — el que se muestra en el panel (punto I). */
+  diaLocalSede: string | null;
   estado: PartidoProximo['estado'];
   ronda: string | null;
   estadio: string | null;
@@ -128,6 +130,7 @@ export function plegarDetallePartido(filas: PartidoProximo[]): DetallePartido | 
     inicioUtc: base.inicioUtc,
     zonaHorariaEvento: base.zonaHorariaEvento,
     diaUy: base.diaUy,
+    diaLocalSede: base.diaLocalSede ?? base.diaUy,
     estado: base.estado,
     ronda: base.ronda,
     estadio: base.estadio,

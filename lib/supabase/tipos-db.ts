@@ -1036,6 +1036,7 @@ export type Database = {
           club_id: string | null
           competencia_codigo: string | null
           cuando_utc: string | null
+          dia_local_sede: string | null
           dia_uy: string | null
           es_internacional: boolean | null
           fuente: string | null
@@ -1061,6 +1062,7 @@ export type Database = {
             | null
           con_seleccion: boolean | null
           convocado: boolean | null
+          dia_local_sede: string | null
           dia_uy: string | null
           es_internacional: boolean | null
           es_local: boolean | null
