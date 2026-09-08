@@ -215,3 +215,20 @@
 [data-theme="dark"] .luna {
   display: none;
 }
+
+/* ------------------------------------------------------------
+   Grilla del calendario: columnas SIEMPRE iguales y alineadas con la fila de
+   días (Lunes…Domingo). demo.css usa `repeat(7, 1fr)` en las dos, pero `1fr`
+   es `minmax(auto, 1fr)`: si una celda tiene contenido ancho (nombre de club
+   largo en un `.ev`), su columna se estira y roba ancho a las demás, y deja de
+   coincidir con el encabezado — se lee mal (parece otro día). `minmax(0, 1fr)`
+   + `min-width:0` en la celda fuerzan 7 columnas idénticas.
+   Pedido de Gerardo 2026-09-08 (revisión Sesión 6).
+   ------------------------------------------------------------ */
+.cal__dias,
+.cal__grid {
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+}
+.cal__grid > .celda {
+  min-width: 0;
+}

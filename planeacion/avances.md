@@ -157,6 +157,23 @@ diseñador → Community Manager.
 
 ## 4. Hecho (por fecha, más reciente primero)
 
+### 2026-09-08 — Sesión 6 (cont.: bug de columnas del calendario)
+
+Gerardo reportó que en el calendario los partidos parecían caer en otro día.
+**No era un problema de datos** (Atlante vs Pachuca ya estaba bien en `agenda_anual`
+con `dia_local_sede` = viernes) — era que **las columnas de la grilla no coincidían con la
+fila de días** (Lunes…Domingo). Medido en el navegador: encabezados en 7 columnas iguales
+(~167px), pero la grilla con columnas de 35px a 312px. Causa: `demo.css` usa
+`grid-template-columns: repeat(7, 1fr)` y `1fr` = `minmax(auto, 1fr)`; una celda con un
+nombre de club largo en un `.ev` estira su columna y roba ancho a las demás.
+
+- **Fix (`styles/app.css`, sin tocar `demo.css`):** `.cal__dias` y `.cal__grid` →
+  `repeat(7, minmax(0, 1fr))` + `.cal__grid > .celda { min-width: 0 }`. Fuerza 7 columnas
+  idénticas alineadas con el encabezado; los `.ev` largos ya cortan con "…" (regla de la demo).
+- **Verificado:** encabezados y primera fila de celdas con los mismos `left`
+  (`58, 225, 392, 559, 727, 894, 1061`), todas las celdas a 161px. Día 11 (viernes) en la
+  5ª columna con sus dos partidos; sábado 12 sin el de Atlante. 90 tests, build + lint OK.
+
 ### 2026-09-08 — Sesión 6 (cont.: feedback de revisión 2)
 
 - **Hero: duelo en tres líneas apiladas.** `[escudo] EQUIPO 1` / `vs` / `[escudo] EQUIPO 2`
