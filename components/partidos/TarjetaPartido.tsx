@@ -106,10 +106,15 @@ export function TarjetaPartido({
           {mostrar(p.rivalNombre)}
         </div>
         <div className="linea">
-          <span>
-            <Ico nombre="trofeo" clase="ico ico--sm" />
-            <b>{mostrar(p.ronda)}</b>
-          </span>
+          {/* La ronda ("Regular Season - 8") solo la trae API-Football; los fixtures de ESPN
+              (la mayoría) no la tienen. Si no está, no se muestra la línea en vez de un
+              "Sin datos" en casi todas las tarjetas. */}
+          {p.ronda && (
+            <span>
+              <Ico nombre="trofeo" clase="ico ico--sm" />
+              <b>{p.ronda}</b>
+            </span>
+          )}
           <span>
             <Ico nombre="pin" clase="ico ico--sm" />
             {p.estadio || p.ciudad ? `${mostrar(p.estadio)}, ${mostrar(p.ciudad)}` : 'Sin datos'}

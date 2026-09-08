@@ -17,6 +17,7 @@
 'use client';
 
 import { Ico } from '@/components/comunes/Ico';
+import { Escudo } from '@/components/comunes/Escudo';
 import { CaraJugador } from '@/components/comunes/CaraJugador';
 import { usePanel } from '@/lib/paneles/use-panel';
 import {
@@ -97,6 +98,10 @@ export function HeroPartidoDelDia({ partidos, hitos }: { partidos: PartidoProxim
               {mostrar(p.competenciaNombre)}
               {p.ronda ? ` · ${p.ronda}` : ''}
             </span>
+          </div>
+          <div className="heroA__escudos" aria-hidden="true">
+            <Escudo nombre={p.clubNombre ?? '?'} url={p.clubEscudoUrl} clase="crest crest--lg" />
+            <Escudo nombre={p.rivalNombre ?? '?'} url={p.rivalEscudoUrl} clase="crest crest--lg" />
           </div>
           <div className="hero__t">
             {mostrar(p.clubNombre)} vs {mostrar(p.rivalNombre)}

@@ -58,24 +58,29 @@ export function PanelPartido({ bundle }: { bundle: DetallePartidoBundle }) {
         <Escudo nombre={d.visitante.nombre ?? '?'} url={d.visitante.escudoUrl} clase="crest crest--lg" />
       </div>
 
-      <div className="linea" style={{ marginBottom: 32 }}>
-        <span>
-          <Ico nombre="trofeo" clase="ico ico--sm" />
-          <b>{mostrar(d.ronda)}</b>
-        </span>
-        {d.representadoEsLocal !== null && (
-          <span>
-            <Ico nombre="calendario" clase="ico ico--sm" />
-            {d.representadoEsLocal ? 'Local' : 'Visitante'}
-          </span>
-        )}
-        {d.tentativo && (
-          <span style={{ color: 'var(--accent)', fontWeight: 600 }}>
-            <Ico nombre="alerta" clase="ico ico--sm" />
-            Fecha tentativa
-          </span>
-        )}
-      </div>
+      {(d.ronda || d.representadoEsLocal !== null || d.tentativo) && (
+        <div className="linea" style={{ marginBottom: 32 }}>
+          {/* La ronda solo la trae API-Football; si no está, no se muestra (ver TarjetaPartido). */}
+          {d.ronda && (
+            <span>
+              <Ico nombre="trofeo" clase="ico ico--sm" />
+              <b>{d.ronda}</b>
+            </span>
+          )}
+          {d.representadoEsLocal !== null && (
+            <span>
+              <Ico nombre="calendario" clase="ico ico--sm" />
+              {d.representadoEsLocal ? 'Local' : 'Visitante'}
+            </span>
+          )}
+          {d.tentativo && (
+            <span style={{ color: 'var(--accent)', fontWeight: 600 }}>
+              <Ico nombre="alerta" clase="ico ico--sm" />
+              Fecha tentativa
+            </span>
+          )}
+        </div>
+      )}
 
       <div className="bloque">
         <span className="label">Horario</span>

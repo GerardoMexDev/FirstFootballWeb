@@ -156,6 +156,29 @@ diseñador → Community Manager.
 
 ## 4. Hecho (por fecha, más reciente primero)
 
+### 2026-09-08 — Sesión 6 (cont.: feedback de revisión)
+
+Tres puntos de Gerardo al revisar:
+
+- **Escudos en el hero** (pedido): `HeroPartidoDelDia` muestra ahora una fila con los dos
+  escudos (`.heroA__escudos`, `crest--lg` a 44px) arriba del duelo. Hubo que subir
+  `.hero--a` a `min-height:420px` — la fila de escudos sumaba alto y el contenido (abajo por
+  `justify-content:flex-end`) se metía debajo del pill "Partido del día". Verificado: 0
+  solapamiento, 2 escudos `<img>`, 0 errores.
+- **"Sin datos" en la ronda** (bug): `sync-fixtures-espn` **no trae `ronda`** (el *core* API
+  de ESPN no tiene matchday/"Fecha N" — confirmado revisando el JSON de un evento), así que
+  casi todas las tarjetas mostraban "Sin datos" en la línea del trofeo. Ahora `TarjetaPartido`
+  y `PanelPartido` **ocultan esa línea si no hay `ronda`** (API-Football sí la trae para su
+  ventana → ahí se sigue viendo "Regular Season - 8"). El hero ya la mostraba condicional.
+  **Pendiente (opcional):** resolver `event.seasonType.$ref` de ESPN para al menos poner
+  "Temporada regular" / "Apertura" — es un cambio en `_shared/espn-partido.ts` +
+  `sync-fixtures-espn` + redeploy + re-sync.
+- **Marca `+1` no aparece:** es lo esperado — necesita la migración `0013` aplicada (sin
+  ella `diaLocalSede === diaUy` y `marcadorCambioDeDia` devuelve `""`). **El classifier
+  vuelve a bloquear `npm run migracion` desde acá.** Hay que correr a mano:
+  `npm run migracion 0013_dia_local_sede.sql && npm run tipos:db` (o agregar la regla de
+  permiso). Hasta entonces I entero (agrupar por día de la sede + `+1`) queda dormido.
+
 ### 2026-09-08 — Sesión 6 (cont.: escudos de clubes)
 
 Camino 1 de la charla ("hotlink al CDN del proveedor, sin Storage"). **Aplicado a la BD.**
