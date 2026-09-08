@@ -8,10 +8,14 @@
  *     (es exactamente el valor del campo `team.logo` de cualquier respuesta de /teams)
  *   · proveedor_externo = 'espn'         → https://a.espncdn.com/i/teamlogos/soccer/500/<id>.png
  *
- * Antes de guardar, se verifica que la URL responda 200 (HEAD, con fallback a GET porque
- * algún CDN rechaza HEAD). Si no resuelve, la fila queda como estaba — el componente
- * `Escudo` ya cae a las iniciales cuando no hay `escudo_url` (o cuando la imagen falla).
- * Nunca se pisa un `escudo_url` existente con NULL.
+ * `MANUALES` cubre los clubes cuyo logo no está en el CDN de ningún proveedor: el archivo va
+ * a mano en `public/escudos/` y acá se mapea su nombre → ruta. Tiene prioridad sobre el
+ * patrón del CDN, así una corrida futura no lo pisa.
+ *
+ * Antes de guardar se verifica que exista: 200 para una URL http (HEAD, con fallback a GET
+ * porque algún CDN rechaza HEAD); el archivo en disco para una ruta de `public/`. Si no
+ * resuelve, la fila queda como estaba — el componente `Escudo` cae a las iniciales cuando no
+ * hay `escudo_url` (o cuando la imagen falla). Nunca se pisa un `escudo_url` existente con NULL.
  *
  * Idempotente: si la fila ya tiene la URL deseada no se toca ni se re-verifica. Volver a
  * correrlo solo intenta las que siguen sin escudo.
@@ -20,6 +24,7 @@
  *
  * Football First (Fase 1). Creado 2026-09-08 (Sesión 6).
  */
+import { existsSync } from 'node:fs';
 import { createClient } from '@supabase/supabase-js';
 
 process.loadEnvFile('.secretos/.env');
@@ -33,8 +38,18 @@ const admin = createClient(NEXT_PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, 
   auth: { autoRefreshToken: false, persistSession: false },
 });
 
-/** URL del escudo según el proveedor, o null si no sabemos construirla para ese club. */
-function urlEscudo({ proveedor_externo, id_externo }) {
+/**
+ * Escudos cargados a mano en `public/escudos/` para clubes que ningún CDN tiene.
+ * Clave = `clubes.nombre` en minúsculas y sin espacios de más.
+ */
+const MANUALES = {
+  'al faisaly': '/escudos/al-faisaly.png', // ESPN no tiene su logo (Sesión 6)
+};
+
+/** URL/ruta del escudo del club, o null si no sabemos de dónde sacarlo. */
+function urlEscudo({ nombre, proveedor_externo, id_externo }) {
+  const manual = MANUALES[nombre.trim().toLowerCase().replace(/\s+/g, ' ')];
+  if (manual) return manual;
   if (!id_externo) return null;
   // Solo ids numéricos: los dos proveedores usan enteros; algo con otra forma no es un id de equipo.
   if (!/^\d+$/.test(id_externo)) return null;
@@ -46,6 +61,12 @@ function urlEscudo({ proveedor_externo, id_externo }) {
     default:
       return null;
   }
+}
+
+/** ¿El escudo (URL http o ruta de `public/`) realmente existe? */
+async function existeEscudo(ruta) {
+  if (ruta.startsWith('/')) return existsSync(`public${ruta}`);
+  return existe(ruta);
 }
 
 /** ¿La URL de imagen responde 200? HEAD primero; si el CDN no lo soporta, se prueba GET. */
@@ -94,9 +115,9 @@ await enTandas(clubes, 8, async (club) => {
     resumen.yaEstaban++;
     return;
   }
-  if (!(await existe(deseada))) {
+  if (!(await existeEscudo(deseada))) {
     resumen.noResuelve++;
-    console.log(`✗  ${club.nombre.padEnd(28)} el CDN no tiene el escudo → queda con iniciales`);
+    console.log(`✗  ${club.nombre.padEnd(28)} no hay escudo (${deseada}) → queda con iniciales`);
     return;
   }
 

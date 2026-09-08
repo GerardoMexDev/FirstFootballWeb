@@ -105,7 +105,8 @@ diseñador → Community Manager.
 | `lib/perfil/validar-contrasena.ts` (+ `.test.ts`) | `validarContrasena` (≥8, coinciden), puro, 5 tests | ✅ creado S4 |
 | `components/paneles/PanelPerfil.tsx` · `app/api/paneles/perfil/route.ts` | Panel "Mi cuenta" (3 pestañas) · endpoint GET | ✅ creados S4 |
 | `scripts/seed-fotos-jugadores.mjs` | Guarda `/jugadores/<slug>.webp` en `jugadores.foto_url`. `npm run seed:fotos` | ✅ creado y corrido S4 |
-| `scripts/seed-escudos.mjs` | Llena `clubes.escudo_url` con la URL del logo del CDN del proveedor (patrón fijo desde `id_externo`, sin API key). `npm run seed:escudos` | ✅ creado y corrido S6 (83/84 clubes) |
+| `scripts/seed-escudos.mjs` | Llena `clubes.escudo_url`: patrón fijo del CDN del proveedor desde `id_externo` (sin API key) + mapa `MANUALES` para los que ningún CDN tiene. `npm run seed:escudos` | ✅ creado y corrido S6 (84/84 clubes) |
+| `public/escudos/al-faisaly.png` | Escudo de Al Faisaly cargado a mano (ESPN no lo tiene). Lo cablea `seed-escudos.mjs` vía `MANUALES` | ✅ S6 |
 | `public/jugadores/*.webp` | 6 fotos procesadas (600×800). Originales fuera del repo (`.gitignore`) | ✅ S4 |
 | `lib/repositorios/repositorio-partidos.ts` | `RepositorioPartidosSupabase`: lee `proximos_partidos`, filtra `estado != 'finalizado'`, mapea a `PartidoProximo` | ✅ creado S2 |
 | `lib/partidos/utilidades.ts` | `pesoPartido`, `claseTarjeta`, `filtrarPartidos`, `agruparPorDia`, `agruparPorJugador` (reglas puras, sin JSX) | ✅ creado S2 |
@@ -167,8 +168,11 @@ Camino 1 de la charla ("hotlink al CDN del proveedor, sin Storage"). **Aplicado 
 - Verifica cada URL con HEAD (fallback GET) antes de guardar; si no resuelve, la fila queda
   como estaba (el componente `Escudo` cae a las iniciales). Nunca pisa un `escudo_url` con
   NULL. Idempotente: si ya tiene la URL deseada no la re-verifica.
-- **Corrida:** 84 clubes → **83 con escudo**, 1 sin logo en el CDN (`Al Faisaly`, queda con
-  iniciales — correcto). 0 errores.
+- **Corrida:** 84 clubes → **83 con escudo** del CDN. El que faltaba (`Al Faisaly`, ESPN no
+  lo tiene) se cargó a mano: `public/escudos/al-faisaly.png` + entrada en el mapa `MANUALES`
+  del script (tiene prioridad sobre el patrón del CDN, así una corrida futura no lo pisa).
+  → **84/84 con escudo.** El middleware ya excluye rutas `*.png`, así que `public/escudos/`
+  se sirve sin 307.
 - **Verificado** con `browser-automation` (login real): en `/partidos` 197 escudos `<img>` /
   1 `span` de iniciales / 0 imágenes rotas; en el buscador 10 `<img>` / 0 iniciales; 0
   errores de consola, 0 requests fallidos.
