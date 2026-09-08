@@ -18,7 +18,7 @@ En Claude Code **no hay memoria entre sesiones**, así que este protocolo es obl
 3. Rutina de cierre Git: `git add . && git commit -m "Sesión N: ..." && git push`.
 4. La sesión no se cierra hasta que `git push` terminó OK.
 
-**Última actualización:** 2026-09-08 (Sesión 6: ronda de mejoras A–I — A–H hechos, I espera la migración 0013)
+**Última actualización:** 2026-09-08 (Sesión 6: ronda A–I + escudos de clubes — I espera la migración 0013)
 **Estado general:** **Fase 1 en producción**: `https://first-football-web.vercel.app`. 3 vistas
 con datos reales (`partidos`, `calendario`, `jugadores`) + panel lateral (partido / jugador /
 perfil) + buscador ⌘K + toggle de tema. Auth, RLS, **4 Edge Functions + cron**, motor de hitos
@@ -105,6 +105,7 @@ diseñador → Community Manager.
 | `lib/perfil/validar-contrasena.ts` (+ `.test.ts`) | `validarContrasena` (≥8, coinciden), puro, 5 tests | ✅ creado S4 |
 | `components/paneles/PanelPerfil.tsx` · `app/api/paneles/perfil/route.ts` | Panel "Mi cuenta" (3 pestañas) · endpoint GET | ✅ creados S4 |
 | `scripts/seed-fotos-jugadores.mjs` | Guarda `/jugadores/<slug>.webp` en `jugadores.foto_url`. `npm run seed:fotos` | ✅ creado y corrido S4 |
+| `scripts/seed-escudos.mjs` | Llena `clubes.escudo_url` con la URL del logo del CDN del proveedor (patrón fijo desde `id_externo`, sin API key). `npm run seed:escudos` | ✅ creado y corrido S6 (83/84 clubes) |
 | `public/jugadores/*.webp` | 6 fotos procesadas (600×800). Originales fuera del repo (`.gitignore`) | ✅ S4 |
 | `lib/repositorios/repositorio-partidos.ts` | `RepositorioPartidosSupabase`: lee `proximos_partidos`, filtra `estado != 'finalizado'`, mapea a `PartidoProximo` | ✅ creado S2 |
 | `lib/partidos/utilidades.ts` | `pesoPartido`, `claseTarjeta`, `filtrarPartidos`, `agruparPorDia`, `agruparPorJugador` (reglas puras, sin JSX) | ✅ creado S2 |
@@ -154,6 +155,30 @@ diseñador → Community Manager.
 
 ## 4. Hecho (por fecha, más reciente primero)
 
+### 2026-09-08 — Sesión 6 (cont.: escudos de clubes)
+
+Camino 1 de la charla ("hotlink al CDN del proveedor, sin Storage"). **Aplicado a la BD.**
+
+- **`scripts/seed-escudos.mjs`** (`npm run seed:escudos`) — llena `clubes.escudo_url` sin
+  ninguna API key: la URL del logo es un patrón fijo derivado del `id_externo` que ya está en
+  la fila:
+  - `proveedor_externo='api-football'` → `https://media.api-sports.io/football/teams/<id>.png`
+  - `proveedor_externo='espn'` → `https://a.espncdn.com/i/teamlogos/soccer/500/<id>.png`
+- Verifica cada URL con HEAD (fallback GET) antes de guardar; si no resuelve, la fila queda
+  como estaba (el componente `Escudo` cae a las iniciales). Nunca pisa un `escudo_url` con
+  NULL. Idempotente: si ya tiene la URL deseada no la re-verifica.
+- **Corrida:** 84 clubes → **83 con escudo**, 1 sin logo en el CDN (`Al Faisaly`, queda con
+  iniciales — correcto). 0 errores.
+- **Verificado** con `browser-automation` (login real): en `/partidos` 197 escudos `<img>` /
+  1 `span` de iniciales / 0 imágenes rotas; en el buscador 10 `<img>` / 0 iniciales; 0
+  errores de consola, 0 requests fallidos.
+- Nota: `clubes` tiene filas de rivales duplicadas (una por fuente API-Football / ESPN — ver
+  §4 Sesión 5); las dos copias reciben escudo, y las vistas de-duplicadas eligen cuál se
+  muestra. Cuando entre API-Football Pro y se haga el merge de clubes, no hay nada que
+  reajustar acá.
+- `clubes.escudo_url` guarda una URL absoluta a un CDN externo (no Storage). Si un día se
+  pasa a Storage (camino 2), el `Escudo` no cambia — solo el valor del campo.
+
 ### 2026-09-08 — Sesión 6 (ronda de mejoras de la web: A–I)
 
 Lista de 9 puntos de la agencia tras revisar producción (ver §5, "Ronda de mejoras — Sesión 6").
@@ -181,8 +206,8 @@ DORMIDO**: el classifier bloqueó aplicar la migración a la BD de producción �
 **Parte 2 — F–H (cambios de datos/lógica):**
 - **F — escudos de los DOS equipos en el buscador.** El resultado de partido mostraba solo el
   escudo del club del representado; ahora club + rival (`<span class="res__escudos">` con dos
-  `<Escudo>`, CSS nuevo en `app.css` a 22px). Sin escudos cargados en BD todavía → se ven las
-  iniciales (cuando entren las URLs de ESPN/sync se vuelven imagen solas).
+  `<Escudo>`, CSS nuevo en `app.css` a 22px). **Los escudos reales ya cargan** (ver "Sesión 6
+  cont.: escudos de clubes" en §4 — `seed-escudos.mjs`, 83/84 clubes).
 - **G — doble país en la tarjeta del jugador.** La píldora sobre la foto mostraba el país del
   club y `jug__pos` abajo repetía "posición · país del club". Ahora: píldora = país del club
   (dónde juega, sin fallback a nacionalidad); `jug__pos` = "posición · **nacionalidad**".

@@ -19,6 +19,7 @@
     "seed:base-hitos": "node scripts/seed-base-hitos.mjs",
     "seed:datos-manuales": "node scripts/seed-datos-manuales.mjs",
     "seed:fotos": "node scripts/seed-fotos-jugadores.mjs",
+    "seed:escudos": "node scripts/seed-escudos.mjs",
     "vault:cron": "node scripts/configurar-vault-cron.mjs",
     "deploy:funcion": "node scripts/desplegar-funcion.mjs"
   },
