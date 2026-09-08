@@ -1254,6 +1254,11 @@ F–H → I (con migración). Cada ítem cerrado se documenta en §4.
   le agrega el dominio `@footballfirst.uy`.
 - Huecos conocidos donde se muestra "Sin datos" (nunca inventar): pre-listas de convocatoria, juveniles/reservas,
   rendimiento individual en copas poco cubiertas, lesiones con detalle.
+- **Un partido "pertenece" al día en que se juega EN LA SEDE**, no al día en Uruguay (confirmado por
+  Gerardo 2026-09-08). Ej.: Atlante vs Pachuca, viernes 21:00 en México, se lista/rotula en **viernes**
+  aunque en Uruguay sean las 00:00 del sábado. La hora de Uruguay se sigue mostrando, con una marca
+  `+1` estilo vuelos para avisar del cambio de día. Implementado en el punto I de la Sesión 6
+  (`dia_local_sede` en las vistas + `marcadorCambioDeDia`).
 
 ## 10. Lecciones técnicas aprendidas (se acumulan, no se borran)
 
