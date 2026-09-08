@@ -1024,7 +1024,10 @@ F–H → I (con migración). Cada ítem cerrado se documenta en §4.
 **Parte 3 — con migración (CÓDIGO LISTO, migración SIN aplicar):**
 - [x] **I** — agrupar/rotular por el **día en la sede** (no el de Uruguay) + marca `+1` estilo
       vuelos cuando el partido cruza la medianoche. Migración `0013` aplicada 2026-09-08,
-      tipos regenerados. Verificado: Atlante vs Pachuca ahora en "Viernes" con "00:00 +1".
+      tipos regenerados. Verificado en **lista** (`/partidos`) y **calendario** (`/calendario`):
+      Atlante vs Pachuca (`dia_uy` sáb 12, `dia_local_sede` vie 11) queda en **viernes 11**
+      junto a Al-Qadisiyah vs Al Ettifaq; el sábado 12 NO lo tiene. `agenda_anual.dia_local_sede`
+      confirmado en la BD. Si en producción se ve viejo: es deploy/caché — forzar recarga.
 
 ---
 
