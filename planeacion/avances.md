@@ -18,7 +18,7 @@ En Claude Code **no hay memoria entre sesiones**, así que este protocolo es obl
 3. Rutina de cierre Git: `git add . && git commit -m "Sesión N: ..." && git push`.
 4. La sesión no se cierra hasta que `git push` terminó OK.
 
-**Última actualización:** 2026-09-08 (Sesión 6: ronda A–I + escudos de clubes — I espera la migración 0013)
+**Última actualización:** 2026-09-08 (Sesión 6: ronda A–I completa + escudos de clubes; migración 0013 aplicada)
 **Estado general:** **Fase 1 en producción**: `https://first-football-web.vercel.app`. 3 vistas
 con datos reales (`partidos`, `calendario`, `jugadores`) + panel lateral (partido / jugador /
 perfil) + buscador ⌘K + toggle de tema. Auth, RLS, **4 Edge Functions + cron**, motor de hitos
@@ -34,14 +34,15 @@ Es un PUENTE hasta API-Football Pro; todo aditivo y reversible.
 **Falta (post-lanzamiento):** Lighthouse formal en warm; rotar
 `SUPABASE_SERVICE_ROLE_KEY` + `SUPABASE_DB_PASSWORD`; fotos definitivas de jugadores;
 estadísticas de jugador vía FBref/Transfermarkt cuando la agencia las pida; toast de tema.
-**Sesión 6 (en curso, 2026-09-08):** ronda de 9 mejoras de UI/UX de la agencia, TODO en el
-árbol de trabajo **sin commitear** (Gerardo revisa el conjunto). **A–H hechos y verificados:**
-sin "Fase 1" en la cabecera · sin `⌘K` en Buscar · píldora negra del pie eliminada · icono de
-tema invertido (claro→luna, oscuro→sol) · ✕ para cerrar el buscador · 2 escudos por resultado
-en el buscador · nacionalidad (no país del club repetido) en la tarjeta del jugador · partidos
-pasados fuera de "próximos". **I (día por sede) code-complete pero DORMIDO:** el frontend cae a
-`dia_uy` hasta aplicar `supabase/migrations/0013_dia_local_sede.sql` + `npm run tipos:db` (el
-classifier bloqueó tocar la BD de prod). 85 tests, build + lint OK. Detalle en §4 y §5.
+**Sesión 6 (2026-09-08):** ronda de 9 mejoras de UI/UX de la agencia, en `main` (commits
+`6847849`…). **A–I hechos y verificados:** sin "Fase 1" en la cabecera · sin `⌘K` en Buscar ·
+píldora negra del pie eliminada · icono de tema invertido (claro→luna, oscuro→sol) · ✕ para
+cerrar el buscador · 2 escudos por resultado en el buscador · nacionalidad (no país del club
+repetido) en la tarjeta del jugador · partidos pasados fuera de "próximos" · **I: agrupar por
+día de la sede + marca `+1` estilo vuelos** (migración `0013` aplicada, tipos regenerados).
+**Feedback de revisión resuelto:** escudos también en el hero; línea de ronda oculta cuando no
+hay dato (ESPN no trae matchday). **Escudos de clubes cargados:** 84/84 (`seed-escudos.mjs`,
+hotlink al CDN + Al Faisaly a mano). 90 tests, build + lint OK. Detalle en §4 y §5.
 
 ---
 
@@ -144,7 +145,7 @@ diseñador → Community Manager.
 | `supabase/functions/sync-fixtures-espn/index.ts` + `_shared/{espn-api,espn-partido}.ts` (+ `espn-partido.test.ts`, 13 tests) | Edge Function: temporada doméstica completa desde el *core* API de ESPN → upsert en `partidos` (`proveedor_externo='espn'`). Puente a la lógica de zona/estado ya existente. | ✅ **desplegada y corriendo** S5 |
 | `supabase/migrations/0011_dedup_proximos_partidos.sql` | `create or replace` de `proximos_partidos` (+`distinct on` jugador/día_uy/con_selección, prefiere API-Football) y `agenda_anual` (su bloque de partidos ahora lee de `proximos_partidos`) | ✅ aplicada S5 |
 | `supabase/migrations/0012_cron_sync_fixtures_espn.sql` | `pg_cron` diario (03:30 UTC) → `pg_net` → `sync-fixtures-espn`, secreto vía Vault, timeout 300 s | ✅ aplicada y probada S5 |
-| `supabase/migrations/0013_dia_local_sede.sql` | `create or replace` de `proximos_partidos` + `agenda_anual` agregando `dia_local_sede` (día civil en la sede, fallback a `dia_uy`). Aditiva, reversible. Para el punto I de la Sesión 6 | ⬜ **escrita, SIN aplicar** (classifier bloqueó tocar la BD) — correr `npm run migracion 0013_dia_local_sede.sql` + `npm run tipos:db` |
+| `supabase/migrations/0013_dia_local_sede.sql` | `create or replace` de `proximos_partidos` + `agenda_anual` agregando `dia_local_sede` (día civil en la sede, fallback a `dia_uy`). Aditiva, reversible. Para el punto I de la Sesión 6 | ✅ **aplicada S6** (`npm run migracion supabase/migrations/0013_… `) + `npm run tipos:db` |
 | `scripts/configurar-vault-cron.mjs` | Guarda/rota `sync_functions_secret` en Supabase Vault (consulta parametrizada) | ✅ creado y corrido S2 |
 | `scripts/seed-usuarios.mjs` | 4 cuentas (`service_role`), idempotente | ✅ creado y corrido S2 |
 | `scripts/consultar-ligas.mjs` | Solo lectura: consulta `GET /leagues` por país + búsquedas de continentales | ✅ creado S2 |
@@ -173,11 +174,11 @@ Tres puntos de Gerardo al revisar:
   **Pendiente (opcional):** resolver `event.seasonType.$ref` de ESPN para al menos poner
   "Temporada regular" / "Apertura" — es un cambio en `_shared/espn-partido.ts` +
   `sync-fixtures-espn` + redeploy + re-sync.
-- **Marca `+1` no aparece:** es lo esperado — necesita la migración `0013` aplicada (sin
-  ella `diaLocalSede === diaUy` y `marcadorCambioDeDia` devuelve `""`). **El classifier
-  vuelve a bloquear `npm run migracion` desde acá.** Hay que correr a mano:
-  `npm run migracion 0013_dia_local_sede.sql && npm run tipos:db` (o agregar la regla de
-  permiso). Hasta entonces I entero (agrupar por día de la sede + `+1`) queda dormido.
+- **Marca `+1`:** Gerardo autorizó el permiso → **migración `0013` aplicada** + `npm run
+  tipos:db` (los tipos salieron idénticos al parche manual). El path del runner es completo:
+  `npm run migracion supabase/migrations/0013_dia_local_sede.sql`. **Punto I activo:**
+  verificado con `browser-automation` — Atlante FC vs Pachuca pasó de "Sábado" a **"Viernes"**,
+  hora Uruguay **"00:00 +1"**, hora sede "21:00"; 7 tarjetas con marca `+1`; 0 errores.
 
 ### 2026-09-08 — Sesión 6 (cont.: escudos de clubes)
 
@@ -209,10 +210,9 @@ Camino 1 de la charla ("hotlink al CDN del proveedor, sin Storage"). **Aplicado 
 ### 2026-09-08 — Sesión 6 (ronda de mejoras de la web: A–I)
 
 Lista de 9 puntos de la agencia tras revisar producción (ver §5, "Ronda de mejoras — Sesión 6").
-Acordado con Gerardo: poco a poco, A–E (sin BD) → F–H → I (con migración). Todo en el árbol de
-trabajo, **sin commitear todavía** (Gerardo revisa el conjunto). **I quedó code-complete pero
-DORMIDO**: el classifier bloqueó aplicar la migración a la BD de producción — el código cae a
-`dia_uy` hasta que se corra `0013` + `npm run tipos:db` (ver §5 y §10).
+Acordado con Gerardo: poco a poco, A–E (sin BD) → F–H → I (con migración). **I quedó dormido
+hasta que Gerardo autorizó el permiso** y se aplicó la migración `0013` + `npm run tipos:db`
+(ver §5 y §10) — ahora activo y verificado.
 
 **Parte 1 — A–E (sin tocar la BD):**
 - **A — "Fase 1" fuera de la cabecera.** Se borró `<span class="fase">Fase 1</span>` de
@@ -1009,15 +1009,9 @@ F–H → I (con migración). Cada ítem cerrado se documenta en §4.
       + UI explícita) sigue pendiente más abajo en §5.
 
 **Parte 3 — con migración (CÓDIGO LISTO, migración SIN aplicar):**
-- [~] **I** — agrupar/rotular por el **día en la sede**, no por el de Uruguay, + marca `+1`
-      estilo vuelos en la hora de Uruguay cuando el partido cruza la medianoche. Todo el
-      frontend cableado con fallback `?? dia_uy` (sin la migración, la app se comporta igual
-      que hoy — verificado: 0 marcas `+1`, 0 errores). **Falta:** aplicar
-      `supabase/migrations/0013_dia_local_sede.sql` a la BD (el classifier bloqueó hacerlo
-      desde acá) y regenerar tipos:
-      `npm run migracion 0013_dia_local_sede.sql` → `npm run tipos:db` → QA (Atlante vs Pachuca
-      debe pasar de "sábado" a "viernes" en `/partidos` y `/calendario`, con "00:00 +1" en la
-      hora de Uruguay). — grande
+- [x] **I** — agrupar/rotular por el **día en la sede** (no el de Uruguay) + marca `+1` estilo
+      vuelos cuando el partido cruza la medianoche. Migración `0013` aplicada 2026-09-08,
+      tipos regenerados. Verificado: Atlante vs Pachuca ahora en "Viernes" con "00:00 +1".
 
 ---
 
