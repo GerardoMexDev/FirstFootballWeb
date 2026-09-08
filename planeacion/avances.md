@@ -157,6 +157,19 @@ diseñador → Community Manager.
 
 ## 4. Hecho (por fecha, más reciente primero)
 
+### 2026-09-08 — Sesión 6 (cont.: feedback de revisión 2)
+
+- **Hero: escudo a la izquierda de cada equipo.** El duelo del hero pasó de una fila de dos
+  escudos sueltos a `[escudo] EQUIPO  vs  [escudo] EQUIPO` (`.heroA__duelo` / `.heroA__eq` en
+  `app.css`; el `vs` va con el bloque del rival para que al cortar en dos líneas quede
+  "vs [escudo] RIVAL"). `.hero--a` sigue en `min-height:420px`. Verificado: escudo antes del
+  nombre en los dos, sin solapar el pill "Partido del día".
+- **Fecha del hito de Nahitan.** `jugadores.debut_seleccion` era `2015-09-18`; la correcta es
+  **8/9** (Gerardo). Corregido en `scripts/seed-base-hitos.mjs` (`2015-09-08`) y re-corrido
+  `npm run seed:base-hitos` — solo cambió esa fila (mismos totales, mismo corte `2026-08-29`,
+  sin riesgo de doble conteo). `agenda_anual` ahora proyecta el aniversario al `2026-09-08`;
+  verificado: aparece como "Hoy" en Fechas señaladas y en la celda del 8 del calendario.
+
 ### 2026-09-08 — Sesión 6 (cont.: feedback de revisión)
 
 Tres puntos de Gerardo al revisar:

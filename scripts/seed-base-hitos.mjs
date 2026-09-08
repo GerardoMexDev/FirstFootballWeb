@@ -49,7 +49,7 @@ const CORTE = '2026-08-29'; // fecha a la que corresponden los totales de Transf
 // debutSeleccion = fecha del primer partido con la mayor (solo Nahitan y Kevin Amaro; resto null).
 const BASE = [
   // nombre en jugadores  | id_externo | carrera pj/g/a          | selección pj/g | debut selección
-  { ref: 'Nahitan Nández',    id_externo: '2614',   carrera: [388, 28, 53], seleccion: [71, 0], debutSeleccion: '2015-09-18' },
+  { ref: 'Nahitan Nández',    id_externo: '2614',   carrera: [388, 28, 53], seleccion: [71, 0], debutSeleccion: '2015-09-08' }, // corregido por Gerardo 2026-09-08 (era 18/9)
   { ref: 'Federico Pereira',  id_externo: '67884',  carrera: [223, 20, 12], seleccion: [0, 0],  debutSeleccion: null },
   { ref: 'Ignacio Sosa',      id_externo: '310307', carrera: [152, 4, 10],  seleccion: [0, 0],  debutSeleccion: null },
   { ref: 'Javier Méndez',     id_externo: '6122',   carrera: [304, 14, 8],  seleccion: [0, 0],  debutSeleccion: null },

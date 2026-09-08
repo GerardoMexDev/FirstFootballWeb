@@ -99,12 +99,16 @@ export function HeroPartidoDelDia({ partidos, hitos }: { partidos: PartidoProxim
               {p.ronda ? ` · ${p.ronda}` : ''}
             </span>
           </div>
-          <div className="heroA__escudos" aria-hidden="true">
-            <Escudo nombre={p.clubNombre ?? '?'} url={p.clubEscudoUrl} clase="crest crest--lg" />
-            <Escudo nombre={p.rivalNombre ?? '?'} url={p.rivalEscudoUrl} clase="crest crest--lg" />
-          </div>
-          <div className="hero__t">
-            {mostrar(p.clubNombre)} vs {mostrar(p.rivalNombre)}
+          <div className="hero__t heroA__duelo">
+            <span className="heroA__eq">
+              <Escudo nombre={p.clubNombre ?? '?'} url={p.clubEscudoUrl} clase="crest crest--lg" />
+              {mostrar(p.clubNombre)}
+            </span>
+            <span className="heroA__eq">
+              <em className="vs">vs</em>
+              <Escudo nombre={p.rivalNombre ?? '?'} url={p.rivalEscudoUrl} clase="crest crest--lg" />
+              {mostrar(p.rivalNombre)}
+            </span>
           </div>
           <div className="hero__j">
             <div className="caras__pila">
