@@ -53,7 +53,7 @@ export class RepositorioAgendaSupabase {
       .gte('dia_uy', hoyUy)
       .lte('dia_uy', hasta)
       .returns<FilaAgenda[]>();
-    if (error) throw new Error(`No se pudo leer agenda_anual: ${error.message}`);
+    if (error) throw new Error(`No se pudo leer ${this.vista}: ${error.message}`);
 
     return (data ?? [])
       .filter((r): r is { fuente: FuenteAgenda; titulo: string; dia_uy: string } =>
@@ -77,7 +77,7 @@ export class RepositorioAgendaSupabase {
       .gte('dia_uy', desdeIso)
       .lte('dia_uy', hastaIso)
       .returns<FilaAgendaCal[]>();
-    if (error) throw new Error(`No se pudo leer agenda_anual: ${error.message}`);
+    if (error) throw new Error(`No se pudo leer ${this.vista}: ${error.message}`);
 
     return (data ?? [])
       .filter((r): r is FilaAgendaCal & { fuente: FuenteAgenda; titulo: string; dia_uy: string } =>

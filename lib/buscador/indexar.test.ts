@@ -16,6 +16,8 @@ function jugador(over: Partial<JugadorPlantel>): JugadorPlantel {
     clubNombre: 'Al-Qadisiyah FC',
     clubEscudoUrl: null,
     clubPais: 'Arabia Saudita',
+    clubFechaFundacion: null,
+    soloContenido: false,
     carreraPartidos: 388,
     carreraGoles: 28,
     carreraAsistencias: 53,
