@@ -61,3 +61,6 @@ Thumbs.db
 
 # Workspace de tooling SDD (ledger, briefs, reports) — no versionar
 /.superpowers
+
+# Cache incremental de TypeScript
+/tsconfig.tsbuildinfo
