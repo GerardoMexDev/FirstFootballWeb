@@ -246,6 +246,7 @@
   z-index: 2;
   padding: 5px 10px;
   border-radius: 999px;
+  font-size: var(--t-xs);
   font-weight: 600;
   letter-spacing: 0.02em;
   color: var(--on-accent);
