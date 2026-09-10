@@ -18,7 +18,7 @@ En Claude Code **no hay memoria entre sesiones**, así que este protocolo es obl
 3. Rutina de cierre Git: `git add . && git commit -m "Sesión N: ..." && git push`.
 4. La sesión no se cierra hasta que `git push` terminó OK.
 
-**Última actualización:** 2026-09-10 (Sesión 7: spec de "Calendario General" + rótulo Match Day escrito y aprobado; implementación EN PAUSA esperando feedback de la agencia)
+**Última actualización:** 2026-09-10 (Sesión 7: Calendario General + rótulo Match Day IMPLEMENTADO — migración 0014, vista `agenda_contenido`, ruta `/calendario-general`, ficha slim, 7 jugadores + 4 clubes del servicio de contenido, nav de 4 ítems. Match Day idéntico (gate). Falta push+deploy y QA de navegador.)
 **Estado general:** **Fase 1 en producción**: `https://first-football-web.vercel.app`. 3 vistas
 con datos reales (`partidos`, `calendario`, `jugadores`) + panel lateral (partido / jugador /
 perfil) + buscador ⌘K + toggle de tema. Auth, RLS, **4 Edge Functions + cron**, motor de hitos
@@ -34,11 +34,20 @@ Es un PUENTE hasta API-Football Pro; todo aditivo y reversible.
 **Falta (post-lanzamiento):** Lighthouse formal en warm; rotar
 `SUPABASE_SERVICE_ROLE_KEY` + `SUPABASE_DB_PASSWORD`; fotos definitivas de jugadores;
 estadísticas de jugador vía FBref/Transfermarkt cuando la agencia las pida; toast de tema.
-**Sesión 7 (2026-09-10):** solo diseño. Spec de un **2º calendario ("Calendario General")**
-para el servicio de contenido de la agencia + renombre de la vista actual a **"Match Day"**.
-Escrito, aprobado por Gerardo y pusheado: `planeacion/specs/2026-09-10-calendario-general.md`
-(commit `15ae14a`). **No se tocó código.** Implementación **en pausa hasta que la agencia
-comente.** Detalle en §5 ("Sesión 7").
+**Sesión 7 (2026-09-10):** **2º calendario ("Calendario General")** para el servicio de
+contenido de la agencia + rótulo de la vista actual a **"Match Day"**. Spec y plan escritos y
+aprobados (`planeacion/specs/` y `planeacion/plans/2026-09-10-calendario-general.md`),
+**implementado por subagentes** (13 commits, `7999aad`…`86ac083`). Migración `0014` (2 banderas
+`jugadores.servicio_match_day`/`servicio_contenido` + guardia en `agenda_anual` + vista nueva
+`agenda_contenido`). Ruta `/calendario-general` (reusa `<Calendario>`/`<NotasAgenda>` con
+`agenda_contenido`). Ficha **slim** para jugadores de solo-contenido (panel + endpoint
+`/api/paneles/jugador-contenido` + branch en la ruta SSR). **7 jugadores + 4 clubes nuevos**
+cargados (`seed-jugadores-contenido.mjs` + `enriquecer-jugadores-contenido.mjs`), badge
+"Contenido" en grilla y buscador. Nav de 4 ítems. **Match Day intacto:** gate (diff del set de
+eventos de `agenda_anual`) vacío antes/después de la migración y del seed. 94 tests, build +
+lint OK. Review multi-agente (incl. whole-branch con opus) + fix wave aplicado. **Pendiente:**
+`git push` → deploy Vercel, QA de navegador, y decisión sobre el bug de proyección leap-year
+(`0015`, ver §5/§6). Detalle en §4 y §5.
 **Sesión 6 (2026-09-08):** ronda de 9 mejoras de UI/UX de la agencia, en `main` (commits
 `6847849`…). **A–I hechos y verificados:** sin "Fase 1" en la cabecera · sin `⌘K` en Buscar ·
 píldora negra del pie eliminada · icono de tema invertido (claro→luna, oscuro→sol) · ✕ para
@@ -162,10 +171,9 @@ diseñador → Community Manager.
 
 ## 4. Hecho (por fecha, más reciente primero)
 
-### 2026-09-10 — Sesión 7 (solo diseño: spec del Calendario General)
+### 2026-09-10 — Sesión 7 (Calendario General — implementado)
 
-La agencia pidió, antes de cerrar Fase 1, un **segundo calendario**. Charla con Gerardo
-(no se codeó nada):
+La agencia pidió, antes de cerrar Fase 1, un **segundo calendario**. Diseño y decisiones:
 
 - **Dos servicios distintos.** "Match Day" = seguimiento de fixture, los 6 representados
   de siempre (es la vista `/calendario` actual, solo se le cambia el rótulo a
@@ -182,10 +190,53 @@ La agencia pidió, antes de cerrar Fase 1, un **segundo calendario**. Charla con
 - **Camino A** (aprobado): banderas `jugadores.servicio_match_day` / `servicio_contenido`,
   guardia en `agenda_anual` para que Match Day quede **idéntico**, y una vista nueva y
   chica `agenda_contenido` para el Calendario General. Migración `0014`, reversible.
-- **Spec:** `planeacion/specs/2026-09-10-calendario-general.md` (commit `15ae14a`,
-  pusheado). **Implementación en pausa** hasta el OK / comentarios de la agencia.
-- Hallazgo anotado (no se tocó nada): las fundaciones de **Atlante** y **RB Bragantino**
-  de la pestaña "Nuevos" no coinciden con el seed vigente → tarea en §5.
+- **Spec + plan:** `planeacion/specs/` y `planeacion/plans/2026-09-10-calendario-general.md`.
+
+**Implementación** (subagent-driven, 13 commits `7999aad`…`86ac083`, en `main`):
+
+- **Migración `0014_calendario_general.sql`** (aplicada a prod, aditiva/reversible):
+  `jugadores.servicio_match_day` (default `true` → los 6 quedan solos) + `servicio_contenido`
+  (default `false`). `agenda_anual` gana un guardia `and servicio_match_day` en los 3 bloques
+  de fecha fija (bloque de aniversario de club vía `exists(...)`) — **salida idéntica hoy**.
+  Vista nueva `agenda_contenido` = 4 proyecciones de fecha fija (cumpleaños, aniversario de
+  club, de debut en selección, de **debut profesional**), roster `servicio_contenido`, mismas
+  11 columnas que `agenda_anual`, `security_invoker`. `npm run tipos:db` regenerado.
+- **Gate "Match Day idéntico":** diff del set de eventos de `agenda_anual`
+  (`fuente in (cumpleanos, aniversario_club, aniversario_seleccion)`, 2025-2028) **vacío**
+  antes/después de la migración y después del seed (los 7 nuevos son `servicio_match_day=false`).
+  El `exists(...)` del bloque de aniversario de club fue clave: sin él, los 4 clubes nuevos con
+  `fecha_fundacion` habrían inyectado ~16 aniversarios a Match Day.
+- **Frontend:** `lib/agenda/notas-proximas.ts` (`FuenteAgenda` += `aniversario_debut`,
+  `FUENTES_CONTENIDO`), `lib/jugadores/datos-contenido.ts` (`proximoAniversario` puro, 4 tests),
+  `repositorio-agenda.ts` (2º arg `vista`), `repositorio-jugadores.ts` (`soloContenido` +
+  `clubFechaFundacion`). Nav de 4 ítems (**Partidos · Match Day · Calendario general ·
+  Jugadores**). `/calendario` solo cambia el `<h1>` a "Match Day". Página nueva
+  `app/(app)/calendario-general/page.tsx`.
+- **Ficha slim** para jugadores solo-contenido: `lib/jugadores/cargar-ficha-contenido.ts`,
+  `components/jugadores/FichaContenido.tsx` (cabecera + "Datos para contenido" + "Fechas
+  señaladas"; sin partidos/estadísticas/hitos), `components/paneles/PanelJugadorContenido.tsx`,
+  `app/api/paneles/jugador-contenido/route.ts` (SSR→RLS, 404 si no es `servicio_contenido`),
+  `TipoPanel` += `'jugador-contenido'`, branch en `/jugadores/[jugadorId]`. Badge "Contenido"
+  en `GrillaPlantel` y `Buscador` (`.jug__servicio` / `.res__tag` nuevos en `styles/app.css`,
+  geometría igual a `.jug__pais`).
+- **Datos (a prod):** `scripts/seed-jugadores-contenido.mjs` (`npm run seed:jugadores-contenido`)
+  — 4 clubes (Tigres UANL, SC Internacional, CA Peñarol, Club Nacional, con `fecha_fundacion`)
+  + 7 jugadores (`origen='manual'`, `servicio_match_day=false`, `servicio_contenido=true`,
+  fechas de la pestaña "Nuevos" normalizadas a mano) + `servicio_contenido=true` en los 5
+  existentes de esa lista (nada más se les toca). `scripts/enriquecer-jugadores-contenido.mjs`
+  (`npm run enriquecer:jugadores-contenido`) — posición/nacionalidad/foto de los 7 desde
+  API-Football, traducidas a español (`POSICION_ES`, `PAIS_ES`). `npm run seed:escudos`
+  re-corrido para los 4 clubes. Contadores post-seed: `servicio_contenido`=12,
+  `servicio_match_day`=6, `agenda_contenido`=148 filas.
+- **Review:** multi-agente por task + whole-branch (opus). Sin regresiones. Fix wave aplicado
+  (mensaje 404 no muestra el slug, fecha en la ficha slim con día+mes, geometría del badge,
+  hover del tag del buscador, acentos en comentarios SQL, "Panamá"). 94 tests, build + lint OK.
+- **Hallazgos anotados** (no bloqueantes, ver §5 y §6): (a) bug preexistente de proyección
+  día-del-año en `agenda_anual` → `agenda_contenido` lo hereda (`0015` pendiente, cambia 3
+  fechas de Match Day, decisión de Gerardo); (b) fundaciones de Atlante/Bragantino de la
+  pestaña "Nuevos" no coinciden con el seed vigente; (c) `clubes` ganó 1 duplicado (Tigres
+  UANL, ESPN + API-Football) — consistente con los dups de ESPN ya documentados; (d) franja
+  de densidad de `/calendario-general` en `–` (sin partidos).
 
 ### 2026-09-08 — Sesión 6 (cont.: bug de columnas del calendario)
 
@@ -1051,14 +1102,38 @@ Charla con Gerardo (no se codeó nada): tres preguntas de la agencia / de él.
 
 ### Sesión 7 — Calendario General (2026-09-10)
 
-- [ ] **Implementar el spec** `planeacion/specs/2026-09-10-calendario-general.md` cuando
-      llegue el OK / los comentarios de la agencia. Camino A ya aprobado por Gerardo.
-      Siguiente paso metodológico: plan de implementación (writing-plans) → ejecutar.
+- [x] ~~Implementar el spec~~ — hecho 2026-09-10 (subagent-driven, 13 commits). Ver §4.
+- [ ] **Push + deploy + QA de navegador.** Los 13 commits están en `main` local sin pushear.
+      Al pushear, Vercel despliega. Falta el QA de navegador con login real
+      (`/calendario-general` con datos, `/jugadores` con las 7 tarjetas "Contenido", buscador,
+      Match Day sin cambios, mobile 390px). — **ahora**
+- [ ] **`0015` — bug de proyección leap-year** (lo detectó el review final). La expresión
+      `make_date(y,1,1) + (fecha - make_date(year,1,1))` de `agenda_anual` (desde `0001`) y
+      ahora `agenda_contenido` usa día-del-año → se corre ±1 día en fechas de meses
+      post-febrero cruzando años bisiestos. Match Day ya lo tiene mal (cumple de Amaro Mar 4
+      vs 3 real, Atlante Abr 19 vs 18, Genk Jul 2 vs 1). `proximoAniversario` (ficha slim) sí
+      lo calcula bien → el grid del Calendario General discrepa con la ficha. Fix: `0015` con
+      `make_date(y, mes, least(dia, último_día_del_mes))` en **ambas** vistas.
+      **Arreglar `agenda_anual` cambia esas 3 fechas de Match Day en prod → necesita OK
+      explícito de Gerardo** (es una corrección, pero rompe el baseline byte-idéntico). — media
 - [ ] **Investigar fundaciones que no coinciden** entre la pestaña "Nuevos" del Excel y el
-      seed vigente (`scripts/seed-datos-manuales.mjs`): **Atlante** ("Nuevos" 8-dic-1918 ·
-      seed 1916-04-18) y **RB Bragantino** ("Nuevos" 8-ene-1928 · seed 2020-01-01, que es
-      la refundación como Red Bull). Confirmar con la agencia cuál quiere para cada uno y
-      unificar. **El seed NO se tocó.** — media
+      seed vigente: **Atlante** ("Nuevos" 8-dic-1918 · `seed-datos-manuales.mjs` 1916-04-18) y
+      **RB Bragantino** ("Nuevos" 8-ene-1928 · seed 2020-01-01, refundación Red Bull). El
+      nuevo `seed-jugadores-contenido.mjs` cargó los clubes NUEVOS con las fechas de "Nuevos";
+      los 6 viejos no se tocaron. Confirmar con la agencia y unificar. — media
+- [ ] **`nacionalidad`/`posicion` de los 7 nuevos vs los 6 viejos.** Los 6 viejos tienen
+      `posicion` en español hardcodeada (`seed-clubes-jugadores.mjs`) y `nacionalidad`
+      genérica ("Uruguay"). Los 7 nuevos: `enriquecer-jugadores-contenido.mjs` traduce con
+      `POSICION_ES`/`PAIS_ES`. Revisar de vez en cuando que API-Football no devuelva un valor
+      fuera del mapa (quedaría en inglés). — baja
+- [ ] **`/calendario-general`: franja de densidad en `–`** los 12 meses (la vista no tiene
+      partidos). Opciones: ocultar la franja en esta vista (prop en `<Calendario>`), o contar
+      todos los eventos en vez de solo `fuente='partido'`. Decisión de Gerardo. — baja
+- [ ] **`clubes` — dup de Tigres UANL** (`espn:232` + `api-football:2279` del seed nuevo).
+      Se limpia junto con los 7 dups de ESPN cuando entre API-Football Pro (ya anotado). — baja
+- [ ] **Endurecer `seed-jugadores-contenido.mjs`**: el update de club no filtra
+      `origen='manual'` → si un sync futuro reescribe uno de esos 4 clubes, re-correr el seed
+      reasserta `nombre`/`pais` a mano. Hoy inerte. — baja
 
 ### Ronda de mejoras — Sesión 6 (2026-09-08, en curso)
 
@@ -1221,6 +1296,20 @@ F–H → I (con migración). Cada ítem cerrado se documenta en §4.
 
 ## 6. Bugs conocidos / cosas a vigilar
 
+- **Proyección de aniversarios ±1 día cruzando años bisiestos** (preexistente desde `0001`,
+  lo heredó `agenda_contenido` en `0014`). Los bloques de cumpleaños / aniversarios de
+  `agenda_anual` y `agenda_contenido` proyectan con
+  `make_date(y,1,1) + (fecha - make_date(año_origen,1,1))` = día del año, que no es estable
+  entre años bisiestos y no. Regla: una fecha posterior a febrero cuyo **año de origen** es
+  bisiesto se ve +1 día en años no bisiestos; si el año de origen no es bisiesto, se ve −1
+  día en años bisiestos. Hoy en Match Day: cumple de Kevin Amaro Mar 4 (real Mar 3), Atlante
+  Abr 19 (real Abr 18), Genk Jul 2 (real Jul 1). Como las dos vistas comparten la expresión,
+  el gate de Sesión 7 dio vacío igual (el bug está en ambos lados). `proximoAniversario`
+  (`lib/jugadores/datos-contenido.ts`, ficha slim) sí lo hace bien con `base.set({year})` →
+  el grid del Calendario General y la ficha slim discrepan por un día en esas fechas. Fix =
+  `0015` en ambas vistas con `make_date(y, extract(month from d), least(extract(day from d),
+  último_día_del_mes))` (el `least` es obligatorio: `make_date(y,2,29)` tira error en años no
+  bisiestos). Corrige 3 fechas de Match Day → **necesita OK de Gerardo** (ver §5).
 - **`sync-roster` flaggea `revisar` a Nacho / Javi / Martín cada semana** (no toca datos):
   API-Football no tiene su traspaso reciente a Bragantino / Colo-Colo / Atlante — su último
   `/transfers` apunta a Peñarol / Boston River (viejo). La guarda de reciencia (200 días)
