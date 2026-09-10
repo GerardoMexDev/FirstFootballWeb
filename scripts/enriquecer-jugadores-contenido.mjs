@@ -22,6 +22,16 @@ const admin = createClient(NEXT_PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, 
 // Los mismos 7 ids que cargó seed-jugadores-contenido.mjs (proveedor api-football).
 const IDS = ['16482', '50077', '844', '197520', '2967', '52058', '51542'];
 
+// API-Football devuelve la posición en inglés; los representados existentes la tienen en
+// español. Traducimos para que /jugadores y el buscador no mezclen idiomas. Si la API
+// devuelve algo fuera de estas 4, se guarda tal cual (no se pierde); null sigue siendo null.
+const POSICION_ES = {
+  Goalkeeper: 'Arquero',
+  Defender: 'Defensa',
+  Midfielder: 'Mediocampista',
+  Attacker: 'Delantero',
+};
+
 async function perfil(playerId) {
   const r = await fetch(`https://v3.football.api-sports.io/players/profiles?player=${playerId}`, {
     headers: { 'x-apisports-key': API_FOOTBALL_KEY },
@@ -31,7 +41,7 @@ async function perfil(playerId) {
   const p = j?.response?.[0]?.player;
   if (!p) return null;
   return {
-    posicion: p.position ?? null,
+    posicion: POSICION_ES[p.position] ?? p.position ?? null,
     nacionalidad: p.nationality ?? null,
     foto_url: p.photo ?? null,
   };
