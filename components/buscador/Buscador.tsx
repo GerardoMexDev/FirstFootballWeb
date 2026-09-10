@@ -81,7 +81,7 @@ export function Buscador() {
     : { jugadores: [], partidos: [], vacia: true };
   const sinResultados = !cargando && resultados.jugadores.length === 0 && resultados.partidos.length === 0;
 
-  function irA(tipo: 'jugador' | 'partido', id: string) {
+  function irA(tipo: 'jugador' | 'partido' | 'jugador-contenido', id: string) {
     cerrar();
     router.push(rutaPanel(pathname, tipo, id), { scroll: false });
   }
@@ -163,11 +163,14 @@ export function Buscador() {
                 <>
                   <div className="busca__g">Jugadores ({resultados.jugadores.length})</div>
                   {resultados.jugadores.map((j) => (
-                    <button className="res" type="button" key={j.id} onClick={() => irA('jugador', j.id)}>
+                    <button className="res" type="button" key={j.id} onClick={() => irA(j.soloContenido ? 'jugador-contenido' : 'jugador', j.id)}>
                       <CaraJugador nombre={j.nombre} fotoUrl={j.fotoUrl} clase="" />
                       <div>
                         <b>{j.nombre}</b>
-                        <span>{[j.clubNombre, j.clubPais].filter(Boolean).join(' · ') || mostrar(j.posicion)}</span>
+                        <span>
+                          {[j.clubNombre, j.clubPais].filter(Boolean).join(' · ') || mostrar(j.posicion)}
+                          {j.soloContenido && <em className="res__tag">Contenido</em>}
+                        </span>
                       </div>
                       <Ico nombre="chevron" clase="ico ico--sm" />
                     </button>

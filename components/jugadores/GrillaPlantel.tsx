@@ -58,6 +58,8 @@ function TarjetaJugador({
 
       {hitoFrase ? (
         <div className="jug__hito">{hitoFrase}</div>
+      ) : jugador.soloContenido ? (
+        <div className="jug__servicio">Contenido</div>
       ) : (
         pill && <div className="jug__pais">{pill}</div>
       )}
@@ -106,7 +108,7 @@ export function GrillaPlantel({
           key={jugador.id}
           jugador={jugador}
           hitoFrase={hitoFrasePorJugador[jugador.id]}
-          onAbrir={() => abrir('jugador', jugador.id)}
+          onAbrir={() => abrir(jugador.soloContenido ? 'jugador-contenido' : 'jugador', jugador.id)}
         />
       ))}
     </div>

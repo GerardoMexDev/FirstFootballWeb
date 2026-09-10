@@ -232,3 +232,34 @@
 .cal__grid > .celda {
   min-width: 0;
 }
+
+/* ── Servicio "Contenido" ─────────────────────────────────────────────────
+   Jugadores que la agencia atiende solo por contenido (no por fixture). No es
+   una clase de la demo: vive acá, con tokens de la demo. */
+
+/* Pill en la tarjeta de la grilla — ocupa el lugar de la píldora de país. */
+.jug__servicio {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  z-index: 2;
+  padding: 3px 8px;
+  border-radius: var(--r-sm);
+  font-size: var(--t-xs);
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: var(--on-accent);
+  background: var(--accent);
+}
+
+/* Tag chico en la fila de resultado del buscador. */
+.res__tag {
+  margin-left: 6px;
+  padding: 1px 6px;
+  border-radius: var(--r-sm);
+  font-size: var(--t-xs);
+  font-style: normal;
+  font-weight: 700;
+  color: var(--accent);
+  background: var(--surface-2);
+}
