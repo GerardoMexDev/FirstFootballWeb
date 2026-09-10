@@ -18,7 +18,7 @@ En Claude Code **no hay memoria entre sesiones**, así que este protocolo es obl
 3. Rutina de cierre Git: `git add . && git commit -m "Sesión N: ..." && git push`.
 4. La sesión no se cierra hasta que `git push` terminó OK.
 
-**Última actualización:** 2026-09-08 (Sesión 6: ronda A–I completa + escudos de clubes; migración 0013 aplicada)
+**Última actualización:** 2026-09-10 (Sesión 7: spec de "Calendario General" + rótulo Match Day escrito y aprobado; implementación EN PAUSA esperando feedback de la agencia)
 **Estado general:** **Fase 1 en producción**: `https://first-football-web.vercel.app`. 3 vistas
 con datos reales (`partidos`, `calendario`, `jugadores`) + panel lateral (partido / jugador /
 perfil) + buscador ⌘K + toggle de tema. Auth, RLS, **4 Edge Functions + cron**, motor de hitos
@@ -34,6 +34,11 @@ Es un PUENTE hasta API-Football Pro; todo aditivo y reversible.
 **Falta (post-lanzamiento):** Lighthouse formal en warm; rotar
 `SUPABASE_SERVICE_ROLE_KEY` + `SUPABASE_DB_PASSWORD`; fotos definitivas de jugadores;
 estadísticas de jugador vía FBref/Transfermarkt cuando la agencia las pida; toast de tema.
+**Sesión 7 (2026-09-10):** solo diseño. Spec de un **2º calendario ("Calendario General")**
+para el servicio de contenido de la agencia + renombre de la vista actual a **"Match Day"**.
+Escrito, aprobado por Gerardo y pusheado: `planeacion/specs/2026-09-10-calendario-general.md`
+(commit `15ae14a`). **No se tocó código.** Implementación **en pausa hasta que la agencia
+comente.** Detalle en §5 ("Sesión 7").
 **Sesión 6 (2026-09-08):** ronda de 9 mejoras de UI/UX de la agencia, en `main` (commits
 `6847849`…). **A–I hechos y verificados:** sin "Fase 1" en la cabecera · sin `⌘K` en Buscar ·
 píldora negra del pie eliminada · icono de tema invertido (claro→luna, oscuro→sol) · ✕ para
@@ -156,6 +161,31 @@ diseñador → Community Manager.
 | `components/paneles/PanelPerfil.tsx` | Panel "Mi cuenta" (Mi perfil / Cambiar contraseña / Notificaciones) — necesita forms de Supabase | ⬜ |
 
 ## 4. Hecho (por fecha, más reciente primero)
+
+### 2026-09-10 — Sesión 7 (solo diseño: spec del Calendario General)
+
+La agencia pidió, antes de cerrar Fase 1, un **segundo calendario**. Charla con Gerardo
+(no se codeó nada):
+
+- **Dos servicios distintos.** "Match Day" = seguimiento de fixture, los 6 representados
+  de siempre (es la vista `/calendario` actual, solo se le cambia el rótulo a
+  **"Match Day"**). "Contenido / otros servicios" = arte y comunicación para un grupo más
+  amplio (12 jugadores de la pestaña **"Nuevos"** del Excel), sin seguir sus partidos.
+- **"Calendario General"** (`/calendario-general`, nav de 4 ítems) muestra fechas de
+  contenido de esos 12: cumpleaños · aniversario de fundación del club · aniversario del
+  debut en selección · **aniversario del debut profesional** (fuente nueva). Sin partidos.
+- Los **7 jugadores genuinamente nuevos** (Aguirre, Rochet, Abel Hernández, Martirena,
+  Mejía, Silvera, Romero) + sus 4 clubes (Tigres UANL, SC Internacional, Peñarol,
+  Nacional) entran a `jugadores`/`clubes` (`origen='manual'`). Aparecen también en la
+  vista Jugadores y en el buscador con badge "Contenido" y **ficha slim** (sin
+  partidos/estadísticas/hitos). Nahitan NO va (no está en "Nuevos" — decisión de Gerardo).
+- **Camino A** (aprobado): banderas `jugadores.servicio_match_day` / `servicio_contenido`,
+  guardia en `agenda_anual` para que Match Day quede **idéntico**, y una vista nueva y
+  chica `agenda_contenido` para el Calendario General. Migración `0014`, reversible.
+- **Spec:** `planeacion/specs/2026-09-10-calendario-general.md` (commit `15ae14a`,
+  pusheado). **Implementación en pausa** hasta el OK / comentarios de la agencia.
+- Hallazgo anotado (no se tocó nada): las fundaciones de **Atlante** y **RB Bragantino**
+  de la pestaña "Nuevos" no coinciden con el seed vigente → tarea en §5.
 
 ### 2026-09-08 — Sesión 6 (cont.: bug de columnas del calendario)
 
@@ -1018,6 +1048,17 @@ Charla con Gerardo (no se codeó nada): tres preguntas de la agencia / de él.
 - `.env.local.example` y `README.md` actualizados para apuntar a `.secretos/.env`.
 
 ## 5. Pendiente / próximos pasos
+
+### Sesión 7 — Calendario General (2026-09-10)
+
+- [ ] **Implementar el spec** `planeacion/specs/2026-09-10-calendario-general.md` cuando
+      llegue el OK / los comentarios de la agencia. Camino A ya aprobado por Gerardo.
+      Siguiente paso metodológico: plan de implementación (writing-plans) → ejecutar.
+- [ ] **Investigar fundaciones que no coinciden** entre la pestaña "Nuevos" del Excel y el
+      seed vigente (`scripts/seed-datos-manuales.mjs`): **Atlante** ("Nuevos" 8-dic-1918 ·
+      seed 1916-04-18) y **RB Bragantino** ("Nuevos" 8-ene-1928 · seed 2020-01-01, que es
+      la refundación como Red Bull). Confirmar con la agencia cuál quiere para cada uno y
+      unificar. **El seed NO se tocó.** — media
 
 ### Ronda de mejoras — Sesión 6 (2026-09-08, en curso)
 
