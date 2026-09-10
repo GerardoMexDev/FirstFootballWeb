@@ -58,3 +58,6 @@ Thumbs.db
 
 # Config personal de Claude Code (permisos locales, no versionar)
 .claude/settings.local.json
+
+# Workspace de tooling SDD (ledger, briefs, reports) — no versionar
+/.superpowers
