@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { datosParaContenido } from './datos-contenido.ts';
+import { datosParaContenido, proximoAniversario } from './datos-contenido.ts';
 
 // hoy fijo para que los cálculos sean deterministas
 const HOY = '2026-09-06';
@@ -60,4 +60,22 @@ test('fecha inválida → null (no rompe)', () => {
   const d = datosParaContenido({ fechaNacimiento: 'no-es-fecha' }, HOY);
   assert.equal(d.edad, null);
   assert.equal(d.cumpleLegible, null);
+});
+
+test('proximoAniversario: si el día del año todavía no pasó, es este año', () => {
+  assert.equal(proximoAniversario('1990-12-28', '2026-09-06'), '2026-12-28');
+});
+
+test('proximoAniversario: si ya pasó este año, es el que viene', () => {
+  assert.equal(proximoAniversario('1990-03-16', '2026-09-06'), '2027-03-16');
+});
+
+test('proximoAniversario: hoy mismo cuenta como la próxima ocurrencia', () => {
+  assert.equal(proximoAniversario('2000-09-06', '2026-09-06'), '2026-09-06');
+});
+
+test('proximoAniversario: fecha vacía, null o inválida → null', () => {
+  assert.equal(proximoAniversario(null, '2026-09-06'), null);
+  assert.equal(proximoAniversario('', '2026-09-06'), null);
+  assert.equal(proximoAniversario('no-es-fecha', '2026-09-06'), null);
 });

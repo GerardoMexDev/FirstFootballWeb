@@ -60,3 +60,24 @@ export function datosParaContenido(fechas: FechasJugador, hoyUy: string): DatosC
     cumpleLegible: nacimiento ? nacimiento.setLocale('es').toFormat("d 'de' LLLL") : null,
   };
 }
+
+/**
+ * Próxima ocurrencia (>= hoy) del aniversario de una fecha civil: toma su mes y día y los
+ * lleva al año en curso; si en ese año ya pasó, al año siguiente. Devuelve `YYYY-MM-DD`.
+ * `null` si la fecha es vacía o inválida. Fechas 29/2: Luxon ajusta al día válido más cercano.
+ *
+ * Puro: `hoyUy` (YYYY-MM-DD en zona de Uruguay) entra como argumento, no se llama a `now()`.
+ */
+export function proximoAniversario(
+  fechaIso: string | null | undefined,
+  hoyUy: string,
+): string | null {
+  if (!fechaIso) return null;
+  const base = DateTime.fromISO(fechaIso, { zone: 'utc' }).startOf('day');
+  const hoy = DateTime.fromISO(hoyUy, { zone: 'utc' }).startOf('day');
+  if (!base.isValid || !hoy.isValid) return null;
+
+  let candidata = base.set({ year: hoy.year });
+  if (candidata < hoy) candidata = base.set({ year: hoy.year + 1 });
+  return candidata.toISODate();
+}

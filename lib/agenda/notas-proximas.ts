@@ -23,7 +23,8 @@ export type FuenteAgenda =
   | 'hito'
   | 'cumpleanos'
   | 'aniversario_club'
-  | 'aniversario_seleccion';
+  | 'aniversario_seleccion'
+  | 'aniversario_debut';
 
 /** Fila mínima de `agenda_anual` que necesita esta lógica. */
 export interface EventoAgenda {
@@ -44,6 +45,17 @@ export interface NotaAgenda extends EventoAgenda {
  * por conteo se muestran en otro lado (la vista `partidos` y `SeccionHitos`).
  */
 const FUENTES_NOTA: readonly FuenteAgenda[] = ['cumpleanos', 'aniversario_club', 'aniversario_seleccion'];
+
+/**
+ * Fuentes de fecha fija del servicio "Contenido" (Calendario General). Suma el aniversario
+ * del debut profesional a las tres de `FUENTES_NOTA`.
+ */
+export const FUENTES_CONTENIDO: readonly FuenteAgenda[] = [
+  'cumpleanos',
+  'aniversario_club',
+  'aniversario_seleccion',
+  'aniversario_debut',
+];
 
 /**
  * Días entre dos fechas civiles (YYYY-MM-DD). Ambas se anclan a medianoche UTC y se resta:
@@ -91,6 +103,8 @@ export function textoFuente(fuente: FuenteAgenda): string {
       return 'Aniversario de club';
     case 'aniversario_seleccion':
       return 'Aniversario de debut en selección';
+    case 'aniversario_debut':
+      return 'Aniversario de debut profesional';
     default:
       return 'Fecha señalada';
   }
