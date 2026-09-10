@@ -28,14 +28,11 @@ export default async function PaginaCalendario() {
   return (
     <section className="vista on" id="v-calendario" tabIndex={-1}>
       <div className="head">
-        <h1 className="d1">
-          Calendario
-          <br />
-          <em>anual</em>
-        </h1>
+        <h1 className="d1">Match Day</h1>
         <p className="sub">
-          Densidad por mes. Las fechas a más de 90 días son tentativas: el fixture se confirma por
-          semestre y los horarios los mueve la TV.
+          Partidos de los representados, agrupados por el día en la sede. Las fechas a más de
+          90 días son tentativas: el fixture se confirma por semestre y los horarios los mueve
+          la TV.
         </p>
       </div>
 

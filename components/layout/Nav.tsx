@@ -9,7 +9,8 @@ import { usePathname, useRouter } from 'next/navigation';
 
 const SECCIONES = [
   { v: 'partidos', etiqueta: 'Partidos' },
-  { v: 'calendario', etiqueta: 'Calendario' },
+  { v: 'calendario', etiqueta: 'Match Day' },
+  { v: 'calendario-general', etiqueta: 'Calendario general' },
   { v: 'jugadores', etiqueta: 'Jugadores' },
 ] as const;
 
