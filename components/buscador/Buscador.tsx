@@ -169,7 +169,7 @@ export function Buscador() {
                         <b>{j.nombre}</b>
                         <span>
                           {[j.clubNombre, j.clubPais].filter(Boolean).join(' · ') || mostrar(j.posicion)}
-                          {j.soloContenido && <em className="res__tag">Contenido</em>}
+                          {j.soloContenido && <span className="res__tag">Contenido</span>}
                         </span>
                       </div>
                       <Ico nombre="chevron" clase="ico ico--sm" />

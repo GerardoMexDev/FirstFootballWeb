@@ -237,16 +237,16 @@
    Jugadores que la agencia atiende solo por contenido (no por fixture). No es
    una clase de la demo: vive acá, con tokens de la demo. */
 
-/* Pill en la tarjeta de la grilla — ocupa el lugar de la píldora de país. */
+/* Pill en la tarjeta de la grilla — misma geometría que la píldora de país / hito de la
+   demo (.jug__pais / .jug__hito), a la que reemplaza en los jugadores solo-contenido. */
 .jug__servicio {
   position: absolute;
-  top: 12px;
-  left: 12px;
+  top: 18px;
+  left: 20px;
   z-index: 2;
-  padding: 3px 8px;
-  border-radius: var(--r-sm);
-  font-size: var(--t-xs);
-  font-weight: 700;
+  padding: 5px 10px;
+  border-radius: 999px;
+  font-weight: 600;
   letter-spacing: 0.02em;
   color: var(--on-accent);
   background: var(--accent);
@@ -258,8 +258,7 @@
   padding: 1px 6px;
   border-radius: var(--r-sm);
   font-size: var(--t-xs);
-  font-style: normal;
   font-weight: 700;
   color: var(--accent);
-  background: var(--surface-2);
+  background: var(--surface-3);
 }

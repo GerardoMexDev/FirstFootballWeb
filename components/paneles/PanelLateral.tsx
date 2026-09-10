@@ -39,6 +39,14 @@ type Contenido =
 
 const FOCOS = 'a[href], button:not([disabled]), input, select, textarea, [tabindex]:not([tabindex="-1"])';
 
+// Etiqueta legible por tipo de panel para el mensaje de "no encontrado" (jugador-contenido → "jugador").
+const ETIQUETA_TIPO: Record<string, string> = {
+  jugador: 'jugador',
+  'jugador-contenido': 'jugador',
+  partido: 'partido',
+  perfil: 'perfil',
+};
+
 export function PanelLateral() {
   const { tipo, id, cerrar } = usePanel();
   // perfil no necesita id (el id, si viene, es la pestaña inicial); jugador/partido sí.
@@ -61,7 +69,7 @@ export function PanelLateral() {
       .then(async (respuesta) => {
         if (!vivo) return;
         if (respuesta.status === 404) {
-          setContenido({ fase: 'error', mensaje: `No encontramos ese ${tipo}.` });
+          setContenido({ fase: 'error', mensaje: `No encontramos ese ${ETIQUETA_TIPO[tipo] ?? tipo}.` });
           return;
         }
         if (!respuesta.ok) {

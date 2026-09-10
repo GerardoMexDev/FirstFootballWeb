@@ -39,9 +39,9 @@ alter table jugadores
   add column servicio_contenido boolean not null default false;
 
 comment on column jugadores.servicio_match_day is
-  'Servicio "Match Day": la agencia sigue el fixture de este jugador. Los 6 representados historicos. Alimenta agenda_anual y la vista partidos.';
+  'Servicio "Match Day": la agencia sigue el fixture de este jugador. Los 6 representados históricos. Alimenta agenda_anual y la vista partidos.';
 comment on column jugadores.servicio_contenido is
-  'Servicio "Contenido": la agencia prepara arte/comunicacion para este jugador. Alimenta agenda_contenido (Calendario General). Puede coincidir con servicio_match_day.';
+  'Servicio "Contenido": la agencia prepara arte/comunicación para este jugador. Alimenta agenda_contenido (Calendario General). Puede coincidir con servicio_match_day.';
 
 -- ----------------------------------------------------------------------------
 -- 2) agenda_anual — cuerpo EXACTO de 0013 con un guardia servicio_match_day en
@@ -283,6 +283,6 @@ from (
 ) j;
 
 comment on view agenda_contenido is
-  'Fechas de contenido (cumpleanos, aniversarios de club / debut en seleccion / debut profesional) del servicio Contenido — roster servicio_contenido. Alimenta /calendario-general. Sin sede: dia_local_sede = dia_uy.';
+  'Fechas de contenido (cumpleaños, aniversarios de club / debut en selección / debut profesional) del servicio Contenido — roster servicio_contenido. Alimenta /calendario-general. Sin sede: dia_local_sede = dia_uy.';
 
 commit;

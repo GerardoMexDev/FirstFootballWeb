@@ -11,8 +11,8 @@
 import { Ico } from '@/components/comunes/Ico';
 import { Escudo } from '@/components/comunes/Escudo';
 import { EstadoSinDatos } from '@/components/comunes/EstadoSinDatos';
+import { DateTime } from 'luxon';
 import { datosParaContenido } from '@/lib/jugadores/datos-contenido';
-import { etiquetaDiaUy } from '@/lib/fechas/zonas';
 import { mostrar } from '@/lib/formato/valores';
 import type { ProximaFecha } from '@/lib/jugadores/cargar-ficha-contenido';
 import type { JugadorFicha } from '@/lib/repositorios/tipos';
@@ -94,7 +94,7 @@ export function FichaContenido({
             {proximas.map((f) => (
               <div className="pm" key={f.etiqueta}>
                 <b>{f.etiqueta}</b>
-                <span>{etiquetaDiaUy(f.proximaIso)}</span>
+                <span>{DateTime.fromISO(f.proximaIso).setLocale('es').toFormat("d 'de' LLLL")}</span>
               </div>
             ))}
           </div>

@@ -32,6 +32,9 @@ const POSICION_ES = {
   Attacker: 'Delantero',
 };
 
+// Igual que POSICION_ES pero para el país: API-Football devuelve "Panama" sin tilde.
+const PAIS_ES = { Panama: 'Panamá' };
+
 async function perfil(playerId) {
   const r = await fetch(`https://v3.football.api-sports.io/players/profiles?player=${playerId}`, {
     headers: { 'x-apisports-key': API_FOOTBALL_KEY },
@@ -42,7 +45,7 @@ async function perfil(playerId) {
   if (!p) return null;
   return {
     posicion: POSICION_ES[p.position] ?? p.position ?? null,
-    nacionalidad: p.nationality ?? null,
+    nacionalidad: PAIS_ES[p.nationality] ?? p.nationality ?? null,
     foto_url: p.photo ?? null,
   };
 }
