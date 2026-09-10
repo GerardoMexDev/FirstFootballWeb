@@ -10,12 +10,34 @@
  * hitos + próximos) lo comparte con `/api/paneles/jugador` vía `cargarFichaJugador`.
  */
 import { notFound } from 'next/navigation';
+import { FichaContenido } from '@/components/jugadores/FichaContenido';
 import { FichaJugador } from '@/components/jugadores/FichaJugador';
+import { cargarFichaContenido } from '@/lib/jugadores/cargar-ficha-contenido';
 import { cargarFichaJugador } from '@/lib/jugadores/cargar-ficha';
 import { crearClienteServidor } from '@/lib/supabase/cliente-servidor';
 
 export default async function FichaJugadorPage({ params }: { params: { jugadorId: string } }) {
-  const bundle = await cargarFichaJugador(crearClienteServidor(), params.jugadorId);
+  const cliente = crearClienteServidor();
+
+  // Jugador del servicio Contenido → ficha slim (cargarFichaContenido devuelve null si no lo es).
+  const contenido = await cargarFichaContenido(cliente, params.jugadorId);
+  if (contenido) {
+    return (
+      <section className="vista on" tabIndex={-1}>
+        <div className="head">
+          <h1 className="d1">
+            Ficha del
+            <br />
+            <em>jugador</em>
+          </h1>
+          <p className="sub">{contenido.jugador.apodo ?? contenido.jugador.nombre}</p>
+        </div>
+        <FichaContenido jugador={contenido.jugador} proximas={contenido.proximas} hoyUy={contenido.hoyUy} />
+      </section>
+    );
+  }
+
+  const bundle = await cargarFichaJugador(cliente, params.jugadorId);
   if (!bundle) notFound();
 
   return (

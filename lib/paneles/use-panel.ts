@@ -18,9 +18,9 @@
 import { useCallback } from 'react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 
-export type TipoPanel = 'jugador' | 'partido' | 'perfil';
+export type TipoPanel = 'jugador' | 'partido' | 'perfil' | 'jugador-contenido';
 
-const TIPOS: readonly TipoPanel[] = ['jugador', 'partido', 'perfil'];
+const TIPOS: readonly TipoPanel[] = ['jugador', 'partido', 'perfil', 'jugador-contenido'];
 
 /**
  * Arma la URL que abre un panel, sin leer `useSearchParams` — para los componentes que

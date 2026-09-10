@@ -19,10 +19,12 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { EstadoSinDatos } from '@/components/comunes/EstadoSinDatos';
 import { PanelJugador } from '@/components/paneles/PanelJugador';
+import { PanelJugadorContenido } from '@/components/paneles/PanelJugadorContenido';
 import { PanelPartido } from '@/components/paneles/PanelPartido';
 import { PanelPerfil, type PerfilBundle } from '@/components/paneles/PanelPerfil';
 import { usePanel } from '@/lib/paneles/use-panel';
 import type { FichaJugadorBundle } from '@/lib/jugadores/cargar-ficha';
+import type { FichaContenidoBundle } from '@/lib/jugadores/cargar-ficha-contenido';
 import type { DetallePartidoBundle } from '@/lib/paneles/cargar-detalle-partido';
 
 type PestanaPerfil = 'datos' | 'clave' | 'avisos';
@@ -31,6 +33,7 @@ type Contenido =
   | { fase: 'cargando' }
   | { fase: 'error'; mensaje: string }
   | { fase: 'jugador'; datos: FichaJugadorBundle }
+  | { fase: 'jugador-contenido'; datos: FichaContenidoBundle }
   | { fase: 'partido'; datos: DetallePartidoBundle }
   | { fase: 'perfil'; datos: PerfilBundle };
 
@@ -69,6 +72,7 @@ export function PanelLateral() {
         if (!vivo) return;
         if (tipo === 'jugador') setContenido({ fase: 'jugador', datos });
         else if (tipo === 'partido') setContenido({ fase: 'partido', datos });
+        else if (tipo === 'jugador-contenido') setContenido({ fase: 'jugador-contenido', datos });
         else setContenido({ fase: 'perfil', datos });
       })
       .catch(() => {
@@ -117,7 +121,7 @@ export function PanelLateral() {
   );
 
   const titulo =
-    tipo === 'jugador'
+    tipo === 'jugador' || tipo === 'jugador-contenido'
       ? 'Ficha del jugador'
       : tipo === 'partido'
         ? 'Detalle del partido'
@@ -151,6 +155,7 @@ export function PanelLateral() {
           {contenido?.fase === 'cargando' && <div className="sinDato">Cargando el detalle…</div>}
           {contenido?.fase === 'error' && <EstadoSinDatos>{contenido.mensaje}</EstadoSinDatos>}
           {contenido?.fase === 'jugador' && <PanelJugador bundle={contenido.datos} />}
+          {contenido?.fase === 'jugador-contenido' && <PanelJugadorContenido bundle={contenido.datos} />}
           {contenido?.fase === 'partido' && <PanelPartido bundle={contenido.datos} />}
           {contenido?.fase === 'perfil' && (
             <PanelPerfil
