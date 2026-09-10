@@ -478,6 +478,8 @@ export type Database = {
           seleccion: string | null
           seleccion_goles_base: number | null
           seleccion_partidos_base: number | null
+          servicio_contenido: boolean
+          servicio_match_day: boolean
           sincronizado_en: string | null
         }
         Insert: {
@@ -510,6 +512,8 @@ export type Database = {
           seleccion?: string | null
           seleccion_goles_base?: number | null
           seleccion_partidos_base?: number | null
+          servicio_contenido?: boolean
+          servicio_match_day?: boolean
           sincronizado_en?: string | null
         }
         Update: {
@@ -542,6 +546,8 @@ export type Database = {
           seleccion?: string | null
           seleccion_goles_base?: number | null
           seleccion_partidos_base?: number | null
+          servicio_contenido?: boolean
+          servicio_match_day?: boolean
           sincronizado_en?: string | null
         }
         Relationships: [
@@ -1032,6 +1038,22 @@ export type Database = {
     }
     Views: {
       agenda_anual: {
+        Row: {
+          club_id: string | null
+          competencia_codigo: string | null
+          cuando_utc: string | null
+          dia_local_sede: string | null
+          dia_uy: string | null
+          es_internacional: boolean | null
+          fuente: string | null
+          jugador_id: string | null
+          ref_id: string | null
+          tentativo: boolean | null
+          titulo: string | null
+        }
+        Relationships: []
+      }
+      agenda_contenido: {
         Row: {
           club_id: string | null
           competencia_codigo: string | null
