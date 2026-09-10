@@ -32,6 +32,7 @@ interface ClubEmbebido {
   nombre: string | null;
   escudo_url: string | null;
   pais: string | null;
+  fecha_fundacion: string | null;
 }
 
 /** Columnas de `jugadores` que pide la grilla + el club embebido por la FK. */
@@ -44,6 +45,8 @@ interface FilaJugadorPlantel {
   nacionalidad: string | null;
   seleccion: string | null;
   foto_url: string | null;
+  servicio_match_day: boolean;
+  servicio_contenido: boolean;
   clubes: ClubEmbebido | null;
 }
 
@@ -61,7 +64,8 @@ interface FilaJugadorFicha extends FilaJugadorPlantel {
 // `proximos_partidos`), así que un `clubes(...)` a secas no resuelve.
 const CAMPOS_PLANTEL =
   'id, nombre, apodo, dorsal, posicion, nacionalidad, seleccion, foto_url, ' +
-  'clubes!jugadores_club_actual_id_fkey(nombre, escudo_url, pais)';
+  'servicio_match_day, servicio_contenido, ' +
+  'clubes!jugadores_club_actual_id_fkey(nombre, escudo_url, pais, fecha_fundacion)';
 
 const CAMPOS_FICHA =
   CAMPOS_PLANTEL + ', fecha_nacimiento, debut, debut_seleccion, fichaje, instagram';
@@ -83,6 +87,8 @@ function aJugadorPlantel(fila: FilaJugadorPlantel, totales: FilaTotales | undefi
     clubNombre: fila.clubes?.nombre ?? null,
     clubEscudoUrl: fila.clubes?.escudo_url ?? null,
     clubPais: fila.clubes?.pais ?? null,
+    clubFechaFundacion: fila.clubes?.fecha_fundacion ?? null,
+    soloContenido: fila.servicio_contenido && !fila.servicio_match_day,
     carreraPartidos: totales?.carrera_partidos ?? null,
     carreraGoles: totales?.carrera_goles ?? null,
     carreraAsistencias: totales?.carrera_asistencias ?? null,

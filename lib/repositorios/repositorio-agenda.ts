@@ -13,7 +13,12 @@ import type { EventoCalendario } from '@/lib/calendario/eventos';
 
 type ClienteSupabase = ReturnType<typeof crearClienteServidor>;
 
-const FUENTES_FECHA_FIJA: FuenteAgenda[] = ['cumpleanos', 'aniversario_club', 'aniversario_seleccion'];
+const FUENTES_FECHA_FIJA: FuenteAgenda[] = [
+  'cumpleanos',
+  'aniversario_club',
+  'aniversario_seleccion',
+  'aniversario_debut',
+];
 
 // `.returns<T[]>()` fuerza la forma — sin esto la combinación de versiones de
 // supabase-js/postgrest-js infiere `never` en `.select('col, col')` (ver avances.md §10).
@@ -29,7 +34,10 @@ type FilaAgendaCal = FilaAgenda & {
 };
 
 export class RepositorioAgendaSupabase {
-  constructor(private readonly supabase: ClienteSupabase) {}
+  constructor(
+    private readonly supabase: ClienteSupabase,
+    private readonly vista: 'agenda_anual' | 'agenda_contenido' = 'agenda_anual',
+  ) {}
 
   /**
    * Eventos de fecha fija (cumpleaños, aniversarios) entre hoy y hoy+`dias`, en zona de Uruguay.
@@ -39,7 +47,7 @@ export class RepositorioAgendaSupabase {
     const hasta = DateTime.fromISO(hoyUy, { zone: 'utc' }).plus({ days: dias }).toISODate() ?? hoyUy;
 
     const { data, error } = await this.supabase
-      .from('agenda_anual')
+      .from(this.vista)
       .select('fuente, titulo, dia_uy')
       .in('fuente', FUENTES_FECHA_FIJA)
       .gte('dia_uy', hoyUy)
@@ -64,7 +72,7 @@ export class RepositorioAgendaSupabase {
     // para que si la migración todavía no corrió la ausencia de esa columna no rompa la
     // consulta — simplemente se cae a `dia_uy` en el map de abajo.
     const { data, error } = await this.supabase
-      .from('agenda_anual')
+      .from(this.vista)
       .select('*')
       .gte('dia_uy', desdeIso)
       .lte('dia_uy', hastaIso)

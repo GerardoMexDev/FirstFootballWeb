@@ -86,6 +86,13 @@ export interface JugadorPlantel {
   clubNombre: string | null;
   clubEscudoUrl: string | null;
   clubPais: string | null;
+  /** Fecha de fundación del club actual (YYYY-MM-DD) o `null`. Para el aniversario de club. */
+  clubFechaFundacion: string | null;
+  /**
+   * `true` si el jugador es SOLO del servicio Contenido (servicio_contenido && !servicio_match_day):
+   * aparece en la grilla y el buscador con badge "Contenido" y abre la ficha slim, no la completa.
+   */
+  soloContenido: boolean;
   carreraPartidos: number | null;
   carreraGoles: number | null;
   carreraAsistencias: number | null;
