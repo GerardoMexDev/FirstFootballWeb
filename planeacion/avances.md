@@ -18,7 +18,8 @@ En Claude Code **no hay memoria entre sesiones**, así que este protocolo es obl
 3. Rutina de cierre Git: `git add . && git commit -m "Sesión N: ..." && git push`.
 4. La sesión no se cierra hasta que `git push` terminó OK.
 
-**Última actualización:** 2026-09-10 (Sesión 7: Calendario General + rótulo Match Day IMPLEMENTADO — migración 0014, vista `agenda_contenido`, ruta `/calendario-general`, ficha slim, 7 jugadores + 4 clubes del servicio de contenido, nav de 4 ítems. Match Day idéntico (gate). Falta push+deploy y QA de navegador.)
+**Última actualización:** 2026-09-10 (Sesión 7: Calendario General + rótulo Match Day IMPLEMENTADO y DESPLEGADO — migración 0014, vista `agenda_contenido`, ruta `/calendario-general`, ficha slim, 7 jugadores + 4 clubes del servicio de contenido, nav de 4 ítems. Match Day idéntico (gate). Falta QA de navegador con login.)
+**⚠️ ALCANCE DE FASE 1 EN CONGELAMIENTO** (Sesión 7): no se codea funcionalidad nueva hasta que la agencia entregue la lista definitiva de Fase 1. Ver §5.
 **Estado general:** **Fase 1 en producción**: `https://first-football-web.vercel.app`. 3 vistas
 con datos reales (`partidos`, `calendario`, `jugadores`) + panel lateral (partido / jugador /
 perfil) + buscador ⌘K + toggle de tema. Auth, RLS, **4 Edge Functions + cron**, motor de hitos
@@ -1099,6 +1100,29 @@ Charla con Gerardo (no se codeó nada): tres preguntas de la agencia / de él.
 - `.env.local.example` y `README.md` actualizados para apuntar a `.secretos/.env`.
 
 ## 5. Pendiente / próximos pasos
+
+### ⚠️ ALCANCE DE FASE 1 — EN CONGELAMIENTO (acordado 2026-09-10, Sesión 7)
+
+Gerardo habló con la agencia y su socio: **no se codea ninguna funcionalidad nueva hasta
+tener la lista DEFINITIVA de Fase 1.** El motivo es evitar el "cuento de nunca acabar" —
+pedidos sueltos que se van acumulando y terminan alterando la BD / la arquitectura de forma
+reactiva. La agencia debe entregar: "esto es todo Fase 1, hasta acá y no más".
+
+**Cuando llegue esa lista, antes de tocar código:**
+1. **Paso de arquitectura.** Clasificar cada ítem: puro frontend / necesita columna-tabla-vista
+   nueva / roza cosas en producción (`agenda_anual`, `partidos`, RLS, motor de hitos). Los que
+   tocan la BD se diseñan **juntos** en 1-2 migraciones pensadas, no una por pedido.
+2. **Congelar por escrito** en `planeacion/alcance-funcionalidades.md`: la lista final de Fase 1
+   + explícito qué queda AFUERA / para Fase 2. Ese doc pasa a ser el límite: lo que no está
+   ahí, no entra.
+3. **Lista de "dejado preparado para el CRM/ERM"** (Fase 2): qué estructura ya está puesta
+   (las tablas CRM de `0001` existen solo como esquema), qué decisiones quedan para el arranque.
+
+Los pendientes de abajo (bug `0015`, enum aplazado/cancelado, franja de densidad,
+reconciliación Transfermarkt, FBref, etc.) quedan en espera: cada uno se marcará "entra a
+Fase 1" o "Fase 2 / descartado" según la lista de la agencia.
+
+---
 
 ### Sesión 7 — Calendario General (2026-09-10)
 
