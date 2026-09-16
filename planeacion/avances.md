@@ -1172,14 +1172,43 @@ Fase 1" o "Fase 2 / descartado" según la lista de la agencia.
 
 ### Sesión 8 — roster definitivo + fix de sync (2026-09-16)
 
-- [ ] **Desplegar `sync-partidos`, `sync-fixtures-espn`, `sync-roster`** — código listo y
-      testeado (ver §4), el deploy lo bloqueó el permiso de auto-mode. Correr a mano:
-      `npm run deploy:funcion -- sync-partidos` (y lo mismo para las otras dos). — **ahora**
+- [x] ~~Desplegar `sync-partidos`, `sync-fixtures-espn`, `sync-roster`~~ — hecho 2026-09-16.
+      Gerardo corrió `npm run deploy:funcion -- <nombre>` a mano (el deploy directo lo bloquea
+      el permiso de auto-mode de Claude Code) desde `WebFirst/` (el error `ENOENT` inicial era
+      por correrlo un nivel arriba, en `FirstUY/`). Commit `abb9f98` pusheado a `main`.
 - [ ] **`scripts/importar-datos-manuales.ts`** (lee el `.xlsx` directo en vez de transcribir a
       mano) — **decidido 2026-09-16: se construye recién cuando la agencia mande el paquete
       completo** (todas las fechas + fotos + el resto de la info pendiente), de una sola vez,
       no por partes. Hasta entonces se sigue con el patrón actual (Gerardo pasa los datos,
       Claude actualiza el script/seed a mano). — baja, en espera de la agencia
+
+### Evaluación SportMonks — en curso (2026-09-16)
+
+La agencia está evaluando reemplazar/complementar API-Football con **SportMonks** para Match Day.
+**Decisión de la agencia (2026-09-16, vía Gerardo): SE PAGA.** Plan Starter (29€/mes, 5 ligas) —
+alcanza justo para las 5 ligas domésticas de los 6 de Match Day (Arabia, Liga MX, Brasileirão,
+Chile, Bélgica; Liga MX cubre a Toluca Y Atlante con 1 sola liga). Copas/continentales
+(Libertadores, Sudamericana, Leagues Cup, Concachampions, etc.) quedan **fuera** del plan
+Starter (consumirían slots de liga aparte) → siguen con API-Football/ESPN gratis como hoy.
+
+Investigado (docs públicas de SportMonks, sin cuenta): entidad `Player` trae `date_of_birth`,
+altura, peso, nacionalidad, posición; entidad `Team` trae `founded`. **Ningún plan de SportMonks
+da fecha de debut profesional ni de debut en selección** — esos 2 campos siguen 100% manuales
+(igual que hoy). Acordado con Gerardo: se cargan por Excel, mismo patrón de siempre — "cada vez
+que se haga eso hay que cambiarlo" (Gerardo), entendido y aceptado; más adelante se puede evaluar
+alguna forma de edición más cómoda, sin apuro.
+
+**Falta para poder migrar:**
+1. Gerardo/la agencia activa el trial de 14 días (o ya el plan pago) y pasa la API key.
+2. Claude corre una **prueba puntual de solo lectura** (sin tocar producción, mismo patrón que
+   `scripts/consultar-*.mjs`) contra las 5 ligas reales para confirmar que Nández/Pereira/etc.
+   vienen completos (fixture, alineación, plantel) antes de meter mano en `sync-partidos`/
+   `sync-roster`.
+3. Recién con eso confirmado se planea la migración real: nuevo cliente `_shared/sportmonks.ts`,
+   qué pasa con `proveedor_externo`/`id_externo` existentes (api-football) al sumar un proveedor
+   nuevo, y si se jubila el puente `sync-fixtures-espn` (ESPN) para las 5 ligas domésticas.
+   Es trabajo de Edge Functions, no toca el frontend ni el modelo de datos (repositorio ya
+   aísla el proveedor). — **bloqueado, esperando la API key**
 
 ### Sesión 7 — Calendario General (2026-09-10)
 
