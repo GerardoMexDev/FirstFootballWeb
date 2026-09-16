@@ -57,6 +57,7 @@ export type Database = {
           fecha_fundacion: string | null
           id: string
           id_externo: string | null
+          id_externo_sportmonks: string | null
           nombre: string
           origen: Database["public"]["Enums"]["origen_dato"]
           pais: string | null
@@ -72,6 +73,7 @@ export type Database = {
           fecha_fundacion?: string | null
           id?: string
           id_externo?: string | null
+          id_externo_sportmonks?: string | null
           nombre: string
           origen?: Database["public"]["Enums"]["origen_dato"]
           pais?: string | null
@@ -87,6 +89,7 @@ export type Database = {
           fecha_fundacion?: string | null
           id?: string
           id_externo?: string | null
+          id_externo_sportmonks?: string | null
           nombre?: string
           origen?: Database["public"]["Enums"]["origen_dato"]
           pais?: string | null
@@ -467,6 +470,7 @@ export type Database = {
           foto_url: string | null
           id: string
           id_externo: string | null
+          id_externo_sportmonks: string | null
           instagram: string | null
           nacionalidad: string | null
           nombre: string
@@ -501,6 +505,7 @@ export type Database = {
           foto_url?: string | null
           id?: string
           id_externo?: string | null
+          id_externo_sportmonks?: string | null
           instagram?: string | null
           nacionalidad?: string | null
           nombre: string
@@ -535,6 +540,7 @@ export type Database = {
           foto_url?: string | null
           id?: string
           id_externo?: string | null
+          id_externo_sportmonks?: string | null
           instagram?: string | null
           nacionalidad?: string | null
           nombre?: string

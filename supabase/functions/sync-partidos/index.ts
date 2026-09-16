@@ -29,6 +29,17 @@ import { zonaDePais } from '../_shared/zona-pais.ts';
 const PROVEEDOR = 'api-football';
 const NOVENTA_DIAS_MS = 90 * 86_400_000;
 
+/**
+ * Ligas domésticas de la cartera que desde 2026-09-16 trae `sync-partidos-sportmonks` (plan
+ * Starter de SportMonks — avances.md, sección "Evaluación SportMonks"). Se descartan acá para
+ * no duplicar el partido (dos filas del mismo fixture, una por proveedor) ni gastar de más la
+ * cuota del plan free. Copas/continentales de estos mismos clubes SÍ siguen viniendo de acá
+ * (Leagues Cup, Concachampions, Libertadores, etc. — el plan Starter no las cubre).
+ * Ids = `competencias.id_externo` (API-Football): 262 Liga MX, 144 Bélgica Pro League,
+ * 71 Brasil Serie A, 265 Chile Primera División, 307 Arabia Pro League.
+ */
+const LIGAS_DOMESTICAS_SPORTMONKS = new Set(['262', '144', '71', '265', '307']);
+
 Deno.serve(async (req: Request) => {
   if (req.headers.get('x-sync-secret') !== Deno.env.get('SYNC_FUNCTIONS_SECRET')) {
     return new Response('No autorizado', { status: 401 });
@@ -90,6 +101,7 @@ Deno.serve(async (req: Request) => {
     const { fixtures } = resultadoFixtures;
     diasOmitidos = resultadoFixtures.diasOmitidos;
     const relevantes = fixtures.filter((fx) => {
+      if (LIGAS_DOMESTICAS_SPORTMONKS.has(String(fx.league.id))) return false;
       const home = String(fx.teams.home.id);
       const away = String(fx.teams.away.id);
       return carteraPorExterno.has(home) || carteraPorExterno.has(away);

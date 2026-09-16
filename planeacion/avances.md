@@ -1170,6 +1170,24 @@ Fase 1" o "Fase 2 / descartado" según la lista de la agencia.
 
 ---
 
+### Auditorías de cierre (agregado 2026-09-16, Sesión 9) — pendiente
+
+Gerardo pidió dejarlas anotadas para hacerlas al cierre del proyecto, antes de pasar a la
+siguiente etapa. Confirmado con Gerardo que son sobre **Football First** (no sobre otro
+proyecto), pese a que hoy la doc dice "app interna sin SEO" (ver línea ~621) — parte de la
+auditoría de SEO es justamente confirmar si eso sigue siendo así o si hay páginas públicas
+(login, landing) que sí necesitan SEO real.
+
+- [ ] **Auditoría de seguridad completa** de toda la web: RLS de Supabase en todas las tablas,
+      manejo de auth/sesión, validación de inputs, exposición de secrets/env, cabeceras HTTP,
+      dependencias con vulnerabilidades conocidas, Edge Functions (auth entre ellas y
+      `SYNC_FUNCTIONS_SECRET`), etc. — **baja, al cierre del proyecto**
+- [ ] **Auditoría de SEO completa** — Gerardo cree que puede que ya esté resuelta; confirmar
+      antes de darla por cerrada (meta tags, sitemap, robots.txt, rendering de páginas públicas
+      si las hay). — **baja, al cierre del proyecto**
+
+---
+
 ### Sesión 8 — roster definitivo + fix de sync (2026-09-16)
 
 - [x] ~~Desplegar `sync-partidos`, `sync-fixtures-espn`, `sync-roster`~~ — hecho 2026-09-16.
@@ -1182,33 +1200,76 @@ Fase 1" o "Fase 2 / descartado" según la lista de la agencia.
       no por partes. Hasta entonces se sigue con el patrón actual (Gerardo pasa los datos,
       Claude actualiza el script/seed a mano). — baja, en espera de la agencia
 
-### Evaluación SportMonks — en curso (2026-09-16)
+### Sesión 9 — migración a SportMonks (2026-09-16)
 
-La agencia está evaluando reemplazar/complementar API-Football con **SportMonks** para Match Day.
-**Decisión de la agencia (2026-09-16, vía Gerardo): SE PAGA.** Plan Starter (29€/mes, 5 ligas) —
-alcanza justo para las 5 ligas domésticas de los 6 de Match Day (Arabia, Liga MX, Brasileirão,
-Chile, Bélgica; Liga MX cubre a Toluca Y Atlante con 1 sola liga). Copas/continentales
-(Libertadores, Sudamericana, Leagues Cup, Concachampions, etc.) quedan **fuera** del plan
-Starter (consumirían slots de liga aparte) → siguen con API-Football/ESPN gratis como hoy.
+La agencia decidió **pagar SportMonks** (plan Starter, 29€/mes, 5 ligas) para reemplazar a
+ESPN/API-Football en las 5 ligas domésticas de los 6 representados de Match Day (Arabia, Liga
+MX, Brasileirão, Chile, Bélgica; Liga MX cubre a Toluca Y Atlante con 1 sola liga).
+Copas/continentales (Libertadores, Leagues Cup, Concachampions, etc.) quedan **fuera** del plan
+Starter → siguen con API-Football como hoy. Ningún plan de SportMonks da fecha de debut
+profesional/selección — esos 2 campos siguen 100% manuales por Excel (aceptado por Gerardo).
 
-Investigado (docs públicas de SportMonks, sin cuenta): entidad `Player` trae `date_of_birth`,
-altura, peso, nacionalidad, posición; entidad `Team` trae `founded`. **Ningún plan de SportMonks
-da fecha de debut profesional ni de debut en selección** — esos 2 campos siguen 100% manuales
-(igual que hoy). Acordado con Gerardo: se cargan por Excel, mismo patrón de siempre — "cada vez
-que se haga eso hay que cambiarlo" (Gerardo), entendido y aceptado; más adelante se puede evaluar
-alguna forma de edición más cómoda, sin apuro.
+**Pruebas de solo lectura (API key recibida 2026-09-16, `scripts/consultar-sportmonks.mjs`):**
+- Los 6 representados salen completos en `/squads/teams/{id}` (posición, dorsal, nacimiento).
+- **Convocatoria real confirmada**: `/fixtures/{id}?include=lineups.player` distingue titular
+  (`type_id 11`) de suplente (`type_id 12`); probado contra 6 partidos reales de Atlante — el
+  jugador aparece/falta de forma consistente con ausencias reales, no con huecos del proveedor.
+  Esto cierra el gap que ni API-Football free ni ESPN pudieron cerrar nunca.
+- Nombres de equipo en SportMonks ≠ API-Football/ESPN (`Al-Qadsiah`, no `Al-Qadisiyah`;
+  `Bragantino`, no `RB Bragantino`) — hubo que re-resolver los 6 team-id por `/teams/search`.
 
-**Falta para poder migrar:**
-1. Gerardo/la agencia activa el trial de 14 días (o ya el plan pago) y pasa la API key.
-2. Claude corre una **prueba puntual de solo lectura** (sin tocar producción, mismo patrón que
-   `scripts/consultar-*.mjs`) contra las 5 ligas reales para confirmar que Nández/Pereira/etc.
-   vienen completos (fixture, alineación, plantel) antes de meter mano en `sync-partidos`/
-   `sync-roster`.
-3. Recién con eso confirmado se planea la migración real: nuevo cliente `_shared/sportmonks.ts`,
-   qué pasa con `proveedor_externo`/`id_externo` existentes (api-football) al sumar un proveedor
-   nuevo, y si se jubila el puente `sync-fixtures-espn` (ESPN) para las 5 ligas domésticas.
-   Es trabajo de Edge Functions, no toca el frontend ni el modelo de datos (repositorio ya
-   aísla el proveedor). — **bloqueado, esperando la API key**
+**Implementado (código listo, build+lint+104 tests OK):**
+- `_shared/sportmonks.ts` (cliente fetch, pagina `/fixtures/between/{desde}/{hasta}/{teamId}`
+  hasta agotar `pagination.next_page` — el plan ignora `per_page>25`) + `_shared/sportmonks-
+  partido.ts` (lógica pura: `normalizarFixture`, `mapearEstadoSportmonks` — mapeo completo de
+  `GET /states`, verificado en vivo —, `convocadoEnLineups`) + `sportmonks-partido.test.ts`
+  (10 tests, fixtures reales recortados del derby Atlante-Toluca).
+- **`supabase/functions/sync-partidos-sportmonks/`** (función nueva): un solo
+  `include=lineups.player;participants;state;venue` por club trae equipos+estado+sede+
+  convocatoria de toda la temporada en 1-2 llamadas (a diferencia de ESPN, que hacía una
+  llamada por evento). Escribe `partidos_jugadores.convocado` directo (a diferencia de
+  `sync-partidos`/`sync-fixtures-espn`, que lo dejan `null` para que `sync-estadisticas` lo
+  resuelva después) — se actualiza en corridas sucesivas a medida que SportMonks lo publica
+  (~1h antes), nunca se vuelve a `null` un valor ya conocido. **Smoke-test end-to-end contra la
+  API real** (no Supabase) con el código tal cual quedó: 36 fixtures de Toluca en 2026, 27 con
+  alineación ya publicada, `convocado` de Pereira correcto en las 8 revisadas.
+- **`sync-partidos`** (API-Football) ajustado: `LIGAS_DOMESTICAS_SPORTMONKS` (ids 262/144/71/
+  265/307) descarta esas 5 ligas del filtro de fixtures relevantes — sigue trayendo copas/
+  continentales de los mismos 6 clubes, ya no duplica las domésticas que ahora trae SportMonks.
+- **Migración `0015` (APLICADA)**: columnas `clubes.id_externo_sportmonks` /
+  `jugadores.id_externo_sportmonks` (aparte del par `proveedor_externo`/`id_externo` existente,
+  que sigue en api-football porque esos mismos 6 clubes/jugadores TAMBIÉN se sincronizan por
+  API-Football para copas) + backfill de los 6 pares de cada uno. `npm run tipos:db` corrido.
+- **Migración `0016` (escrita, NO aplicada a propósito)**: apaga el cron de
+  `sync-fixtures-espn` y agenda el de `sync-partidos-sportmonks` (mismo horario, 03:30 UTC).
+  Deliberadamente separada de `0015` para no dejar una ventana sin cobertura de temporada
+  completa si se aplicara antes de desplegar/probar la función nueva.
+
+**✅ DESPLEGADO Y VERIFICADO EN PRODUCCIÓN (2026-09-16, mismo día):**
+1. Gerardo desplegó `sync-partidos-sportmonks` y redeployó `sync-partidos`.
+2. Primer intento falló: `SPORTMONKS_APIKEY` estaba solo en `.secretos/.env` (local), nunca
+   como secret de Edge Functions en Supabase — a diferencia de `API_FOOTBALL_KEY`, que sí se
+   había subido en su momento. Se armó `scripts/configurar-secret-edge.mjs` (`npm run
+   secrets:edge -- SPORTMONKS_APIKEY`, mismo patrón que `deploy:funcion`) porque
+   `supabase secrets set` directo lo bloquea el auto-mode ("Secret-Store Writes"), igual que
+   el deploy. Gerardo lo corrió y quedó resuelto.
+3. Corrida manual de `sync-partidos-sportmonks`: `estado:'ok'`, **188 registros afectados**,
+   **0 clubes con error**, 94 partidos (temporada completa de los 6 clubes). Verificado en
+   `partidos_jugadores`: partidos futuros lejanos → `convocado: null` (sin publicar aún,
+   correcto); partidos ya jugados → `true`/`false` reales (Méndez con `false` en un finalizado
+   — ausencia real). **Cero partidos pasados con `convocado` sin resolver.** Sin clubes
+   duplicados (Toluca sigue siendo 1 sola fila).
+4. Corrida manual de `sync-partidos` (redeployado): `0` registros — confirma que ya NO trae
+   las 5 ligas domésticas (se las quedó SportMonks), solo copas/continentales cuando las haya.
+5. Migración `0016` aplicada: `sync-fixtures-espn-diario` desapareció de `cron.job`,
+   `sync-partidos-sportmonks-diario` quedó agendado a las 03:30 UTC. Verificado con `select *
+   from cron.job` — 4 jobs activos (`sync-partidos` 03:00, `sync-partidos-sportmonks` 03:30,
+   `sync-estadisticas` 05:00, `sync-roster` lunes 04:00).
+6. `sync-fixtures-espn` NO se borró (queda desplegada, solo sin cron) por si hiciera falta
+   volver atrás.
+
+**Migración a SportMonks: CERRADA.** Nada pendiente de este trabajo salvo lo ya anotado aparte
+en §5 ("Auditorías de cierre") y el uso normal del sistema en producción.
 
 ### Sesión 7 — Calendario General (2026-09-10)
 
@@ -1217,12 +1278,13 @@ alguna forma de edición más cómoda, sin apuro.
       Al pushear, Vercel despliega. Falta el QA de navegador con login real
       (`/calendario-general` con datos, `/jugadores` con las 7 tarjetas "Contenido", buscador,
       Match Day sin cambios, mobile 390px). — **ahora**
-- [ ] **`0015` — bug de proyección leap-year** (lo detectó el review final). La expresión
+- [ ] **`0017`** *(renumerado — `0015`/`0016` los tomó la migración a SportMonks, Sesión 9)* **—
+      bug de proyección leap-year** (lo detectó el review final). La expresión
       `make_date(y,1,1) + (fecha - make_date(year,1,1))` de `agenda_anual` (desde `0001`) y
       ahora `agenda_contenido` usa día-del-año → se corre ±1 día en fechas de meses
       post-febrero cruzando años bisiestos. Match Day ya lo tiene mal (cumple de Amaro Mar 4
       vs 3 real, Atlante Abr 19 vs 18, Genk Jul 2 vs 1). `proximoAniversario` (ficha slim) sí
-      lo calcula bien → el grid del Calendario General discrepa con la ficha. Fix: `0015` con
+      lo calcula bien → el grid del Calendario General discrepa con la ficha. Fix: `0017` con
       `make_date(y, mes, least(dia, último_día_del_mes))` en **ambas** vistas.
       **Arreglar `agenda_anual` cambia esas 3 fechas de Match Day en prod → necesita OK
       explícito de Gerardo** (es una corrección, pero rompe el baseline byte-idéntico). — media

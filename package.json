@@ -15,6 +15,7 @@
     "seed:competencias": "node scripts/seed-competencias.mjs",
     "consultar:ligas": "node scripts/consultar-ligas.mjs",
     "consultar:clubes": "node scripts/consultar-clubes-jugadores.mjs",
+    "consultar:sportmonks": "node scripts/consultar-sportmonks.mjs",
     "seed:roster": "node scripts/seed-clubes-jugadores.mjs",
     "seed:base-hitos": "node scripts/seed-base-hitos.mjs",
     "seed:datos-manuales": "node scripts/seed-datos-manuales.mjs",
@@ -23,7 +24,8 @@
     "seed:fotos": "node scripts/seed-fotos-jugadores.mjs",
     "seed:escudos": "node scripts/seed-escudos.mjs",
     "vault:cron": "node scripts/configurar-vault-cron.mjs",
-    "deploy:funcion": "node scripts/desplegar-funcion.mjs"
+    "deploy:funcion": "node scripts/desplegar-funcion.mjs",
+    "secrets:edge": "node scripts/configurar-secret-edge.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.5.2",
