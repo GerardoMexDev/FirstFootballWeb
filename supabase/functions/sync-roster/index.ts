@@ -47,7 +47,7 @@ Deno.serve(async (req: Request) => {
   try {
     const { data: jugadores, error: errJugadores } = await supabase
       .from('jugadores')
-      .select('id, nombre, apodo, id_externo, club_actual_id, clubes(id_externo)')
+      .select('id, nombre, apodo, id_externo, club_actual_id, servicio_match_day, clubes(id_externo)')
       .eq('activo', true)
       .not('id_externo', 'is', null);
     if (errJugadores) throw errJugadores;
@@ -131,6 +131,10 @@ async function asegurarClub(
  * Aplica el cambio: club nuevo + FK del jugador + hito de traspaso. Devuelve cuántas filas tocó.
  * El hito es idempotente por (jugador_id, tipo, proveedor_externo, id_externo): si la función
  * corre dos veces con el mismo traspaso, no se duplica.
+ * El club se actualiza para CUALQUIER jugador activo (Contenido también depende de tener el
+ * club actual al día, para su aniversario de fundación). El hito de traspaso, en cambio, solo
+ * se crea para Match Day: `agenda_anual` no filtra su bloque de hitos por servicio, así que un
+ * hito de un jugador solo-Contenido se colaría en el calendario de Match Day.
  */
 async function aplicarCambioDeClub(
   // deno-lint-ignore no-explicit-any
@@ -147,6 +151,8 @@ async function aplicarCambioDeClub(
     .update({ club_actual_id: clubId })
     .eq('id', jugador.id);
   if (errJugador) throw errJugador;
+
+  if (!jugador.servicio_match_day) return 1; // jugador solo-Contenido: sin hito de traspaso
 
   // id_externo del hito: estable para el mismo traspaso, así el upsert no duplica.
   const idExternoHito = `traspaso:${jugador.id_externo}:${traspaso.fecha}:${nuevoClub.idExterno}`;

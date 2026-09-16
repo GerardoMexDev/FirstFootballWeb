@@ -49,11 +49,15 @@ Deno.serve(async (req: Request) => {
   let diasOmitidos: string[] = [];
 
   try {
-    // 1) Nuestros jugadores activos, con el id_externo y la zona horaria de su club actual.
+    // 1) Nuestros jugadores de Match Day, con el id_externo y la zona horaria de su club actual.
+    //    servicio_contenido (Calendario General) no sigue fixture: sin este filtro, un jugador
+    //    solo-Contenido termina con partidos_jugadores/estadisticas_partido y se cuela en
+    //    agenda_anual (Match Day) — ver planeacion/avances.md §6.
     const { data: jugadores, error: errJugadores } = await supabase
       .from('jugadores')
       .select('id, club_actual_id, clubes(id, id_externo, zona_horaria)')
       .eq('activo', true)
+      .eq('servicio_match_day', true)
       .not('club_actual_id', 'is', null);
     if (errJugadores) throw errJugadores;
 

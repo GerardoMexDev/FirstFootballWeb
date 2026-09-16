@@ -172,6 +172,52 @@ diseñador → Community Manager.
 
 ## 4. Hecho (por fecha, más reciente primero)
 
+### 2026-09-16 — Sesión 8 (roster definitivo de Calendario General + fix de sync)
+
+La agencia mandó por voz/chat la lista **definitiva y confirmada** de los dos servicios.
+Se cruzó contra `jugadores.servicio_match_day`/`servicio_contenido` en producción y aparecieron
+3 diferencias con lo cargado en Sesión 7:
+
+- **Nahitan Nández SÍ va en Calendario General** — revierte la nota de Sesión 7 ("Nahitan NO
+  va, no está en 'Nuevos'"). Se prendió `servicio_contenido=true` (ya existía por Match Day).
+- **Sergio Rochet y Luis Mejía NO estaban en la lista de la agencia** — **borrados** de
+  `jugadores` (no solo el flag: DELETE completo, confirmado por Gerardo). Cascade limpió sus
+  filas en `partidos_jugadores`/`estadisticas_partido` (tenían, pese a ser solo-Contenido — ver
+  el bug de abajo). Efecto: SC Internacional se queda sin ningún jugador `servicio_contenido`,
+  así que su aniversario de fundación deja de aparecer en Calendario General (lo resuelve solo
+  el `exists(...)` de `agenda_contenido`, sin tocar nada). Club Nacional no se afecta (le quedan
+  Martirena y Silvera).
+- Roster final verificado en prod: **Match Day 6** = Nández/Al-Qadisiyah, Pereira/Toluca,
+  Sosa/RB Bragantino, Méndez/Colo-Colo, Amaro/Genk, Fernández/Atlante (sin cambios, coincide
+  con Sesión 7). **Calendario General 11** = los 6 de Match Day + Aguirre, Hernández,
+  Martirena, Silvera, Romero.
+
+**Bug encontrado y corregido (separado del dato):** `sync-partidos` y `sync-fixtures-espn`
+consultaban `jugadores` filtrando solo por `activo=true`, sin `servicio_match_day` — un jugador
+solo-Contenido terminaba con fixtures reales en `partidos_jugadores`/`estadisticas_partido`, que
+se cuelan en Match Day porque el bloque 1 (partidos) de `agenda_anual` sale de
+`proximos_partidos` **sin** guardia de servicio (a diferencia de los bloques 4-6, que sí la
+tienen desde la migración `0014`). Así fue como Rochet y Mejía habían quedado con 1 y 2 partidos
+sincronizados pese a nunca haber sido Match Day. Fix: las dos funciones ahora filtran
+`.eq('servicio_match_day', true)` en la consulta de jugadores. `sync-roster` (traspasos) es un
+caso distinto: el club actual SÍ se actualiza para cualquier jugador activo (Contenido también
+necesita el club al día para su aniversario de fundación) — lo que se frenó fue el **hito** de
+traspaso (bloque 3 de `agenda_anual`, tampoco tiene guardia): ahora solo se crea si
+`servicio_match_day`. `npm test` (94/94) y `npm run build` verificados tras el cambio.
+**Pendiente: desplegar `sync-partidos`, `sync-fixtures-espn` y `sync-roster`** — el deploy a
+prod quedó bloqueado por el permiso de auto-mode de Claude Code, Gerardo lo corre a mano con
+`npm run deploy:funcion -- <nombre>` (ver §5).
+
+**Pregunta de Gerardo — fuente de las fechas manuales (cumpleaños, fundación, debut,
+debut_selección):** ¿Excel o API? Se recomendó Excel — es exactamente el patrón que ya usa el
+proyecto (`origen='manual'`, ver `contexto.md`) y evita la clase de error de esta sesión (los 3
+jugadores mal cargados vinieron de transcribir el Excel a mano en `seed-jugadores-contenido.mjs`).
+Falta construir `scripts/importar-datos-manuales.ts` (ya anotado en §5 desde Sesión 3, sin
+hacer): que lea el `.xlsx` directo con una librería (`xlsx`/`exceljs`) en vez de que cada
+actualización pase por transcribir valores a mano en un array — Gerardo edita la hoja, sube el
+archivo, corre un script, listo. Sin decidir todavía si se construye ahora o se sigue con el
+patrón de seed manual mientras el volumen de cambios sea bajo.
+
 ### 2026-09-10 — Sesión 7 (Calendario General — implementado)
 
 La agencia pidió, antes de cerrar Fase 1, un **segundo calendario**. Diseño y decisiones:
@@ -1123,6 +1169,17 @@ reconciliación Transfermarkt, FBref, etc.) quedan en espera: cada uno se marcar
 Fase 1" o "Fase 2 / descartado" según la lista de la agencia.
 
 ---
+
+### Sesión 8 — roster definitivo + fix de sync (2026-09-16)
+
+- [ ] **Desplegar `sync-partidos`, `sync-fixtures-espn`, `sync-roster`** — código listo y
+      testeado (ver §4), el deploy lo bloqueó el permiso de auto-mode. Correr a mano:
+      `npm run deploy:funcion -- sync-partidos` (y lo mismo para las otras dos). — **ahora**
+- [ ] **`scripts/importar-datos-manuales.ts`** (lee el `.xlsx` directo en vez de transcribir a
+      mano) — **decidido 2026-09-16: se construye recién cuando la agencia mande el paquete
+      completo** (todas las fechas + fotos + el resto de la info pendiente), de una sola vez,
+      no por partes. Hasta entonces se sigue con el patrón actual (Gerardo pasa los datos,
+      Claude actualiza el script/seed a mano). — baja, en espera de la agencia
 
 ### Sesión 7 — Calendario General (2026-09-10)
 

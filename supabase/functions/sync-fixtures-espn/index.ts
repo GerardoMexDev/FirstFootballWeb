@@ -87,12 +87,13 @@ Deno.serve(async (req: Request) => {
   const eventosConError: string[] = []; // un evento raro no tira abajo toda la corrida
 
   try {
-    // 1) Cartera: jugadores activos + su club actual (id_externo de API-Football + zona).
-    //    Misma consulta que sync-partidos.
+    // 1) Cartera: jugadores de Match Day + su club actual (id_externo de API-Football + zona).
+    //    Misma consulta que sync-partidos (mismo filtro servicio_match_day, mismo motivo).
     const { data: jugadores, error: errJugadores } = await supabase
       .from('jugadores')
       .select('id, clubes(id, id_externo, zona_horaria)')
       .eq('activo', true)
+      .eq('servicio_match_day', true)
       .not('club_actual_id', 'is', null);
     if (errJugadores) throw errJugadores;
 
