@@ -1271,6 +1271,48 @@ profesional/selección — esos 2 campos siguen 100% manuales por Excel (aceptad
 **Migración a SportMonks: CERRADA.** Nada pendiente de este trabajo salvo lo ya anotado aparte
 en §5 ("Auditorías de cierre") y el uso normal del sistema en producción.
 
+### Sesión 9 (cont.) — 2 bugs encontrados probando en vivo, ambos arreglados y desplegados
+
+Gerardo probó la web recién migrada y encontró dos problemas reales (no relacionados entre sí):
+
+**1) `/partidos` (y por lo tanto `/calendario`, Match Day) mostraba un partido de Nacional
+(Uruguay) con jugadores de servicio CONTENIDO** (Maximiliano Silvera, Gastón Martirena) — que
+NO son de Match Day y cuyo fixture no se sigue.
+- **Causa raíz**: `proximos_partidos` (desde 0011/0013) nunca filtró por
+  `jugadores.servicio_match_day`. La migración 0014 (Calendario General) le puso ese guardia a
+  los bloques 4/5/6 de `agenda_anual` pero dejó el bloque 1 (partidos) sin tocar, asumiendo que
+  `partidos_jugadores` solo tenía filas de Match Day — asunción que dejó de ser cierta: ANTES
+  del fix de Sesión 8 (`abb9f98`), los sync sí creaban puentes para jugadores de Contenido.
+  Quedaron 7 filas viejas (Silvera, Martirena, Aguirre, Romero, Hernández) sin limpiar.
+- **Fix — migración `0017_proximos_partidos_solo_match_day.sql` (APLICADA)**: agrega
+  `and j.servicio_match_day` al join de `proximos_partidos` (mismas columnas de salida, cuerpo
+  exacto de 0013 + esa condición) y borra las 7 filas de puente huérfanas. `agenda_anual` hereda
+  el fix gratis (su bloque 1 ya sale `from proximos_partidos`) sin tocar su propia definición.
+  **El `DELETE` hizo que el auto-mode bloqueara la migración para Claude** ("Modify Shared
+  Resources" — categoría distinta de "Production Deploy"/"Secret-Store Writes"; las migraciones
+  puramente aditivas como 0015/0016 SÍ se pudieron correr directo). Gerardo la corrió a mano.
+  Verificado post-fix: 0 filas de puente de jugadores no-Match-Day, `proximos_partidos` solo
+  devuelve apodos de los 6 (Fede/Javi/Nacho/Nahitan + los 2 sin apodo corto).
+
+**2) Escudos de clubes rivales faltantes** (Santos Laguna, Cruz Azul, etc. en "próximos
+partidos" de la ficha de jugador) — mostraban iniciales en vez del escudo real.
+- **Causa raíz**: `scripts/seed-escudos.mjs` arma la URL del escudo por patrón fijo de CDN
+  (`case proveedor_externo`) pero solo tiene casos para `'api-football'` y `'espn'` — cualquier
+  club creado con `proveedor_externo='sportmonks'` (los 67 rivales que trajo la migración de
+  hoy) cae al `default: return null` y queda con iniciales para siempre, ni corriendo el script.
+  SportMonks no tiene un patrón de URL fijo por id (el folder del CDN varía por equipo), así que
+  extender `seed-escudos.mjs` hubiera requerido llamar a la API igual.
+- **Fix (código, sin migración)**: el campo `image_path` de SportMonks viene GRATIS en el mismo
+  `include=participants` que `sync-partidos-sportmonks` ya pedía — se agregó a
+  `ParticipanteSportmonks`/`PartidoSportmonks` (`_shared/sportmonks.ts` /
+  `_shared/sportmonks-partido.ts`, +2 tests) y `asegurarClubSportmonks` ahora lo guarda al crear
+  un club Y lo completa (solo si estaba en `null`, nunca lo pisa) en los que ya existían.
+  Gerardo redeployó la función y la corrió una vez más: **66 de 67 clubes rivales quedaron con
+  escudo real**; el único sin escudo (Deportes Concepción, Chile) es porque SportMonks mismo no
+  tiene esa imagen — cae a iniciales, comportamiento esperado del componente `Escudo`, no un bug.
+
+Ambos fixes: build + lint + 106 tests (`npm test`) OK antes de pedir el deploy/migración.
+
 ### Sesión 7 — Calendario General (2026-09-10)
 
 - [x] ~~Implementar el spec~~ — hecho 2026-09-10 (subagent-driven, 13 commits). Ver §4.
@@ -1278,8 +1320,9 @@ en §5 ("Auditorías de cierre") y el uso normal del sistema en producción.
       Al pushear, Vercel despliega. Falta el QA de navegador con login real
       (`/calendario-general` con datos, `/jugadores` con las 7 tarjetas "Contenido", buscador,
       Match Day sin cambios, mobile 390px). — **ahora**
-- [ ] **`0017`** *(renumerado — `0015`/`0016` los tomó la migración a SportMonks, Sesión 9)* **—
-      bug de proyección leap-year** (lo detectó el review final). La expresión
+- [ ] **`0018`** *(renumerado dos veces — `0015`/`0016` los tomó SportMonks, `0017` el fix de
+      `proximos_partidos`, ambos Sesión 9)* **— bug de proyección leap-year** (lo detectó el
+      review final). La expresión
       `make_date(y,1,1) + (fecha - make_date(year,1,1))` de `agenda_anual` (desde `0001`) y
       ahora `agenda_contenido` usa día-del-año → se corre ±1 día en fechas de meses
       post-febrero cruzando años bisiestos. Match Day ya lo tiene mal (cumple de Amaro Mar 4

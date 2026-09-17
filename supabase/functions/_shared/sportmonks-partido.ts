@@ -19,6 +19,7 @@ export interface PartidoSportmonks {
   nuestroLado: 'local' | 'visitante';
   rivalId: string;
   rivalNombre: string | null;
+  rivalEscudoUrl: string | null;
   sedeNombre: string | null;
   sedeCiudad: string | null;
   estado: EstadoPartido;
@@ -49,6 +50,7 @@ export function normalizarFixture(fixture: FixtureSportmonks, nuestroTeamId: str
     nuestroLado,
     rivalId: String(rival.id),
     rivalNombre: rival.name || null,
+    rivalEscudoUrl: rival.image_path || null,
     sedeNombre: fixture.venue?.name ?? null,
     sedeCiudad: fixture.venue?.city_name ?? null,
     estado: mapearEstadoSportmonks(fixture.state?.state),

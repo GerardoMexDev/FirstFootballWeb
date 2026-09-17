@@ -24,6 +24,8 @@ export function esperarEntreLlamadasSportmonks(): Promise<void> {
 export interface ParticipanteSportmonks {
   id: number;
   name: string;
+  /** URL del escudo — viene de yapa en el mismo `include=participants`, sin llamada aparte. */
+  image_path?: string | null;
   meta?: { location?: 'home' | 'away' } | null;
 }
 

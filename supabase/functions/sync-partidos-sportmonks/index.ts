@@ -175,9 +175,12 @@ Deno.serve(async (req: Request) => {
 
 /**
  * Uuid interno de un club identificado por su id de equipo de SportMonks.
- *   1) Si es uno de nuestros 6 clubes de la cartera → su uuid real (evita duplicar).
- *   2) Si ya lo creamos antes como club de SportMonks → ese.
- *   3) Si no → lo crea con proveedor_externo='sportmonks'.
+ *   1) Si es uno de nuestros 6 clubes de la cartera → su uuid real (evita duplicar). Ya tiene
+ *      escudo (seed-escudos.mjs, vía su fila api-football), no hace falta tocarlo.
+ *   2) Si ya lo creamos antes como club de SportMonks → ese; si le faltaba el escudo, se lo
+ *      completa acá (`escudoUrl` sale gratis de `participants[].image_path`, sin llamada
+ *      aparte) — `seed-escudos.mjs` no cubre `proveedor_externo='sportmonks'`.
+ *   3) Si no → lo crea con proveedor_externo='sportmonks' y el escudo de una.
  */
 async function asegurarClubSportmonks(
   // deno-lint-ignore no-explicit-any
@@ -185,22 +188,30 @@ async function asegurarClubSportmonks(
   smId: string,
   carteraPorSmId: Map<string, string>,
   nombre: string,
+  escudoUrl: string | null,
 ): Promise<string> {
   const deCartera = carteraPorSmId.get(smId);
   if (deCartera) return deCartera;
 
   const { data: existente, error: errBuscar } = await supabase
     .from('clubes')
-    .select('id')
+    .select('id, escudo_url')
     .eq('proveedor_externo', PROVEEDOR)
     .eq('id_externo', smId)
     .maybeSingle();
   if (errBuscar) throw errBuscar;
-  if (existente) return existente.id;
+
+  if (existente) {
+    if (!existente.escudo_url && escudoUrl) {
+      const { error: errUpd } = await supabase.from('clubes').update({ escudo_url: escudoUrl }).eq('id', existente.id);
+      if (errUpd) throw errUpd;
+    }
+    return existente.id;
+  }
 
   const { data: creado, error: errCrear } = await supabase
     .from('clubes')
-    .insert({ nombre, origen: 'api', proveedor_externo: PROVEEDOR, id_externo: smId })
+    .insert({ nombre, origen: 'api', proveedor_externo: PROVEEDOR, id_externo: smId, escudo_url: escudoUrl })
     .select('id')
     .single();
   if (errCrear) throw errCrear;
@@ -226,7 +237,7 @@ async function sincronizarFixture(
   const p = normalizarFixture(fx, cfg.smTeamId);
 
   const rivalNombre = p.rivalNombre ?? `SportMonks ${p.rivalId}`;
-  const rivalClubId = await asegurarClubSportmonks(supabase, p.rivalId, carteraPorSmId, rivalNombre);
+  const rivalClubId = await asegurarClubSportmonks(supabase, p.rivalId, carteraPorSmId, rivalNombre, p.rivalEscudoUrl);
   const nuestroClubId = club.clubId;
 
   const clubLocalId = p.nuestroLado === 'local' ? nuestroClubId : rivalClubId;

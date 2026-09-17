@@ -11,8 +11,8 @@ function fixtureTolucaDeVisitante(): FixtureSportmonks {
     starting_at_timestamp: 1786834800, // 2026-08-15T23:00:00Z
     state: { state: 'FT' },
     participants: [
-      { id: 967, name: 'Toluca', meta: { location: 'away' } },
-      { id: 7023, name: 'Atlante', meta: { location: 'home' } },
+      { id: 967, name: 'Toluca', image_path: 'https://cdn.sportmonks.com/images/soccer/teams/7/967.png', meta: { location: 'away' } },
+      { id: 7023, name: 'Atlante', image_path: 'https://cdn.sportmonks.com/images/soccer/teams/9/7023.png', meta: { location: 'home' } },
     ],
     venue: { name: 'Mexico City Stadium', city_name: 'Mexico City' },
     lineups: [
@@ -56,6 +56,18 @@ test('extrae id de fixture, sede y convierte starting_at_timestamp a ISO UTC', (
   assert.equal(p.inicioUtc, '2026-08-15T23:00:00.000Z');
   assert.equal(p.sedeNombre, 'Mexico City Stadium');
   assert.equal(p.sedeCiudad, 'Mexico City');
+});
+
+test('extrae el escudo del rival desde participants (sin llamada aparte)', () => {
+  const p = normalizarFixture(fixtureTolucaDeVisitante(), '967');
+  assert.equal(p.rivalEscudoUrl, 'https://cdn.sportmonks.com/images/soccer/teams/9/7023.png');
+});
+
+test('rival sin image_path: rivalEscudoUrl null, sin romper', () => {
+  const evento = fixtureTolucaDeVisitante();
+  delete (evento.participants![1] as { image_path?: string }).image_path;
+  const p = normalizarFixture(evento, '967');
+  assert.equal(p.rivalEscudoUrl, null);
 });
 
 test('sede ausente: campos en null, sin romper', () => {
