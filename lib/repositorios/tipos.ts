@@ -98,7 +98,12 @@ export interface JugadorPlantel {
   carreraAsistencias: number | null;
 }
 
-/** Números del jugador en el año calendario en curso (vista `temporada_actual`). */
+/**
+ * Números del jugador en la temporada vigente (vista `temporada_actual`, 0018/0020).
+ * `temporadaAnioDesde`/`Hasta`: rango de años de la temporada real de la competencia
+ * doméstica (0020) — `null` si no hay temporada real conocida (copas/API-Football, cae a año
+ * calendario) o si coinciden (ligas que van ~año calendario, o un torneo que no cruza años).
+ */
 export interface TemporadaActual {
   partidos: number | null;
   minutos: number | null;
@@ -107,6 +112,8 @@ export interface TemporadaActual {
   amarillas: number | null;
   rojas: number | null;
   valoracionPromedio: number | null;
+  temporadaAnioDesde: number | null;
+  temporadaAnioHasta: number | null;
 }
 
 /**

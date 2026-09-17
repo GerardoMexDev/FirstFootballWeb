@@ -1144,6 +1144,8 @@ export type Database = {
           minutos: number | null
           partidos: number | null
           rojas: number | null
+          temporada_anio_desde: number | null
+          temporada_anio_hasta: number | null
           valoracion_promedio: number | null
         }
         Relationships: [

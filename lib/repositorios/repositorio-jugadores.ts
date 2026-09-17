@@ -167,6 +167,8 @@ export class RepositorioJugadoresSupabase implements RepositorioJugadores {
       amarillas: data.amarillas,
       rojas: data.rojas,
       valoracionPromedio: data.valoracion_promedio,
+      temporadaAnioDesde: data.temporada_anio_desde,
+      temporadaAnioHasta: data.temporada_anio_hasta,
     };
   }
 }

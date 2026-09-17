@@ -1402,6 +1402,35 @@ la fila (mejor) de SportMonks del MISMO partido real.
   (`on delete cascade` limpia `partidos_jugadores`/`estadisticas_partido` de esas filas solo).
   — **pendiente que Gerardo la aplique**: `npm run migracion supabase/migrations/0019_limpiar_duplicados_ligas_sportmonks.sql`
 
+### Sesión 9 (cont.) — Excel: fichaje/debut de 5 de Contenido + hallazgos 6°/7°
+
+Gerardo cargó en la hoja "Nuevos" del Excel las fechas de fichaje que faltaban desde la
+Sesión 6 para Rodrigo Aguirre, Abel Hernández, Gastón Martirena, Maximiliano Silvera y Franco
+Romero (Sergio Rochet y Luis Mejía, de la lista original de `seed-jugadores-contenido.mjs`,
+nunca se llegaron a sembrar — no aplica). `scripts/actualizar-fichajes-contenido.mjs` (nuevo,
+corrido) las transcribió a la base — no lee el `.xlsx` directo (instalé `xlsx` con `--no-save`
+solo para inspeccionar el archivo puntualmente, después desinstalado; el importador completo
+sigue aparte y pendiente). Martirena además necesitaba `debut` (la hoja tenía solo "mayo de
+2022", Gerardo confirmó el día exacto por chat: 24 de marzo de 2021).
+
+**6° hallazgo — el hover de esos 5 en la grilla sigue en "—" (Partidos/Asist/Goles).** No es un
+bug: `totales_jugador` (0003) es `jugadores.carrera_*_base` (manual) + lo sincronizado, y da
+`NULL` si la base nunca se cargó (nunca 0 inventado). Revisé la hoja "Hitos" del Excel — tiene
+carrera completa (partidos/goles/asistencias, fuente Transfermarkt) para los 6 de Match Day,
+pero **nunca tuvo una fila para estos 5 de Contenido**. Falta que la agencia pase esos 3 números
+por jugador (de Transfermarkt, mismo criterio que ya se usó) — anotado, no resuelto.
+
+**7° hallazgo — el label "Este año (2026)" no reflejaba la temporada real** ni siquiera después
+de 0018 (la métrica ya era correcta, la palabra no). Migración `0020` (aplicada): 2 columnas
+nuevas en `temporada_actual` (`temporada_anio_desde`/`hasta`, rango de años de TODA la
+temporada vigente — no solo lo ya jugado, así sale completo aunque la temporada haya arrancado
+hace poco) + `FichaJugador.tsx` muestra "Temporada 2026-2027" cuando cruza el año calendario
+(Bélgica/Arabia, verificado con Amaro/Nández vía browser-automation) o sigue con "Este año
+(2026)" cuando no (Brasil/Chile, y México — ahí SportMonks modela Apertura/Clausura como 2
+temporadas separadas que no cruzan año cada una, así que el NÚMERO ya es el del torneo en
+curso aunque la palabra siga diciendo "año" en vez de "Apertura"). Verificado con Pereira
+(Toluca): sigue "Este año (2026)", correcto. Build + lint + 113 tests OK.
+
 ### Sesión 7 — Calendario General (2026-09-10)
 
 - [x] ~~Implementar el spec~~ — hecho 2026-09-10 (subagent-driven, 13 commits). Ver §4.
