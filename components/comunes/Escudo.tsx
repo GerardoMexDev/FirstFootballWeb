@@ -36,7 +36,11 @@ export function Escudo({
         className={clase}
         src={url}
         alt=""
-        style={{ objectFit: 'cover' }} // la demo nunca mostró un <img> acá; .crest no trae object-fit
+        // `.crest` trae un clip-path en forma de escudo pensado para las INICIALES de
+        // respaldo (recorta hasta 64% de alto en los bordes) — aplicado a una foto real
+        // de escudo (de cualquier proveedor) se veía "cortada por abajo" (reporte de
+        // Gerardo 2026-09-16). `contain` (no `cover`) para no recortar tampoco por aspect-ratio.
+        style={{ objectFit: 'contain', clipPath: 'none' }}
         onError={() => setFallo(true)}
       />
     );
