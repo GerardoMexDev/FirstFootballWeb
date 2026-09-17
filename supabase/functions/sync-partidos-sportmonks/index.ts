@@ -39,7 +39,13 @@ import { zonaDePais } from '../_shared/zona-pais.ts';
 
 const PROVEEDOR = 'sportmonks';
 const NOVENTA_DIAS_MS = 90 * 86_400_000;
-const VENTANA_ATRAS_DIAS = 3;
+// 300 atrás (no 3, como sync-fixtures-espn): `temporada_actual`/`totales_jugador` (0007) miran
+// TODO el año calendario en curso, no solo lo reciente — con 3 días nunca se traían los
+// partidos ya jugados de la temporada y las estadísticas quedaban vacías para siempre
+// (hallazgo de Gerardo 2026-09-16, Nacho Sosa/Bragantino: "temporada recién arranca" con el
+// campeonato real en la jornada 27). 300 cubre de sobra desde el 1° de enero incluso el día
+// más lejano del año (16-sep atrás son ~259 días).
+const VENTANA_ATRAS_DIAS = 300;
 const VENTANA_ADELANTE_DIAS = 300; // una temporada de liga entra de sobra (mismo margen que sync-fixtures-espn)
 
 /**
