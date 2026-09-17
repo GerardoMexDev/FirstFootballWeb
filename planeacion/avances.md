@@ -1313,6 +1313,37 @@ partidos" de la ficha de jugador) — mostraban iniciales en vez del escudo real
 
 Ambos fixes: build + lint + 106 tests (`npm test`) OK antes de pedir el deploy/migración.
 
+### Sesión 9 (cont.) — 3er hallazgo: estadísticas de temporada vacías para las 5 ligas (cerrado)
+
+Gerardo probó la ficha de Nacho Sosa (Bragantino) y vio "la temporada recién arranca, sin
+partidos registrados" pese a que el Brasileirão real va por la jornada 27.
+
+- **No es un bug nuevo de hoy**: `temporada_actual`/`totales_jugador` dependen 100% de
+  `estadisticas_partido`, que solo llena `sync-estadisticas` — y esa función SOLO entiende ids
+  de fixture de API-Football (llama a sus endpoints con `partido.id_externo`). Para Bragantino
+  había **0 filas de `estadisticas_partido` desde siempre**, con ESPN o sin ESPN — dependía de
+  que la ventana corta (~3-5 días) de API-Football llegara a pisar el mismo partido por
+  casualidad, cosa que casi nunca pasaba en la práctica.
+- **Lo que sí empeoró hoy**: al excluir las 5 ligas domésticas de `sync-partidos` (para no
+  duplicar), se cerró del todo esa ventanita angosta — de "casi nunca" pasó a "nunca jamás".
+- **Fix real, no parche**: verificado en vivo que SportMonks da minutos jugados y rating por
+  `lineups[].details` (type_id 119 y 118, catálogo `GET /core/types`), y goles/asistencias/
+  tarjetas por `events[]` del fixture completo (type_id 14 Goal —`related_player_id` es quien
+  asistió, verificado con un gol real de Toluca—, 19 Yellowcard, 20/21 Redcard). Se agregó
+  `extraerEstadisticaSportmonks` (`_shared/sportmonks-partido.ts`, 8 tests nuevos, mismo
+  contrato que `extraerLineaJugador` de API-Football: suplente no usado → `null`, no cuenta el
+  partido) y `sync-partidos-sportmonks` ahora hace upsert de `estadisticas_partido` junto con el
+  puente de convocatoria — sin llamadas extra, todo sale del mismo `include` que ya se pedía
+  (se sumó `lineups.details` y `events`).
+- Smoke-test contra datos reales (no Supabase): gol de Helinho atribuido correctamente (1 gol,
+  1 amarilla), asistencia de Santiago Simón correcta (1 asistencia) — verificado con el partido
+  real Toluca-Monterrey de enero 2026. 113 tests, build y lint OK.
+- Sin migración nueva (la tabla `estadisticas_partido` ya existía con las columnas que hacen
+  falta) — solo requiere redeploy de `sync-partidos-sportmonks`.
+
+**Con esto, las 5 ligas domésticas quedan con cobertura completa y autosuficiente vía
+SportMonks: fixtures, convocatoria Y estadísticas — ya no dependen en nada de API-Football.**
+
 ### Sesión 7 — Calendario General (2026-09-10)
 
 - [x] ~~Implementar el spec~~ — hecho 2026-09-10 (subagent-driven, 13 commits). Ver §4.

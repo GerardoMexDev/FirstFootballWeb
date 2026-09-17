@@ -29,11 +29,27 @@ export interface ParticipanteSportmonks {
   meta?: { location?: 'home' | 'away' } | null;
 }
 
+/** Una fila de `lineups[].details[]` — estadística puntual del jugador en el partido. */
+export interface DetalleLineupSportmonks {
+  type_id: number; // 119 = Minutes Played, 118 = Rating (catálogo GET /core/types)
+  data: { value: unknown };
+}
+
 export interface LineupSportmonks {
   player_id: number;
   team_id: number;
   type_id: number; // 11 = titular, 12 = suplente (verificado en vivo, sin doc pública clara)
   player?: { display_name?: string | null } | null;
+  details?: DetalleLineupSportmonks[] | null;
+}
+
+/** Un evento discreto del partido (gol, tarjeta, cambio) — `GET /core/types`: 14 Goal (15 Own
+ *  Goal no cuenta como gol del jugador), 19 Yellowcard, 20 Redcard, 21 Yellow/Red (2ª amarilla). */
+export interface EventoSportmonks {
+  type_id: number;
+  player_id: number | null;
+  /** En un evento de gol (14), es quien dio la asistencia. */
+  related_player_id: number | null;
 }
 
 export interface FixtureSportmonks {
@@ -44,6 +60,7 @@ export interface FixtureSportmonks {
   participants?: ParticipanteSportmonks[] | null;
   venue?: { name?: string | null; city_name?: string | null } | null;
   lineups?: LineupSportmonks[] | null;
+  events?: EventoSportmonks[] | null;
 }
 
 interface RespuestaFixtures {
@@ -74,7 +91,7 @@ export async function obtenerFixturesDeEquipo(
 ): Promise<FixtureSportmonks[]> {
   const fixtures: FixtureSportmonks[] = [];
   let url: URL | null = new URL(`${BASE}/fixtures/between/${desdeIso}/${hastaIso}/${teamId}`);
-  url.searchParams.set('include', 'lineups.player;participants;state;venue');
+  url.searchParams.set('include', 'lineups.player;lineups.details;participants;state;venue;events');
 
   for (let i = 0; i < 20 && url; i++) {
     url.searchParams.set('api_token', apiKey);

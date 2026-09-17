@@ -3,7 +3,12 @@
  * plan Starter de SportMonks (Arabia, Liga MX, Brasileirão, Chile, Bélgica — avances.md,
  * sección "Evaluación SportMonks"). Trae el calendario completo de la temporada de cada uno
  * de los 6 clubes de la cartera Y, de yapa, la CONVOCATORIA real (`partidos_jugadores.convocado`)
- * desde `lineups` — el gap que ni API-Football free ni ESPN podían cerrar.
+ * desde `lineups` — el gap que ni API-Football free ni ESPN podían cerrar. También llena
+ * `estadisticas_partido` (minutos/rating desde `lineups.details`, goles/asistencias/tarjetas
+ * desde `events`) — `sync-estadisticas` (API-Football) nunca pudo procesar estas 5 ligas
+ * (solo entiende ids de API-Football, y esas 5 ligas ya no generan partidos de esa fuente),
+ * así que sin esto `temporada_actual`/`totales_jugador` quedaban vacíos para siempre en estas
+ * ligas (hallazgo de Gerardo 2026-09-16 probando en vivo, Nacho Sosa/Bragantino).
  *
  * Copas/continentales de estos mismos 6 clubes (Leagues Cup, Concachampions, Libertadores,
  * etc.) NO se piden acá — el plan Starter no las cubre (solo 5 ligas domésticas) y siguen
@@ -29,7 +34,7 @@
  */
 import { createClient } from 'npm:@supabase/supabase-js@2';
 import { esperarEntreLlamadasSportmonks, obtenerFixturesDeEquipo, type FixtureSportmonks } from '../_shared/sportmonks.ts';
-import { normalizarFixture, convocadoEnLineups } from '../_shared/sportmonks-partido.ts';
+import { normalizarFixture, convocadoEnLineups, extraerEstadisticaSportmonks } from '../_shared/sportmonks-partido.ts';
 import { zonaDePais } from '../_shared/zona-pais.ts';
 
 const PROVEEDOR = 'sportmonks';
@@ -284,8 +289,35 @@ async function sincronizarFixture(
 
   let filasTocadas = 1;
   for (const jugador of club.jugadores) {
-    const convocado = convocadoEnLineups(fx.lineups, jugador.idSportmonks ?? '');
+    const smId = jugador.idSportmonks;
+    const convocado = convocadoEnLineups(fx.lineups, smId ?? '');
     filasTocadas += await actualizarPuente(supabase, partido.id, jugador.id, convocado);
+
+    // Estadísticas del partido (goles/asistencias/tarjetas/minutos/rating): cierra el hueco
+    // que dejaba sync-estadisticas (solo entiende ids de API-Football) para estas 5 ligas
+    // (avances.md, hallazgo de Gerardo 2026-09-16 con Nacho Sosa/Bragantino).
+    if (smId) {
+      const lineupDelJugador = (fx.lineups ?? []).find((l) => l.player_id === Number(smId));
+      if (lineupDelJugador) {
+        const estadistica = extraerEstadisticaSportmonks(lineupDelJugador, fx.events, smId);
+        if (estadistica) {
+          const { error: errStat } = await supabase.from('estadisticas_partido').upsert(
+            {
+              partido_id: partido.id,
+              jugador_id: jugador.id,
+              ...estadistica,
+              origen: 'api',
+              proveedor_externo: PROVEEDOR,
+              payload_crudo: { lineup: lineupDelJugador },
+              sincronizado_en: new Date().toISOString(),
+            },
+            { onConflict: 'partido_id,jugador_id' },
+          );
+          if (errStat) throw errStat;
+          filasTocadas += 1;
+        }
+      }
+    }
   }
 
   return filasTocadas;

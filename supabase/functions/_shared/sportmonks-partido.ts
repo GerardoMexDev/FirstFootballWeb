@@ -10,7 +10,8 @@
  * Football First (Fase 1). Creado 2026-09-16 (migración a SportMonks).
  */
 import type { EstadoPartido } from './estado-partido.ts';
-import type { FixtureSportmonks, LineupSportmonks } from './sportmonks.ts';
+import type { EstadisticaJugador } from './estadisticas.ts';
+import type { EventoSportmonks, FixtureSportmonks, LineupSportmonks } from './sportmonks.ts';
 
 export interface PartidoSportmonks {
   fixtureId: string;
@@ -91,4 +92,53 @@ export function convocadoEnLineups(lineups: LineupSportmonks[] | null | undefine
   if (filas.length === 0) return null;
   const idBuscado = Number(jugadorSportmonksId);
   return filas.some((l) => l.player_id === idBuscado);
+}
+
+const GOAL = 14;
+const YELLOWCARD = 19;
+const REDCARD = 20;
+const SEGUNDA_AMARILLA = 21; // "Yellow/Red card" — 2ª amarilla que termina en expulsión
+
+function valorDetalle(details: LineupSportmonks['details'], typeId: number): number | null {
+  const fila = (details ?? []).find((d) => d.type_id === typeId);
+  if (!fila) return null;
+  const n = Number(fila.data?.value);
+  return Number.isFinite(n) ? n : null;
+}
+
+/**
+ * Línea de estadísticas de UN jugador en UN fixture, a partir de su fila de `lineups`
+ * (minutos/rating vienen de `details`) y de los `events` del partido completo (goles/
+ * asistencias/tarjetas son eventos discretos, no aparecen en `details`). Mismo contrato que
+ * `extraerLineaJugador` de `_shared/estadisticas.ts` (API-Football): si el jugador no jugó
+ * minutos (suplente no usado), devuelve `null` — no se crea fila de estadística, para no
+ * contar un partido que no jugó en `totales_jugador`/`temporada_actual`.
+ *
+ * Asistencia: en un evento de gol (`type_id` 14), `related_player_id` es quien asistió
+ * (verificado en vivo 2026-09-16 contra un gol real de Toluca). Roja: cuenta `REDCARD` (roja
+ * directa) Y `SEGUNDA_AMARILLA` (expulsado por doble amarilla) — la amarilla que la origina
+ * ya se cuenta aparte como evento `YELLOWCARD` normal, así que no se duplica.
+ */
+export function extraerEstadisticaSportmonks(
+  lineup: LineupSportmonks,
+  eventos: EventoSportmonks[] | null | undefined,
+  jugadorSportmonksId: string,
+): EstadisticaJugador | null {
+  const minutos = valorDetalle(lineup.details, 119);
+  const jugo = minutos !== null && minutos > 0;
+  if (!jugo) return null;
+
+  const idBuscado = Number(jugadorSportmonksId);
+  const propios = eventos ?? [];
+  const deGol = propios.filter((e) => e.type_id === GOAL);
+
+  return {
+    minutos,
+    goles: deGol.filter((e) => e.player_id === idBuscado).length,
+    asistencias: deGol.filter((e) => e.related_player_id === idBuscado).length,
+    amarillas: propios.filter((e) => e.type_id === YELLOWCARD && e.player_id === idBuscado).length,
+    rojas: propios.filter((e) => (e.type_id === REDCARD || e.type_id === SEGUNDA_AMARILLA) && e.player_id === idBuscado).length,
+    titular: lineup.type_id === 11 ? true : lineup.type_id === 12 ? false : null,
+    valoracion: valorDetalle(lineup.details, 118),
+  };
 }

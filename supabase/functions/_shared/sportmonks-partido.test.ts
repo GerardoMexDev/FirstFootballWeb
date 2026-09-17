@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { normalizarFixture, mapearEstadoSportmonks, convocadoEnLineups } from './sportmonks-partido.ts';
+import { normalizarFixture, mapearEstadoSportmonks, convocadoEnLineups, extraerEstadisticaSportmonks } from './sportmonks-partido.ts';
 import type { FixtureSportmonks } from './sportmonks.ts';
 
 /** Recorte real de `/fixtures/between/.../967?include=...` (derby Atlante vs Toluca, verificado en vivo 2026-09-16). */
@@ -111,4 +111,70 @@ test('convocadoEnLineups: jugador presente en lineups → true (titular o suplen
 test('convocadoEnLineups: lineups publicado pero jugador ausente → false real, no null', () => {
   const lineups = fixtureTolucaDeVisitante().lineups!;
   assert.equal(convocadoEnLineups(lineups, '30081977'), false);
+});
+
+/** Recorte real de `/fixtures/19715288?include=lineups.details;events` (Pereira, 90'). */
+function lineupPereiraTitular() {
+  return {
+    player_id: 34907430,
+    team_id: 967,
+    type_id: 11,
+    details: [
+      { type_id: 119, data: { value: 90 } }, // Minutes Played
+      { type_id: 118, data: { value: 8.17 } }, // Rating
+    ],
+  };
+}
+
+function lineupSuplenteNoUsado() {
+  return { player_id: 999, team_id: 967, type_id: 12, details: [] };
+}
+
+const golDePereira = { type_id: 14, player_id: 34907430, related_player_id: 37342996 };
+const asistenciaDePereira = { type_id: 14, player_id: 999, related_player_id: 34907430 };
+const amarillaDePereira = { type_id: 19, player_id: 34907430, related_player_id: null };
+const rojaDeOtro = { type_id: 20, player_id: 999, related_player_id: null };
+
+test('extraerEstadisticaSportmonks: minutos y rating desde details', () => {
+  const e = extraerEstadisticaSportmonks(lineupPereiraTitular(), [], '34907430');
+  assert.equal(e?.minutos, 90);
+  assert.equal(e?.valoracion, 8.17);
+  assert.equal(e?.titular, true);
+});
+
+test('extraerEstadisticaSportmonks: suplente no usado (sin minutos) → null, no cuenta el partido', () => {
+  const e = extraerEstadisticaSportmonks(lineupSuplenteNoUsado(), [], '999');
+  assert.equal(e, null);
+});
+
+test('extraerEstadisticaSportmonks: cuenta gol propio, ignora eventos de otro jugador', () => {
+  const e = extraerEstadisticaSportmonks(lineupPereiraTitular(), [golDePereira, rojaDeOtro], '34907430');
+  assert.equal(e?.goles, 1);
+  assert.equal(e?.rojas, 0);
+});
+
+test('extraerEstadisticaSportmonks: asistencia = related_player_id en un evento de gol ajeno', () => {
+  const e = extraerEstadisticaSportmonks(lineupPereiraTitular(), [asistenciaDePereira], '34907430');
+  assert.equal(e?.asistencias, 1);
+  assert.equal(e?.goles, 0);
+});
+
+test('extraerEstadisticaSportmonks: amarilla cuenta, sin eventos propios → 0 en el resto', () => {
+  const e = extraerEstadisticaSportmonks(lineupPereiraTitular(), [amarillaDePereira], '34907430');
+  assert.equal(e?.amarillas, 1);
+  assert.equal(e?.goles, 0);
+  assert.equal(e?.asistencias, 0);
+  assert.equal(e?.rojas, 0);
+});
+
+test('extraerEstadisticaSportmonks: segunda amarilla (type_id 21) también cuenta como roja', () => {
+  const e = extraerEstadisticaSportmonks(lineupPereiraTitular(), [{ type_id: 21, player_id: 34907430, related_player_id: null }], '34907430');
+  assert.equal(e?.rojas, 1);
+});
+
+test('extraerEstadisticaSportmonks: suplente (type_id 12) que sí entró → titular false', () => {
+  const lineup = { player_id: 1, team_id: 967, type_id: 12, details: [{ type_id: 119, data: { value: 20 } }] };
+  const e = extraerEstadisticaSportmonks(lineup, [], '1');
+  assert.equal(e?.titular, false);
+  assert.equal(e?.minutos, 20);
 });
