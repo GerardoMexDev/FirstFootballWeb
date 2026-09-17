@@ -48,7 +48,7 @@ const ETIQUETA_TIPO: Record<string, string> = {
 };
 
 export function PanelLateral() {
-  const { tipo, id, cerrar } = usePanel();
+  const { tipo, id, destacar, cerrar } = usePanel();
   // perfil no necesita id (el id, si viene, es la pestaña inicial); jugador/partido sí.
   const abierto = tipo === 'perfil' || (tipo !== null && id !== null);
 
@@ -162,8 +162,10 @@ export function PanelLateral() {
         <div className="panel__b">
           {contenido?.fase === 'cargando' && <div className="sinDato">Cargando el detalle…</div>}
           {contenido?.fase === 'error' && <EstadoSinDatos>{contenido.mensaje}</EstadoSinDatos>}
-          {contenido?.fase === 'jugador' && <PanelJugador bundle={contenido.datos} />}
-          {contenido?.fase === 'jugador-contenido' && <PanelJugadorContenido bundle={contenido.datos} />}
+          {contenido?.fase === 'jugador' && <PanelJugador bundle={contenido.datos} destacar={destacar} />}
+          {contenido?.fase === 'jugador-contenido' && (
+            <PanelJugadorContenido bundle={contenido.datos} destacar={destacar} />
+          )}
           {contenido?.fase === 'partido' && <PanelPartido bundle={contenido.datos} />}
           {contenido?.fase === 'perfil' && (
             <PanelPerfil

@@ -37,8 +37,15 @@ export interface EstadoPanel {
   tipo: TipoPanel | null;
   /** Para jugador/partido: el id de la entidad. Para perfil: la pestaña inicial, o null. */
   id: string | null;
+  /**
+   * Qué dato destacar en la ficha del jugador (p.ej. `cumpleanos`, `aniversario_debut`) —
+   * viene del evento del calendario que abrió el panel, para que el diseñador vea de un
+   * vistazo qué se está festeciendo. `null` si el panel se abrió por otro camino (buscador,
+   * grilla de plantel, próximos partidos).
+   */
+  destacar: string | null;
   /** `id` es obligatorio para jugador/partido; opcional para perfil (pestaña inicial). */
-  abrir: (tipo: TipoPanel, id?: string) => void;
+  abrir: (tipo: TipoPanel, id?: string, destacar?: string) => void;
   cerrar: () => void;
 }
 
@@ -50,13 +57,16 @@ export function usePanel(): EstadoPanel {
   const tipoCrudo = params.get('panel');
   const tipo = (TIPOS as readonly string[]).includes(tipoCrudo ?? '') ? (tipoCrudo as TipoPanel) : null;
   const id = tipo ? params.get('id') : null;
+  const destacar = tipo ? params.get('destacar') : null;
 
   const abrir = useCallback(
-    (t: TipoPanel, i?: string) => {
+    (t: TipoPanel, i?: string, d?: string) => {
       const q = new URLSearchParams(Array.from(params.entries()));
       q.set('panel', t);
       if (i) q.set('id', i);
       else q.delete('id');
+      if (d) q.set('destacar', d);
+      else q.delete('destacar');
       router.push(`${pathname}?${q.toString()}`, { scroll: false });
     },
     [params, pathname, router],
@@ -66,9 +76,10 @@ export function usePanel(): EstadoPanel {
     const q = new URLSearchParams(Array.from(params.entries()));
     q.delete('panel');
     q.delete('id');
+    q.delete('destacar');
     const cadena = q.toString();
     router.push(cadena ? `${pathname}?${cadena}` : pathname, { scroll: false });
   }, [params, pathname, router]);
 
-  return { tipo, id, abrir, cerrar };
+  return { tipo, id, destacar, abrir, cerrar };
 }

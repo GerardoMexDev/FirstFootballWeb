@@ -23,7 +23,7 @@
 import { Ico } from '@/components/comunes/Ico';
 import { Escudo } from '@/components/comunes/Escudo';
 import { EstadoSinDatos } from '@/components/comunes/EstadoSinDatos';
-import { datosParaContenido } from '@/lib/jugadores/datos-contenido';
+import { claseResaltado, datosParaContenido, textoFecha } from '@/lib/jugadores/datos-contenido';
 import { etiquetaBloqueTemporada } from '@/lib/jugadores/etiqueta-temporada';
 import { diasDesdeHoyUy, etiquetaDiaUy } from '@/lib/fechas/zonas';
 import { mostrar } from '@/lib/formato/valores';
@@ -65,6 +65,7 @@ export function FichaJugador({
   hitos,
   proximos,
   hoyUy,
+  destacar,
 }: {
   jugador: JugadorFicha;
   temporada: TemporadaActual | null;
@@ -74,6 +75,8 @@ export function FichaJugador({
   proximos: PartidoProximo[];
   /** Día de hoy en Uruguay, YYYY-MM-DD. */
   hoyUy: string;
+  /** `fuente` del evento del calendario que abrió el panel (p.ej. `cumpleanos`), o `null`/undefined. */
+  destacar?: string | null;
 }) {
   const datos = datosParaContenido(jugador, hoyUy);
   const anio = hoyUy.slice(0, 4);
@@ -96,13 +99,46 @@ export function FichaJugador({
           {jugador.nombre}
         </h2>
       </div>
-      <div className="linea" style={{ marginBottom: 32 }}>
+      <div className="linea" style={{ marginBottom: 20 }}>
         <span>
           <b>{jugador.clubNombre ?? 'Sin club'}</b>
         </span>
         {identidad.map((parte) => (
           <span key={parte}>{parte}</span>
         ))}
+      </div>
+
+      {/* ── Accesos del diseñador ── carpetas de Dropbox (0023, dato manual del Excel). Sin
+          link cargado el botón queda inerte (disabled), no se inventa ni se oculta. */}
+      <div className="linea" style={{ gap: 10, marginBottom: 32 }}>
+        {jugador.dropboxFotografiasUrl ? (
+          <a
+            href={jugador.dropboxFotografiasUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="btn btn--g btn--sm"
+          >
+            Fotografías
+          </a>
+        ) : (
+          <button type="button" className="btn btn--g btn--sm" disabled>
+            Fotografías
+          </button>
+        )}
+        {jugador.dropboxMatchdayUrl ? (
+          <a
+            href={jugador.dropboxMatchdayUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="btn btn--a btn--sm"
+          >
+            Match Day
+          </a>
+        ) : (
+          <button type="button" className="btn btn--a btn--sm" disabled>
+            Match Day
+          </button>
+        )}
       </div>
 
       {/* ── Hitos por alcanzar ── */}
@@ -223,13 +259,29 @@ export function FichaJugador({
           </div>
         </div>
         <div className="linea" style={{ marginTop: 14 }}>
-          <span>
+          <span className={claseResaltado('cumpleanos', destacar)}>
             <Ico nombre="torta" clase="ico ico--sm" />
             Cumpleaños: <b>{datos.cumpleLegible ?? 'Sin datos'}</b>
           </span>
           <span>
             <Ico nombre="globo" clase="ico ico--sm" />
             {mostrar(jugador.nacionalidad)}
+          </span>
+        </div>
+        <div className="linea" style={{ marginTop: 14 }}>
+          <span className={claseResaltado('aniversario_debut', destacar)}>
+            <Ico nombre="trofeo" clase="ico ico--sm" />
+            Debut profesional: <b>{textoFecha(datos.debutLegible, datos.aniosDeCarrera)}</b>
+          </span>
+          <span className={claseResaltado('aniversario_seleccion', destacar)}>
+            <Ico nombre="medalla" clase="ico ico--sm" />
+            Debut selección: <b>{textoFecha(datos.debutSeleccionLegible, datos.aniosDeSeleccion)}</b>
+          </span>
+        </div>
+        <div className="linea" style={{ marginTop: 14 }}>
+          <span>
+            <Ico nombre="calendario" clase="ico ico--sm" />
+            Fichaje al club: <b>{datos.fichajeLegible ?? 'Sin datos'}</b>
           </span>
         </div>
         <div className="redes" style={{ marginTop: 14 }}>

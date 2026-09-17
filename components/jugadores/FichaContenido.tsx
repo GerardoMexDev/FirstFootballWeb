@@ -12,19 +12,34 @@ import { Ico } from '@/components/comunes/Ico';
 import { Escudo } from '@/components/comunes/Escudo';
 import { EstadoSinDatos } from '@/components/comunes/EstadoSinDatos';
 import { DateTime } from 'luxon';
-import { datosParaContenido } from '@/lib/jugadores/datos-contenido';
+import { claseResaltado, datosParaContenido, textoFecha } from '@/lib/jugadores/datos-contenido';
 import { mostrar } from '@/lib/formato/valores';
 import type { ProximaFecha } from '@/lib/jugadores/cargar-ficha-contenido';
 import type { JugadorFicha } from '@/lib/repositorios/tipos';
+
+/**
+ * `ProximaFecha.etiqueta` es texto fijo (`cargar-ficha-contenido.ts`), no trae la `fuente` del
+ * evento — se infiere del texto para poder resaltar la fila que corresponde a `destacar`.
+ */
+function fuenteDeEtiqueta(etiqueta: string): string | null {
+  if (etiqueta === 'Cumpleaños') return 'cumpleanos';
+  if (etiqueta === 'Debut en selección') return 'aniversario_seleccion';
+  if (etiqueta === 'Debut profesional') return 'aniversario_debut';
+  if (etiqueta.startsWith('Aniversario de ')) return 'aniversario_club';
+  return null;
+}
 
 export function FichaContenido({
   jugador,
   proximas,
   hoyUy,
+  destacar,
 }: {
   jugador: JugadorFicha;
   proximas: ProximaFecha[];
   hoyUy: string;
+  /** `fuente` del evento del calendario que abrió el panel (p.ej. `cumpleanos`), o `null`/undefined. */
+  destacar?: string | null;
 }) {
   const datos = datosParaContenido(jugador, hoyUy);
   const clubEnMeses = datos.aniosEnClub !== null && datos.aniosEnClub < 1;
@@ -69,13 +84,23 @@ export function FichaContenido({
           </div>
         </div>
         <div className="linea" style={{ marginTop: 14 }}>
-          <span>
+          <span className={claseResaltado('cumpleanos', destacar)}>
             <Ico nombre="torta" clase="ico ico--sm" />
             Cumpleaños: <b>{datos.cumpleLegible ?? 'Sin datos'}</b>
           </span>
           <span>
             <Ico nombre="globo" clase="ico ico--sm" />
             {mostrar(jugador.nacionalidad)}
+          </span>
+        </div>
+        <div className="linea" style={{ marginTop: 14 }}>
+          <span className={claseResaltado('aniversario_debut', destacar)}>
+            <Ico nombre="trofeo" clase="ico ico--sm" />
+            Debut profesional: <b>{textoFecha(datos.debutLegible, datos.aniosDeCarrera)}</b>
+          </span>
+          <span>
+            <Ico nombre="calendario" clase="ico ico--sm" />
+            Fichaje al club: <b>{datos.fichajeLegible ?? 'Sin datos'}</b>
           </span>
         </div>
         <div className="redes" style={{ marginTop: 14 }}>
@@ -92,7 +117,7 @@ export function FichaContenido({
         {proximas.length ? (
           <div className="lst">
             {proximas.map((f) => (
-              <div className="pm" key={f.etiqueta}>
+              <div className={`pm ${claseResaltado(fuenteDeEtiqueta(f.etiqueta) ?? '', destacar)}`} key={f.etiqueta}>
                 <b>{f.etiqueta}</b>
                 <span>{DateTime.fromISO(f.proximaIso).setLocale('es').toFormat("d 'de' LLLL")}</span>
               </div>

@@ -7,6 +7,14 @@
 import { FichaContenido } from '@/components/jugadores/FichaContenido';
 import type { FichaContenidoBundle } from '@/lib/jugadores/cargar-ficha-contenido';
 
-export function PanelJugadorContenido({ bundle }: { bundle: FichaContenidoBundle }) {
-  return <FichaContenido jugador={bundle.jugador} proximas={bundle.proximas} hoyUy={bundle.hoyUy} />;
+export function PanelJugadorContenido({
+  bundle,
+  destacar,
+}: {
+  bundle: FichaContenidoBundle;
+  destacar?: string | null;
+}) {
+  return (
+    <FichaContenido jugador={bundle.jugador} proximas={bundle.proximas} hoyUy={bundle.hoyUy} destacar={destacar} />
+  );
 }

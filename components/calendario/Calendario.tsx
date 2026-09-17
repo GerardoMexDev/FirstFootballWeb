@@ -5,11 +5,13 @@
  * navegación de mes es estado local (el server ya trajo TODOS los eventos de la ventana de
  * proyección, así que moverse entre meses/años no vuelve a pedir nada).
  *
- * Marcado y clases 1:1 con la demo (`renderAnio()` / `renderCal()`). Los `.ev` de partido
- * abren el panel de detalle (`<button>`); los de cumpleaños / aniversario quedan como `<div>`
- * no interactivo (igual que la demo — abrir el jugador desde ahí es un extra para después).
+ * Marcado y clases 1:1 con la demo (`renderAnio()` / `renderCal()`). Los `.ev` de partido,
+ * cumpleaños y aniversario de selección/debut abren el panel del jugador (`<button>`); el
+ * aniversario de fundación de club queda como `<div>` no interactivo — `ref_id` en
+ * `agenda_anual` apunta al club, no a un jugador, y todavía no hay panel de club.
  *
- * Football First (Fase 1). Creado 2026-09-05. Paneles: 2026-09-06.
+ * Football First (Fase 1). Creado 2026-09-05. Paneles: 2026-09-06. Feedback agencia (aniversarios
+ * clickeables): 2026-09-17.
  */
 'use client';
 
@@ -125,6 +127,19 @@ export function Calendario({ eventos, hoyUy }: { eventos: EventoCalendario[]; ho
                   const refId = e.refId;
                   return (
                     <button key={clave} type="button" className={clase} onClick={() => abrir('partido', refId)}>
+                      <b>{etiqueta}</b>
+                      {texto}
+                    </button>
+                  );
+                }
+                if (
+                  (e.fuente === 'cumpleanos' || e.fuente === 'aniversario_seleccion' || e.fuente === 'aniversario_debut') &&
+                  e.refId
+                ) {
+                  const refId = e.refId;
+                  const fuente = e.fuente;
+                  return (
+                    <button key={clave} type="button" className={clase} onClick={() => abrir('jugador', refId, fuente)}>
                       <b>{etiqueta}</b>
                       {texto}
                     </button>

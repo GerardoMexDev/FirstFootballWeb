@@ -8,7 +8,7 @@
 import { FichaJugador } from '@/components/jugadores/FichaJugador';
 import type { FichaJugadorBundle } from '@/lib/jugadores/cargar-ficha';
 
-export function PanelJugador({ bundle }: { bundle: FichaJugadorBundle }) {
+export function PanelJugador({ bundle, destacar }: { bundle: FichaJugadorBundle; destacar?: string | null }) {
   return (
     <FichaJugador
       jugador={bundle.jugador}
@@ -16,6 +16,7 @@ export function PanelJugador({ bundle }: { bundle: FichaJugadorBundle }) {
       hitos={bundle.hitos}
       proximos={bundle.proximos}
       hoyUy={bundle.hoyUy}
+      destacar={destacar}
     />
   );
 }
