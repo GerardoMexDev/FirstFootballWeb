@@ -131,6 +131,10 @@ export interface JugadorFicha extends JugadorPlantel {
   debutSeleccion: string | null;
   fichaje: string | null;
   instagram: string | null;
+  /** Carpeta de Dropbox con las fotos crudas del jugador (botón "Fotografías" de la ficha). */
+  dropboxFotografiasUrl: string | null;
+  /** Carpeta de Dropbox con los diseños de Match Day ya terminados (botón "Match Day"). */
+  dropboxMatchdayUrl: string | null;
   seleccionPartidos: number | null;
   seleccionGoles: number | null;
 }

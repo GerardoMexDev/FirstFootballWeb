@@ -57,6 +57,8 @@ interface FilaJugadorFicha extends FilaJugadorPlantel {
   debut_seleccion: string | null;
   fichaje: string | null;
   instagram: string | null;
+  dropbox_fotografias_url: string | null;
+  dropbox_matchday_url: string | null;
 }
 
 // `clubes!jugadores_club_actual_id_fkey(...)` desambigua por nombre de la FK: `jugadores`
@@ -68,7 +70,9 @@ const CAMPOS_PLANTEL =
   'clubes!jugadores_club_actual_id_fkey(nombre, escudo_url, pais, fecha_fundacion)';
 
 const CAMPOS_FICHA =
-  CAMPOS_PLANTEL + ', fecha_nacimiento, debut, debut_seleccion, fichaje, instagram';
+  CAMPOS_PLANTEL +
+  ', fecha_nacimiento, debut, debut_seleccion, fichaje, instagram, ' +
+  'dropbox_fotografias_url, dropbox_matchday_url';
 
 /** `jugadores.id` es un UUID. Un `id` con otra forma no es un error 500: es "no existe". */
 const ES_UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -144,6 +148,8 @@ export class RepositorioJugadoresSupabase implements RepositorioJugadores {
       debutSeleccion: fila.debut_seleccion,
       fichaje: fila.fichaje,
       instagram: fila.instagram,
+      dropboxFotografiasUrl: fila.dropbox_fotografias_url,
+      dropboxMatchdayUrl: fila.dropbox_matchday_url,
       seleccionPartidos: totales?.seleccion_partidos ?? null,
       seleccionGoles: totales?.seleccion_goles ?? null,
     };

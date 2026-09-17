@@ -18,6 +18,7 @@ export interface FechasJugador {
   fechaNacimiento?: string | null;
   fichaje?: string | null;
   debut?: string | null;
+  debutSeleccion?: string | null;
 }
 
 export interface DatosContenido {
@@ -33,8 +34,18 @@ export interface DatosContenido {
   mesesEnClub: number | null;
   /** Años desde el debut profesional, entero. */
   aniosDeCarrera: number | null;
+  /** Años desde el debut con la selección, entero. */
+  aniosDeSeleccion: number | null;
   /** Cumpleaños en texto, día y mes en español sin año (p.ej. "28 de diciembre"). */
   cumpleLegible: string | null;
+  /**
+   * Fecha completa en texto, con año (p.ej. "22 de septiembre de 2018") — para que el
+   * diseñador vea de un vistazo qué se está festejando al abrir la ficha desde un evento de
+   * aniversario del calendario, sin tener que hacer la cuenta con `aniosDeCarrera`/`aniosEnClub`.
+   */
+  fichajeLegible: string | null;
+  debutLegible: string | null;
+  debutSeleccionLegible: string | null;
 }
 
 /** Fecha civil válida y no futura respecto de `hoyIso`, como DateTime en UTC; si no, null. */
@@ -51,14 +62,40 @@ export function datosParaContenido(fechas: FechasJugador, hoyUy: string): DatosC
   const nacimiento = fechaValida(fechas.fechaNacimiento, hoy);
   const fichaje = fechaValida(fechas.fichaje, hoy);
   const debut = fechaValida(fechas.debut, hoy);
+  const debutSeleccion = fechaValida(fechas.debutSeleccion, hoy);
 
   return {
     edad: nacimiento ? Math.floor(hoy.diff(nacimiento, 'years').years) : null,
     aniosEnClub: fichaje ? Math.round(hoy.diff(fichaje, 'years').years * 10) / 10 : null,
     mesesEnClub: fichaje ? Math.round(hoy.diff(fichaje, 'months').months) : null,
     aniosDeCarrera: debut ? Math.round(hoy.diff(debut, 'years').years) : null,
+    aniosDeSeleccion: debutSeleccion ? Math.round(hoy.diff(debutSeleccion, 'years').years) : null,
     cumpleLegible: nacimiento ? nacimiento.setLocale('es').toFormat("d 'de' LLLL") : null,
+    fichajeLegible: fichaje ? fichaje.setLocale('es').toFormat("d 'de' LLLL 'de' yyyy") : null,
+    debutLegible: debut ? debut.setLocale('es').toFormat("d 'de' LLLL 'de' yyyy") : null,
+    debutSeleccionLegible: debutSeleccion
+      ? debutSeleccion.setLocale('es').toFormat("d 'de' LLLL 'de' yyyy")
+      : null,
   };
+}
+
+/**
+ * Fecha larga (con año) + la cuenta de años entre paréntesis, para que el diseñador vea de un
+ * vistazo qué aniversario es al abrir la ficha desde un evento del calendario (p.ej. "9 de
+ * septiembre de 2020 (6 años)"). Sin la fecha, "Sin datos" — mismo criterio que instagram/cumpleaños.
+ */
+export function textoFecha(fechaLegible: string | null, anios: number | null): string {
+  if (!fechaLegible) return 'Sin datos';
+  return anios !== null ? `${fechaLegible} (${anios} años)` : fechaLegible;
+}
+
+/**
+ * Clase que resalta en rojo (`--accent`) el dato que se está festejando, cuando la ficha se
+ * abrió desde ese evento puntual del calendario (`destacar`, ver `usePanel`) — pedido de la
+ * agencia 2026-09-17 para que el diseñador ubique de un vistazo cuál dato es el de hoy.
+ */
+export function claseResaltado(fuente: string, destacar: string | null | undefined): string {
+  return destacar === fuente ? 'linea__resaltado' : '';
 }
 
 /**

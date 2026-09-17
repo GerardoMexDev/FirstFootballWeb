@@ -465,6 +465,8 @@ export type Database = {
           debut: string | null
           debut_seleccion: string | null
           dorsal: number | null
+          dropbox_fotografias_url: string | null
+          dropbox_matchday_url: string | null
           fecha_nacimiento: string | null
           fichaje: string | null
           foto_url: string | null
@@ -500,6 +502,8 @@ export type Database = {
           debut?: string | null
           debut_seleccion?: string | null
           dorsal?: number | null
+          dropbox_fotografias_url?: string | null
+          dropbox_matchday_url?: string | null
           fecha_nacimiento?: string | null
           fichaje?: string | null
           foto_url?: string | null
@@ -535,6 +539,8 @@ export type Database = {
           debut?: string | null
           debut_seleccion?: string | null
           dorsal?: number | null
+          dropbox_fotografias_url?: string | null
+          dropbox_matchday_url?: string | null
           fecha_nacimiento?: string | null
           fichaje?: string | null
           foto_url?: string | null

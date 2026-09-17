@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { datosParaContenido, proximoAniversario } from './datos-contenido.ts';
+import { datosParaContenido, proximoAniversario, textoFecha } from './datos-contenido.ts';
 
 // hoy fijo para que los cálculos sean deterministas
 const HOY = '2026-09-06';
@@ -39,6 +39,21 @@ test('años de carrera: entero redondeado', () => {
   assert.equal(d.aniosDeCarrera, 8);
 });
 
+test('años desde el debut con la selección: entero redondeado', () => {
+  const d = datosParaContenido({ debutSeleccion: '2020-09-09' }, HOY);
+  assert.equal(d.aniosDeSeleccion, 6);
+});
+
+test('fechas legibles: día, mes y año en español — para saber qué se festeja', () => {
+  const d = datosParaContenido(
+    { fichaje: '2026-03-06', debut: '2018-09-22', debutSeleccion: '2020-09-09' },
+    HOY,
+  );
+  assert.equal(d.fichajeLegible, '6 de marzo de 2026');
+  assert.equal(d.debutLegible, '22 de septiembre de 2018');
+  assert.equal(d.debutSeleccionLegible, '9 de septiembre de 2020');
+});
+
 test('campos ausentes → null, nunca 0 ni NaN', () => {
   const d = datosParaContenido({}, HOY);
   assert.equal(d.edad, null);
@@ -46,14 +61,34 @@ test('campos ausentes → null, nunca 0 ni NaN', () => {
   assert.equal(d.aniosEnClub, null);
   assert.equal(d.mesesEnClub, null);
   assert.equal(d.aniosDeCarrera, null);
+  assert.equal(d.aniosDeSeleccion, null);
+  assert.equal(d.fichajeLegible, null);
+  assert.equal(d.debutLegible, null);
+  assert.equal(d.debutSeleccionLegible, null);
 });
 
 test('fecha en el futuro (dato cargado mal) → null, no un número negativo', () => {
-  const d = datosParaContenido({ fechaNacimiento: '2030-01-01', fichaje: '2031-01-01', debut: '2040-01-01' }, HOY);
+  const d = datosParaContenido(
+    { fechaNacimiento: '2030-01-01', fichaje: '2031-01-01', debut: '2040-01-01', debutSeleccion: '2040-01-01' },
+    HOY,
+  );
   assert.equal(d.edad, null);
   assert.equal(d.aniosEnClub, null);
   assert.equal(d.mesesEnClub, null);
   assert.equal(d.aniosDeCarrera, null);
+  assert.equal(d.aniosDeSeleccion, null);
+});
+
+test('textoFecha: fecha + años entre paréntesis', () => {
+  assert.equal(textoFecha('9 de septiembre de 2020', 6), '9 de septiembre de 2020 (6 años)');
+});
+
+test('textoFecha: sin años, solo la fecha', () => {
+  assert.equal(textoFecha('9 de septiembre de 2020', null), '9 de septiembre de 2020');
+});
+
+test('textoFecha: sin fecha → "Sin datos"', () => {
+  assert.equal(textoFecha(null, null), 'Sin datos');
 });
 
 test('fecha inválida → null (no rompe)', () => {
