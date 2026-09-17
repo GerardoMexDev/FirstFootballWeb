@@ -83,6 +83,27 @@ día de la sede + marca `+1` estilo vuelos** (migración `0013` aplicada, tipos 
 hay dato (ESPN no trae matchday). **Escudos de clubes cargados:** 84/84 (`seed-escudos.mjs`,
 hotlink al CDN + Al Faisaly a mano). 90 tests, build + lint OK. Detalle en §4 y §5.
 
+### Fuentes de datos: qué sale de cada API (referencia rápida, Sesión 9)
+
+| Dato | SportMonks (pago, 5 ligas domésticas) | API-Football (free, copas/continentales) | ESPN (retirado 2026-09-16) | Manual (Excel) |
+|---|---|---|---|---|
+| Calendario de temporada completa | ✅ pasado + futuro, 1-2 llamados/club | ⚠️ solo ventana ~3-5 días | ✅ (lo que traía antes de retirarse) | — |
+| Convocatoria (titular/suplente) | ✅ real, ~1h antes del partido (`lineups`) | ❌ nunca de forma confiable | ❌ nunca | — |
+| Estadísticas por partido (min/goles/asist/tarjetas/rating) | ✅ (`lineups.details` + `events`) | ⚠️ solo si el fixture cae en su ventana corta | ❌ nunca | — |
+| Escudos de club | ✅ (`image_path`, cualquier rival) | ✅ (`media.api-sports.io`) | ✅ (`a.espncdn.com`) | 1 caso a mano (Al Faisaly) |
+| Fotos de jugador | ⚠️ sí, pero genéricas — sin uniforme, solo cara (probado 2026-09-16, no se usa) | ⚠️ igual de genéricas (así están los de Contenido hoy) | — | ✅ las 6 de Match Day, curadas (600×800, con camiseta) |
+| Traspasos / cambio de club | — | ⚠️ existe (`/transfers`) pero puede estar desactualizado | — | — |
+| Fecha de nacimiento | — | — | — | ✅ siempre |
+| Fecha de debut profesional / selección | — | — | — | ✅ siempre (ninguna API lo da) |
+| Fecha de fichaje al club actual | — | — | — | ✅ siempre |
+| Carrera histórica (partidos/goles/asistencias totales) | — | — | — | ✅ (Transfermarkt, hoja "Hitos") |
+| Temporada real (Apertura/Clausura, season_id) | ✅ (`season_id`, aunque el `name` no distingue el torneo) | ❌ no tiene ese concepto | ❌ | — |
+
+**Resumen:** SportMonks es la única fuente que da convocatoria y estadísticas confiables — por
+eso quedó como dueña exclusiva de las 5 ligas domésticas. API-Football sigue siendo necesaria
+para copas/continentales (SportMonks Starter no las cubre). Fechas de nacimiento/debut/fichaje
+y carrera histórica son y seguirán siendo 100% manuales — ninguna API las da.
+
 ---
 
 ## 1. Descripción breve del proyecto
