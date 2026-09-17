@@ -18,7 +18,31 @@ En Claude Code **no hay memoria entre sesiones**, así que este protocolo es obl
 3. Rutina de cierre Git: `git add . && git commit -m "Sesión N: ..." && git push`.
 4. La sesión no se cierra hasta que `git push` terminó OK.
 
-**Última actualización:** 2026-09-10 (Sesión 7: Calendario General + rótulo Match Day IMPLEMENTADO y DESPLEGADO — migración 0014, vista `agenda_contenido`, ruta `/calendario-general`, ficha slim, 7 jugadores + 4 clubes del servicio de contenido, nav de 4 ítems. Match Day idéntico (gate). Falta QA de navegador con login.)
+**Última actualización:** 2026-09-16 (Sesión 9: migración completa a SportMonks para las 5 ligas domésticas de Match Day, en producción — fixtures + convocatoria real + estadísticas + temporada real, y 7 bugs/huecos encontrados probando en vivo, todos arreglados. Queda 1 migración de limpieza pendiente que corra Gerardo — ver abajo y §5.)
+**Sesión 9 (2026-09-16):** **Migración a SportMonks completa y en producción** para las 5 ligas
+domésticas de Match Day (Arabia/Liga MX/Brasil/Chile/Bélgica) — reemplaza a ESPN (cron apagado,
+código intacto por si hace falta volver) y deja de duplicar con API-Football (que sigue con
+copas/continentales de los mismos 6 clubes). Nueva función `sync-partidos-sportmonks`
+(`_shared/sportmonks.ts` + `sportmonks-partido.ts` + `sportmonks-sync-db.ts`, compartido con
+`scripts/backfill-historico-sportmonks.mjs`) trae fixtures + convocatoria real + estadísticas
+(goles/asistencias/tarjetas/minutos/rating) en 1-2 llamados por club — cierra gaps que ni
+API-Football free ni ESPN pudieron dar nunca. **Temporada real** en vez de año calendario
+(`temporada_actual` agrupa por `season_id` real; Liga MX muestra "Apertura"/"Clausura" según el
+mes de arranque, el resto "Temporada AAAA-AAAA" si la temporada cruza el año calendario).
+Migraciones `0015`-`0021` (`0019`, limpieza de 117 partidos duplicados de ESPN/API-Football en
+esas 5 ligas, **queda pendiente que Gerardo la corra** — tiene un `DELETE`, bloqueado para
+Claude por el auto-mode: `npm run migracion supabase/migrations/0019_limpiar_duplicados_ligas_sportmonks.sql`).
+**7 hallazgos probando en vivo con Gerardo, todos arreglados y desplegados:** jugadores de
+Contenido colados en `/partidos` (0017) · escudos de rivales faltantes/recortados por un
+clip-path pensado solo para el fallback de iniciales · estadísticas de temporada vacías (la
+ventana de sync no llegaba a los partidos ya jugados) · esa misma ventana amplia reventando el
+límite de 150s del Edge Function (arreglado separando cron diario de un backfill histórico
+local) · fichaje/debut faltante de 5 jugadores de Contenido (cargados del Excel + confirmación
+de Gerardo). 21 commits, 120 tests, build+lint OK en cada paso — detalle completo en §4/§5.
+**Pendiente para la próxima sesión:** migración `0019` (arriba), carrera completa
+(partidos/goles/asistencias de Transfermarkt) de Rodrigo Aguirre/Abel Hernández/Gastón
+Martirena/Maximiliano Silvera/Franco Romero (hoy en "—", nunca se cargó), auditorías de
+seguridad y SEO (fin de proyecto, ver §5).
 **⚠️ ALCANCE DE FASE 1 EN CONGELAMIENTO** (Sesión 7): no se codea funcionalidad nueva hasta que la agencia entregue la lista definitiva de Fase 1. Ver §5.
 **Estado general:** **Fase 1 en producción**: `https://first-football-web.vercel.app`. 3 vistas
 con datos reales (`partidos`, `calendario`, `jugadores`) + panel lateral (partido / jugador /
