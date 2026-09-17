@@ -1344,6 +1344,29 @@ partidos registrados" pese a que el Brasileirão real va por la jornada 27.
 **Con esto, las 5 ligas domésticas quedan con cobertura completa y autosuficiente vía
 SportMonks: fixtures, convocatoria Y estadísticas — ya no dependen en nada de API-Football.**
 
+**Remate: la ventana de 300 días atrás reventó el límite de ejecución del Edge Function.**
+Al desplegar y correr `sync-partidos-sportmonks` con `VENTANA_ATRAS_DIAS=300`, los 6 clubes
+juntos (con `lineups.details` + `events` de cada fixture, mucho más pesado que antes) superaron
+el límite de Supabase: `HTTP 504 IDLE_TIMEOUT ("Request idle timeout limit (150s) reached")`.
+
+- **Fix — separar "mantener al día" de "backfill histórico"**: la función volvió a una ventana
+  chica (**14 días atrás**, no 3 ni 300) — alcanza para re-resolver un partido recién terminado
+  sin reprocesar la temporada. La lógica de escritura (antes duplicada dentro de `index.ts`) se
+  extrajo a `_shared/sportmonks-sync-db.ts` (`CLUBES_SPORTMONKS`, `asegurarClubSportmonks`,
+  `sincronizarFixture`, `actualizarPuente`) — sin nada de `Deno.*`, así que tanto la Edge
+  Function como un script de Node la importan igual (ya venía probado que Node importa estos
+  `_shared/*.ts` directo, sin transpilar).
+- **`scripts/backfill-historico-sportmonks.mjs`** (nuevo, `npm run backfill:sportmonks`): corre
+  LOCAL, sin el límite de tiempo del Edge Function, con ventana de 400 días atrás / 300
+  adelante. Corrido una vez: **534 filas afectadas** (72/57/55/17/41/68 fixtures por club).
+  Verificado en `temporada_actual`: los 6 representados pasan de "sin datos" a números reales
+  — Nacho Sosa 15 partidos/411', Nahitan Nández 23 partidos/6 goles/8 asistencias, etc.
+  Es un backfill de una vez, no un cron — no hace falta volver a correrlo (la función diaria
+  mantiene todo al día desde acá en adelante).
+
+Redeploy final de `sync-partidos-sportmonks` con la ventana chica + el refactor: 113 tests,
+build y lint OK, verificado que la corrida normal (14 días) ya no se acerca al límite de tiempo.
+
 ### Sesión 7 — Calendario General (2026-09-10)
 
 - [x] ~~Implementar el spec~~ — hecho 2026-09-10 (subagent-driven, 13 commits). Ver §4.

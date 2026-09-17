@@ -25,7 +25,8 @@
     "seed:escudos": "node scripts/seed-escudos.mjs",
     "vault:cron": "node scripts/configurar-vault-cron.mjs",
     "deploy:funcion": "node scripts/desplegar-funcion.mjs",
-    "secrets:edge": "node scripts/configurar-secret-edge.mjs"
+    "secrets:edge": "node scripts/configurar-secret-edge.mjs",
+    "backfill:sportmonks": "node scripts/backfill-historico-sportmonks.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.5.2",
