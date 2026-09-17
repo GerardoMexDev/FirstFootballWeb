@@ -137,6 +137,7 @@ export async function sincronizarFixture(
     origen: 'api',
     proveedor_externo: PROVEEDOR,
     id_externo: p.fixtureId,
+    temporada_externa: fx.season_id ? String(fx.season_id) : null,
     payload_crudo: fx,
     sincronizado_en: new Date().toISOString(),
   };

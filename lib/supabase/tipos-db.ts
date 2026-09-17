@@ -608,6 +608,7 @@ export type Database = {
           proveedor_externo: string | null
           ronda: string | null
           sincronizado_en: string | null
+          temporada_externa: string | null
           tentativo: boolean
           zona_horaria_evento: string | null
         }
@@ -631,6 +632,7 @@ export type Database = {
           proveedor_externo?: string | null
           ronda?: string | null
           sincronizado_en?: string | null
+          temporada_externa?: string | null
           tentativo?: boolean
           zona_horaria_evento?: string | null
         }
@@ -654,6 +656,7 @@ export type Database = {
           proveedor_externo?: string | null
           ronda?: string | null
           sincronizado_en?: string | null
+          temporada_externa?: string | null
           tentativo?: boolean
           zona_horaria_evento?: string | null
         }

@@ -55,6 +55,7 @@ export interface EventoSportmonks {
 export interface FixtureSportmonks {
   id: number;
   league_id: number;
+  season_id: number; // temporada real del torneo (0018) — a diferencia del año calendario, distingue Apertura/Clausura
   starting_at_timestamp: number; // unix seconds UTC — más confiable que `starting_at` (sin 'Z')
   state?: { state?: string | null } | null;
   participants?: ParticipanteSportmonks[] | null;

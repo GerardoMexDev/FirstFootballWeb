@@ -1367,6 +1367,41 @@ el límite de Supabase: `HTTP 504 IDLE_TIMEOUT ("Request idle timeout limit (150
 Redeploy final de `sync-partidos-sportmonks` con la ventana chica + el refactor: 113 tests,
 build y lint OK, verificado que la corrida normal (14 días) ya no se acerca al límite de tiempo.
 
+### Sesión 9 (cont.) — 4° y 5° hallazgo: temporada real (no año calendario) + duplicados
+
+**4° — Gerardo preguntó si los números pueden ser "por temporada" en vez de "por año".** Ya
+estaba anotado como pendiente desde la migración `0007` (arranque del proyecto): sin concepto
+de temporada en el esquema, `temporada_actual` aproximaba con AÑO CALENDARIO. Funciona más o
+menos para Brasil/Chile (~año calendario) pero mezclaba DOS temporadas reales para México/
+Bélgica/Arabia (partida, ~agosto-mayo): el Clausura que termina en mayo + el Apertura que
+arranca en agosto, sumados como si fueran una sola "temporada 2026".
+
+- **Fix — migración `0018` (aplicada)**: `partidos.temporada_externa` (season_id real de
+  SportMonks, NULL para copas/API-Football) + `temporada_actual` reescrita: agrupa por la
+  temporada VIGENTE de cada competencia (la del partido guardado más cercano a "ahora") cuando
+  se conoce, año calendario como antes cuando no (copas). `sincronizarFixture` ahora guarda
+  `temporada_externa` en cada upsert. Backfill re-corrido (`npm run backfill:sportmonks`,
+  idempotente — actualiza las filas ya existentes) para completar la columna en los 409 partidos
+  que ya estaban guardados.
+- **Verificado con números reales**: Fede (Toluca) 21→**9 partidos**, Nahitan Nández (Arabia,
+  la liga recién arrancó su temporada nueva) 23→**1 partido**. Bragantino/Colo-Colo (ligas ~año
+  calendario) sin cambios, como corresponde.
+
+**5° — al investigar esto, aparecieron 117 partidos duplicados** en las 5 ligas domésticas:
+~110 de ESPN (el puente retirado hoy, migración 0016, nunca se le borraron los datos) + ~13 de
+API-Football (de antes del filtro `LIGAS_DOMESTICAS_SPORTMONKS` de hoy), 4 de ellos con
+`estadisticas_partido` propia duplicando conteos de Fede/Kevin Amaro/Martín Fernández frente a
+la fila (mejor) de SportMonks del MISMO partido real.
+
+- **Riesgo, no solo prolijidad**: `proximos_partidos` desempata prefiriendo SIEMPRE
+  `api-football` — tenía sentido cuando ESPN no daba convocatoria/stats; hoy es al revés
+  (SportMonks es la fuente completa). Dejar vivas las filas viejas es un riesgo silencioso de
+  que alguna vuelva a "ganar" el desempate.
+- **Migración `0019` (escrita, BLOQUEADA para Claude — "Modify Shared Resources", tiene
+  `DELETE`)**: borra `partidos` de esas 5 ligas con `proveedor_externo != 'sportmonks'`
+  (`on delete cascade` limpia `partidos_jugadores`/`estadisticas_partido` de esas filas solo).
+  — **pendiente que Gerardo la aplique**: `npm run migracion supabase/migrations/0019_limpiar_duplicados_ligas_sportmonks.sql`
+
 ### Sesión 7 — Calendario General (2026-09-10)
 
 - [x] ~~Implementar el spec~~ — hecho 2026-09-10 (subagent-driven, 13 commits). Ver §4.
