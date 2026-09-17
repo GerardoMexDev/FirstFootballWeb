@@ -1431,6 +1431,18 @@ temporadas separadas que no cruzan año cada una, así que el NÚMERO ya es el d
 curso aunque la palabra siga diciendo "año" en vez de "Apertura"). Verificado con Pereira
 (Toluca): sigue "Este año (2026)", correcto. Build + lint + 113 tests OK.
 
+**Ampliación — Gerardo pidió que Liga MX diga "Apertura"/"Clausura" en vez de "Este año".**
+SportMonks no da ese nombre como texto (`GET /seasons/{id}` solo da "2025/2026"/"2026/2027",
+el año "académico" — verificado en vivo: la temporada actual `28009` se llama "2026/2027" pero
+`starting_at: 2026-07-17` es claramente el Apertura). Migración `0021` (aplicada):
+`temporada_actual` gana `temporada_inicio` (fecha real de arranque de la temporada vigente).
+Nueva función pura `lib/jugadores/etiqueta-temporada.ts` (`etiquetaBloqueTemporada`, 7 tests):
+Liga MX (`clubPais === 'México'`) deriva "Apertura"/"Clausura" + año del MES de arranque
+(jul-dic / ene-jun); el resto sigue la regla de 0020 (cruza el año → "Temporada AAAA-AAAA";
+si no → "Este año (AAAA)"). Verificado con browser-automation: Pereira y Martín Fernández
+(Toluca/Atlante) → "Apertura 2026"; Nández (Arabia) sigue "Temporada 2026-2027". 120 tests,
+build y lint OK.
+
 ### Sesión 7 — Calendario General (2026-09-10)
 
 - [x] ~~Implementar el spec~~ — hecho 2026-09-10 (subagent-driven, 13 commits). Ver §4.

@@ -11,12 +11,12 @@
  * invenciones — se muestra "Sin datos", no se rellena):
  *  - "Carrera" no incluye minutos ni minutos por partido (`jugadores.*_base` solo guarda pj/g/a).
  *  - `debut`, `fichaje` e `instagram` hoy suelen venir `null` → esos campos dicen "Sin datos".
- *  - El bloque de temporada se rotula "Este año (AAAA)" o "Temporada AAAA-AAAA" según si la
- *    temporada real de la competencia (0018/0020) cruza el año calendario o no — para las
- *    ligas de temporada partida que SportMonks modela como una sola temporada larga (Bélgica,
- *    Arabia). México modela Apertura/Clausura como 2 temporadas separadas que no cruzan año
- *    cada una, así que ahí sigue diciendo "Este año" aunque el torneo en curso sea el Apertura
- *    — el número ya es el de la temporada real, solo la palabra "año" no distingue el torneo.
+ *  - El bloque de temporada se rotula según la temporada real de la competencia (0018/0020/
+ *    0021), no el año calendario: "Apertura/Clausura AAAA" para Liga MX (SportMonks no da ese
+ *    nombre como texto — se deriva del MES real de arranque de la temporada, jul-dic =
+ *    Apertura, ene-jun = Clausura), "Temporada AAAA-AAAA" para las ligas que SportMonks modela
+ *    como una sola temporada larga que cruza el año (Bélgica, Arabia), o "Este año (AAAA)" para
+ *    el resto (Brasil/Chile ~año calendario, copas/API-Football sin temporada real conocida).
  *
  * Football First (Fase 1). Creado 2026-09-06.
  */
@@ -24,6 +24,7 @@ import { Ico } from '@/components/comunes/Ico';
 import { Escudo } from '@/components/comunes/Escudo';
 import { EstadoSinDatos } from '@/components/comunes/EstadoSinDatos';
 import { datosParaContenido } from '@/lib/jugadores/datos-contenido';
+import { etiquetaBloqueTemporada } from '@/lib/jugadores/etiqueta-temporada';
 import { diasDesdeHoyUy, etiquetaDiaUy } from '@/lib/fechas/zonas';
 import { mostrar } from '@/lib/formato/valores';
 import type { Hito } from '@/lib/motor-hitos/tipos';
@@ -76,14 +77,7 @@ export function FichaJugador({
 }) {
   const datos = datosParaContenido(jugador, hoyUy);
   const anio = hoyUy.slice(0, 4);
-  // "Temporada 2026-2027" cuando la temporada real de la competencia cruza el año calendario
-  // (Bélgica/Arabia); "Este año (2026)" en el resto (México por torneo, Brasil/Chile, o sin
-  // temporada real conocida) — ver nota de arriba.
-  const etiquetaTemporada =
-    temporada && temporada.temporadaAnioDesde !== null && temporada.temporadaAnioHasta !== null
-      && temporada.temporadaAnioDesde !== temporada.temporadaAnioHasta
-      ? `Temporada ${temporada.temporadaAnioDesde}-${temporada.temporadaAnioHasta}`
-      : `Este año (${anio})`;
+  const etiquetaTemporada = etiquetaBloqueTemporada(temporada, jugador.clubPais, anio);
   // Fichaje reciente (< 1 año): se muestra en meses; "8 meses" se lee mejor que "0 años".
   const clubEnMeses = datos.aniosEnClub !== null && datos.aniosEnClub < 1;
   const identidad = [

@@ -169,6 +169,7 @@ export class RepositorioJugadoresSupabase implements RepositorioJugadores {
       valoracionPromedio: data.valoracion_promedio,
       temporadaAnioDesde: data.temporada_anio_desde,
       temporadaAnioHasta: data.temporada_anio_hasta,
+      temporadaInicio: data.temporada_inicio,
     };
   }
 }

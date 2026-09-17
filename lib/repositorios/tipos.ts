@@ -114,6 +114,8 @@ export interface TemporadaActual {
   valoracionPromedio: number | null;
   temporadaAnioDesde: number | null;
   temporadaAnioHasta: number | null;
+  /** Fecha real de arranque de la temporada vigente (0021) — para derivar "Apertura"/"Clausura" en Liga MX. */
+  temporadaInicio: string | null;
 }
 
 /**

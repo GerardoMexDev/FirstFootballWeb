@@ -1146,6 +1146,7 @@ export type Database = {
           rojas: number | null
           temporada_anio_desde: number | null
           temporada_anio_hasta: number | null
+          temporada_inicio: string | null
           valoracion_promedio: number | null
         }
         Relationships: [
