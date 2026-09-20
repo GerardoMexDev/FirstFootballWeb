@@ -1215,6 +1215,52 @@ Fase 1" o "Fase 2 / descartado" según la lista de la agencia.
 
 ---
 
+### Cuenta de SportMonks en trial hasta 2026-09-30 — resuelto/esperado (2026-09-20)
+
+Consultando la API en vivo para otra cosa (ver más abajo), la respuesta de
+`GET /fixtures/{id}` trajo este bloque de `subscription`:
+
+```json
+"plans": [{ "plan": "Starter - Trialing until 2026-09-30 22:21:15", "sport": "Football", "category": "Advanced" }]
+```
+
+**Aclarado por Gerardo:** el contrato es directo entre la agencia y SportMonks (no de
+Mazdesign) — aprovecharon los 14 días de trial y al vencerse el cobro se aplica solo a la
+tarjeta de la agencia. Ya está confirmado de su lado, sin acción pendiente para nosotros. Se
+deja igual la fecha (2026-09-30) anotada acá por si conviene confirmar informalmente con la
+agencia que el cobro se efectivizó, ya que el sync de Match Day en producción depende de esa
+cuenta.
+
+---
+
+### Sidelined (lesiones/suspensiones con anticipación) — candidato para cuando llegue la lista de Fase 1 (2026-09-20)
+
+Pregunta de Gerardo: cómo mostrarle a la agencia si un jugador está convocado, lesionado o
+suspendido para el próximo partido, para decidir si conviene armar el contenido de Match Day.
+Verificado en vivo contra la API real (no solo documentación), sin tocar código de producción:
+
+- **La convocatoria real** (`include=lineups.player`, ya usada por `sync-partidos-sportmonks`)
+  solo se confirma **~1h antes del partido** — sirve para saber el 11 titular, no para
+  planificar contenido con días de anticipación.
+- **`Sidelined` (lesiones + suspensiones) SÍ está incluido en el plan Starter, sin costo
+  extra.** Particularidad: no es un include de jugador/plantilla (`/players/{id}?include=
+  sidelined` da 404, "does not exist on Player") — es un include del **fixture**:
+  `GET /fixtures/{id}?include=sidelined.player;sidelined.type`. Probado contra los 6 clubes
+  reales de la cartera (2026-09-20): aparecieron casos concretos con 1-3 semanas de
+  anticipación (ej. Bragantino vs Atlético Mineiro, 2026-10-03: 9 jugadores marcados, mezcla
+  de lesiones — `Hamstring Injury`, `Cruciate Ligament Tear`, `Knee Injury` — y suspensiones —
+  `Yellow Card Suspension`, `Red Card Suspension`). Colo-Colo dio vacío en su ventana (no
+  tiene casos activos hoy, no es una limitación del plan). Cada registro trae `player`
+  (id, nombre, foto) y `type` (tipo específico de lesión/suspensión); falta probar el include
+  anidado `sidelined.sideline` para fecha de inicio/fin de la baja.
+- **No implementado.** Es funcionalidad nueva y "lesiones con detalle" está explícitamente
+  listado como fuera de alcance de Fase 1 (`alcance-funcionalidades.md` §5). Además el
+  proyecto está en congelamiento de alcance (ver arriba). Queda anotado acá como técnicamente
+  viable y verificado, para retomar recién cuando la agencia mande la lista definitiva de
+  Fase 1 (evaluar ahí si entra a Fase 1 o Fase 2).
+
+---
+
 ### Auditorías de cierre (agregado 2026-09-16, Sesión 9) — pendiente
 
 Gerardo pidió dejarlas anotadas para hacerlas al cierre del proyecto, antes de pasar a la
