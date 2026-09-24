@@ -18,7 +18,11 @@ En Claude Code **no hay memoria entre sesiones**, así que este protocolo es obl
 3. Rutina de cierre Git: `git add . && git commit -m "Sesión N: ..." && git push`.
 4. La sesión no se cierra hasta que `git push` terminó OK.
 
-**Última actualización:** 2026-09-16 (Sesión 9: migración completa a SportMonks para las 5 ligas domésticas de Match Day, en producción — fixtures + convocatoria real + estadísticas + temporada real, y 7 bugs/huecos encontrados probando en vivo, todos arreglados. Queda 1 migración de limpieza pendiente que corra Gerardo — ver abajo y §5.)
+**Última actualización:** 2026-09-24 (Sesión 11: carrera completa de los 5 de Contenido cargada
+desde el Excel. **Único pendiente técnico: migración `0019`** — Gerardo la aplica desde el SQL
+Editor de Supabase; después verificar que en las 5 ligas quede solo `sportmonks`. Próximo
+bloque: cambios de roles + ajustes menores, a detallar por Gerardo.)
+**Sesión 9 — resumen previo** (2026-09-16: migración completa a SportMonks para las 5 ligas domésticas de Match Day, en producción — fixtures + convocatoria real + estadísticas + temporada real, y 7 bugs/huecos encontrados probando en vivo, todos arreglados. Queda 1 migración de limpieza pendiente que corra Gerardo — ver abajo y §5.)
 **Sesión 9 (2026-09-16):** **Migración a SportMonks completa y en producción** para las 5 ligas
 domésticas de Match Day (Arabia/Liga MX/Brasil/Chile/Bélgica) — reemplaza a ESPN (cron apagado,
 código intacto por si hace falta volver) y deja de duplicar con API-Football (que sigue con
@@ -39,10 +43,8 @@ ventana de sync no llegaba a los partidos ya jugados) · esa misma ventana ampli
 límite de 150s del Edge Function (arreglado separando cron diario de un backfill histórico
 local) · fichaje/debut faltante de 5 jugadores de Contenido (cargados del Excel + confirmación
 de Gerardo). 21 commits, 120 tests, build+lint OK en cada paso — detalle completo en §4/§5.
-**Pendiente para la próxima sesión:** migración `0019` (arriba), carrera completa
-(partidos/goles/asistencias de Transfermarkt) de Rodrigo Aguirre/Abel Hernández/Gastón
-Martirena/Maximiliano Silvera/Franco Romero (hoy en "—", nunca se cargó), auditorías de
-seguridad y SEO (fin de proyecto, ver §5).
+**Pendiente para la próxima sesión:** migración `0019` (arriba), ~~carrera completa de los 5
+de Contenido~~ (hecho en Sesión 11), auditorías de seguridad y SEO (fin de proyecto, ver §5).
 **⚠️ ALCANCE DE FASE 1 EN CONGELAMIENTO** (Sesión 7): no se codea funcionalidad nueva hasta que la agencia entregue la lista definitiva de Fase 1. Ver §5.
 **Estado general:** **Fase 1 en producción**: `https://first-football-web.vercel.app`. 3 vistas
 con datos reales (`partidos`, `calendario`, `jugadores`) + panel lateral (partido / jugador /
@@ -216,6 +218,25 @@ diseñador → Community Manager.
 | `components/paneles/PanelPerfil.tsx` | Panel "Mi cuenta" (Mi perfil / Cambiar contraseña / Notificaciones) — necesita forms de Supabase | ⬜ |
 
 ## 4. Hecho (por fecha, más reciente primero)
+
+### 2026-09-24 — Sesión 11 (cierre de pendientes antes del cambio de roles)
+
+Objetivo de Gerardo: dejar la web **sin nada pendiente** antes de la próxima tanda (cambios de
+roles + ajustes menores, todavía sin detallar).
+- **Carrera completa de los 5 de Contenido cargada** (Aguirre, Abel Hernández, Martirena,
+  Silvera, Franco Romero — cierra el "6° hallazgo" de Sesión 9). Antes se probó en vivo si
+  SportMonks la da: **no** — el plan Starter solo tiene las temporadas de sus 5 ligas (Aguirre:
+  4 temporadas de Liga MX desde 2024; Abel/Silvera: 0; Martirena: no existe; Franco Romero:
+  devuelve un homónimo nacido en 2000). Gerardo agregó las filas a la hoja "Hitos" del Excel
+  (carrera filas 26-30, selección filas 42-46) y se cargaron con `seed-base-hitos.mjs`
+  (ahora admite `corte` por jugador: estos 5 con corte 2026-09-24, los 6 de Match Day siguen en
+  2026-08-29). Verificado en la base: los 11 jugadores tienen `carrera_*_base`.
+- Debut en selección de Abel: el Excel/Transfermarkt dice 10/08/2010; se dejó **2010-08-11**
+  (fecha real del partido — diferencia de huso horario, confirmado por Gerardo).
+- **Migración `0019` confirmada como NO aplicada** (consulta de solo lectura: 103 filas ESPN + 14
+  API-Football + 309 SportMonks en las 5 ligas). Además, la red de hoy no tenía IPv6 → la
+  conexión directa `db.<ref>.supabase.co` (la que usa `npm run migracion`) da `ETIMEDOUT`. Se le
+  indicó a Gerardo aplicarla pegando el `.sql` en el **SQL Editor** del panel de Supabase.
 
 ### 2026-09-16 — Sesión 8 (roster definitivo de Calendario General + fix de sync)
 

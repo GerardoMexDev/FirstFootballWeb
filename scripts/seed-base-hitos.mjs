@@ -55,6 +55,14 @@ const BASE = [
   { ref: 'Javier Méndez',     id_externo: '6122',   carrera: [304, 14, 8],  seleccion: [0, 0],  debutSeleccion: null },
   { ref: 'Kevin Amaro',       id_externo: '377326', carrera: [104, 2, 9],   seleccion: [3, 0],  debutSeleccion: '2025-09-09' },
   { ref: 'Martín Fernández',  id_externo: '51549',  carrera: [175, 2, 3],   seleccion: [0, 0],  debutSeleccion: null },
+  // Los 5 de Contenido (Sesión 11): Gerardo agregó sus filas a la hoja "Hitos" el 2026-09-24,
+  // así que su corte es esa fecha, no el de los 6 de arriba. Ninguna API da estos totales
+  // (SportMonks Starter solo tiene las temporadas de sus 5 ligas — probado en vivo).
+  { ref: 'Rodrigo Aguirre',     id_externo: '16482',  carrera: [426, 106, 34], seleccion: [11, 3],  debutSeleccion: '2024-11-15', corte: '2026-09-24' },
+  { ref: 'Abel Hernández',      id_externo: '844',    carrera: [511, 180, 28], seleccion: [29, 11], debutSeleccion: '2010-08-11', corte: '2026-09-24' }, // el Excel dice 10/8; el 11/8 es el ya cargado
+  { ref: 'Gastón Martirena',    id_externo: '197520', carrera: [204, 20, 23],  seleccion: [0, 0],   debutSeleccion: null,         corte: '2026-09-24' },
+  { ref: 'Maximiliano Silvera', id_externo: '52058',  carrera: [319, 91, 30],  seleccion: [0, 0],   debutSeleccion: null,         corte: '2026-09-24' },
+  { ref: 'Franco Romero',       id_externo: '51542',  carrera: [312, 17, 22],  seleccion: [0, 0],   debutSeleccion: null,         corte: '2026-09-24' },
 ];
 
 const COLS = [
@@ -75,7 +83,7 @@ for (const j of BASE) {
     seleccion_partidos_base: j.seleccion[0],
     seleccion_goles_base: j.seleccion[1],
     debut_seleccion: j.debutSeleccion, // null si no debutó — no se fuerza una fecha
-    base_actualizada_en: CORTE,
+    base_actualizada_en: j.corte ?? CORTE,
   };
 
   const { data: antes, error: errBuscar } = await admin
@@ -103,7 +111,7 @@ for (const j of BASE) {
   console.log(
     `${cambio ? '=' : '·'} ${despues.nombre.padEnd(20)} ` +
       `carrera pj/g/a = ${j.carrera.join('/')}  ·  selección pj/g = ${j.seleccion.join('/')}  ·  ` +
-      `debut selección = ${j.debutSeleccion ?? '—'}  ·  corte ${CORTE}`,
+      `debut selección = ${j.debutSeleccion ?? '—'}  ·  corte ${j.corte ?? CORTE}`,
   );
 }
 
@@ -123,4 +131,4 @@ for (const t of totales) {
   );
 }
 
-console.log(`\n✅ Base de hitos cargada para ${BASE.length} jugadores (corte ${CORTE}).`);
+console.log(`\n✅ Base de hitos cargada para ${BASE.length} jugadores.`);
