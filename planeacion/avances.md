@@ -19,9 +19,8 @@ En Claude Code **no hay memoria entre sesiones**, así que este protocolo es obl
 4. La sesión no se cierra hasta que `git push` terminó OK.
 
 **Última actualización:** 2026-09-24 (Sesión 11: carrera completa de los 5 de Contenido cargada
-desde el Excel. **Único pendiente técnico: migración `0019`** — Gerardo la aplica desde el SQL
-Editor de Supabase; después verificar que en las 5 ligas quede solo `sportmonks`. Próximo
-bloque: cambios de roles + ajustes menores, a detallar por Gerardo.)
+desde el Excel + migración `0019` aplicada por Gerardo (SQL Editor) y verificada. **Sin
+pendientes técnicos.** Próximo bloque: cambios de roles + ajustes menores, a detallar por Gerardo.)
 **Sesión 9 — resumen previo** (2026-09-16: migración completa a SportMonks para las 5 ligas domésticas de Match Day, en producción — fixtures + convocatoria real + estadísticas + temporada real, y 7 bugs/huecos encontrados probando en vivo, todos arreglados. Queda 1 migración de limpieza pendiente que corra Gerardo — ver abajo y §5.)
 **Sesión 9 (2026-09-16):** **Migración a SportMonks completa y en producción** para las 5 ligas
 domésticas de Match Day (Arabia/Liga MX/Brasil/Chile/Bélgica) — reemplaza a ESPN (cron apagado,
@@ -43,7 +42,7 @@ ventana de sync no llegaba a los partidos ya jugados) · esa misma ventana ampli
 límite de 150s del Edge Function (arreglado separando cron diario de un backfill histórico
 local) · fichaje/debut faltante de 5 jugadores de Contenido (cargados del Excel + confirmación
 de Gerardo). 21 commits, 120 tests, build+lint OK en cada paso — detalle completo en §4/§5.
-**Pendiente para la próxima sesión:** migración `0019` (arriba), ~~carrera completa de los 5
+**Pendiente para la próxima sesión:** ~~migración `0019`~~ (aplicada en Sesión 11), ~~carrera completa de los 5
 de Contenido~~ (hecho en Sesión 11), auditorías de seguridad y SEO (fin de proyecto, ver §5).
 **⚠️ ALCANCE DE FASE 1 EN CONGELAMIENTO** (Sesión 7): no se codea funcionalidad nueva hasta que la agencia entregue la lista definitiva de Fase 1. Ver §5.
 **Estado general:** **Fase 1 en producción**: `https://first-football-web.vercel.app`. 3 vistas
@@ -237,6 +236,8 @@ roles + ajustes menores, todavía sin detallar).
   API-Football + 309 SportMonks en las 5 ligas). Además, la red de hoy no tenía IPv6 → la
   conexión directa `db.<ref>.supabase.co` (la que usa `npm run migracion`) da `ETIMEDOUT`. Se le
   indicó a Gerardo aplicarla pegando el `.sql` en el **SQL Editor** del panel de Supabase.
+  **Aplicada ese mismo día y verificada:** en las 5 ligas quedan solo las 309 filas `sportmonks`
+  (0 ESPN, 0 API-Football); `partidos` total 315, `proximos_partidos` 313 filas.
 
 ### 2026-09-16 — Sesión 8 (roster definitivo de Calendario General + fix de sync)
 
