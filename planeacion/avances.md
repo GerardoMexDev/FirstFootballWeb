@@ -9,7 +9,8 @@
 En Claude Code **no hay memoria entre sesiones**, así que este protocolo es obligatorio.
 
 **Al INICIAR una sesión:**
-1. Claude lee `planeacion/contexto.md` + este archivo y confirma dónde se quedó.
+1. Claude lee `planeacion/contexto.md` + este archivo (incluida §10b "Intentos fallidos — no
+   repetir") y confirma dónde se quedó.
 2. No se codea hasta acordar el enfoque con Gerardo (Regla 0 de la metodología).
 
 **Al FINALIZAR una sesión:**
@@ -2137,6 +2138,21 @@ F–H → I (con migración). Cada ítem cerrado se documenta en §4.
   `rm -rf .next`, relanzar, y **calentar las rutas con `curl` hasta 200/307** antes de abrir
   `browser-automation`. En Git Bash `pkill -f "next dev"` no siempre mata el proceso en
   Windows — usar PowerShell `Get-CimInstance Win32_Process ... | Stop-Process`.
+
+## 10b. Intentos fallidos — no repetir
+
+> Regla de la metodología: todo intento que falla se anota ACÁ en el momento, con el motivo
+> exacto y qué hacer en su lugar. Se lee al iniciar cada sesión. Creada en Sesión 11.
+
+| Qué se intentó | Por qué falló | Qué hacer en su lugar |
+|---|---|---|
+| `npm run deploy:funcion` / `supabase secrets set` desde Claude | Bloqueado por el auto-mode ("Production Deploy" / "Secret-Store Writes") | Dejar todo verificado y pasarle a Gerardo `npm run deploy:funcion -- <nombre>` o `npm run secrets:edge -- <NOMBRE>` |
+| Migración con `DELETE` desde Claude (`0019`) | Bloqueado por el auto-mode ("Modify Shared Resources") | Gerardo la aplica (terminal o SQL Editor de Supabase) y Claude verifica con una consulta de solo lectura |
+| Deployar una Edge Function sin revisar sus secrets | Falló en prod con "Invalid token": la key estaba solo en `.secretos/.env` | Antes de dar por hecho un deploy, confirmar que cada env var nueva está subida como secret de Supabase |
+| `npm run migracion` / conexión `pg` directa a `db.<ref>.supabase.co` (2026-09-24) | `ETIMEDOUT`: esa conexión es solo IPv6 y la red del día no tenía IPv6 | Para leer: `supabase-js` con service role (REST, IPv4). Para aplicar migraciones: SQL Editor del panel de Supabase |
+| Buscar la carrera completa de un jugador en SportMonks (2026-09-24) | El plan Starter solo tiene temporadas de sus 5 ligas; homónimos (Franco Romero n. 2000) | Carrera histórica = siempre manual (Transfermarkt → hoja "Hitos" del Excel) |
+| Matchear jugadores por substring (`.includes('nández')`) | Coincidió con Nández y con Fernández del mismo plantel | Matchear por token completo del apellido + fecha de nacimiento |
+| Transcribir el roster del Excel a mano en seeds (Sesión 8) | 3 jugadores mal cargados | Releer el Excel al momento de cargar y verificar en la base después del seed |
 
 ## 11. Dudas abiertas (de `contexto.md` §12)
 
