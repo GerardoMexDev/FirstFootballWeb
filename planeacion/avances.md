@@ -1764,7 +1764,7 @@ F–H → I (con migración). Cada ítem cerrado se documenta en §4.
   | Partido | En la base | Problema |
   |---|---|---|
   | Atlante vs Monterrey (2026-09-26) | `Mexico City Stadium` / `Mexico City` | Es el Azteca/Banorte con el nombre neutral FIFA (Mundial 2026). Nombre no es el que usa la agencia. |
-  | Cruz Azul vs Toluca (2026-09-26) | Cruz Azul local, `Mexico City Stadium` | Gerardo dice que se juega en el estadio de Toluca → SportMonks tendría mal sede o localía. **Confirmar con el calendario oficial de Liga MX.** |
+  | Cruz Azul vs Toluca (2026-09-26) | Cruz Azul local, `Mexico City Stadium` | **Confirmado por Gerardo:** Estadio Banorte (antes Azteca), Cruz Azul local → sede y localía OK; solo el nombre neutral FIFA, igual que Atlante. |
   | Atlético Mineiro vs Bragantino (2026-10-03) | `Arena MRV` / ciudad `null` | Nombre OK; falta ciudad (Belo Horizonte) → la web muestra "sin dato". |
   | Tigres vs Toluca (2026-10-10) | Tigres local, `Estadio Universitario` / ciudad `null` | Falta ciudad (Monterrey). Gerardo ve a **Toluca como local en pantalla** aunque la base dice Tigres → revisar si la UI pone primero al club del representado (¿`es_local` mal usado?). |
   | Al Kholood vs Al-Qadisiyah (2026-10-09) | Completo | ✅ correcto |
