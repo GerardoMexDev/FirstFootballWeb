@@ -22,6 +22,9 @@ En Claude Code **no hay memoria entre sesiones**, así que este protocolo es obl
 **Última actualización:** 2026-09-24 (Sesión 11: carrera completa de los 5 de Contenido cargada
 desde el Excel + migración `0019` aplicada por Gerardo (SQL Editor) y verificada. **Sin
 pendientes técnicos.** Próximo bloque: cambios de roles + ajustes menores, a detallar por Gerardo.)
+**⏰ FECHA LÍMITE DEL PROYECTO: ~2026-10-04** (Gerardo, 2026-09-24). La agencia está juntando los
+requerimientos finales por escrito (botones extra, botón de copiar, cambios de roles — nada
+fijo aún); cuando lleguen se hacen uno a uno para cerrar el proyecto antes de esa fecha.
 **Sesión 9 — resumen previo** (2026-09-16: migración completa a SportMonks para las 5 ligas domésticas de Match Day, en producción — fixtures + convocatoria real + estadísticas + temporada real, y 7 bugs/huecos encontrados probando en vivo, todos arreglados. Queda 1 migración de limpieza pendiente que corra Gerardo — ver abajo y §5.)
 **Sesión 9 (2026-09-16):** **Migración a SportMonks completa y en producción** para las 5 ligas
 domésticas de Match Day (Arabia/Liga MX/Brasil/Chile/Bélgica) — reemplaza a ESPN (cron apagado,
