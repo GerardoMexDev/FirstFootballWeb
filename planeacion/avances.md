@@ -1768,11 +1768,24 @@ F–H → I (con migración). Cada ítem cerrado se documenta en §4.
   | Atlético Mineiro vs Bragantino (2026-10-03) | `Arena MRV` / ciudad `null` | Nombre OK; falta ciudad (Belo Horizonte) → la web muestra "sin dato". |
   | Tigres vs Toluca (2026-10-10) | Tigres local, `Estadio Universitario` / ciudad `null` | Falta ciudad (Monterrey). Gerardo ve a **Toluca como local en pantalla** aunque la base dice Tigres → revisar si la UI pone primero al club del representado (¿`es_local` mal usado?). |
   | Al Kholood vs Al-Qadisiyah (2026-10-09) | Completo | ✅ correcto |
-  Ideas a evaluar (NO implementar sin acordar — congelamiento de alcance, aunque esto es
-  corrección de datos): tabla/mapa de alias de estadios (`Mexico City Stadium` → `Estadio
-  Banorte (Azteca)`), rellenar `ciudad` desde `venue.city_id`/`GET /venues` de SportMonks cuando
-  venga null (mismo patrón que API-Football en `_shared/zona-pais.ts`), y revisar el orden
-  local/visitante en el hero/tarjeta.
+  **Pedido de Gerardo (2026-09-24): generar TODOS los estadios de las 5 ligas una sola vez**,
+  para no revisarlo cada semana y que nunca salga "sin dato". Verificado en vivo
+  (`/teams/seasons/{currentSeason}?include=venue.city`): SportMonks da estadio + ciudad de
+  **88/90 equipos** (faltan ciudad: Deportes Limache, Al Kholood → a mano). Hallazgos:
+  - El "sin dato" es NUESTRO: el sync no pide `venue.city` en los fixtures; el venue del equipo
+    sí la trae (Arena MRV → Belo Horizonte; Tigres → Estadio Universitario de Nuevo León, San
+    Nicolás de los Garza).
+  - Nombres neutrales FIFA (Mundial 2026) en más de un estadio: `Mexico City Stadium` (Banorte/
+    Azteca), `Monterrey Stadium` (BBVA), probablemente Guadalajara (Akron).
+  - NO asumir siempre "estadio del local": SportMonks tiene a Atlante con sede en Cancún, pero
+    Atlante-Monterrey se juega en el Banorte. Regla: **sede del fixture primero; si falta, venue
+    del club local**; luego aplicar alias.
+  **Propuesta acordada para la próxima sesión (~medio día, corrección de datos):** 1) seed único
+  de los 90 estadios (nombre + ciudad) → Gerardo revisa los nombres una vez; 2) tabla de alias
+  de nombres FIFA → nombre local; 3) `sync-partidos-sportmonks`: incluir `venue.city` + fallback
+  al venue del local + alias (requiere deploy por Gerardo); 4) backfill de partidos existentes;
+  5) revisar por qué la UI muestra a Toluca como local en Tigres-Toluca. Gerardo decide si va
+  en la próxima sesión o junto con la lista de la agencia (fecha límite ~2026-10-04).
 
 - **Proyección de aniversarios ±1 día cruzando años bisiestos** (preexistente desde `0001`,
   lo heredó `agenda_contenido` en `0014`). Los bloques de cumpleaños / aniversarios de
