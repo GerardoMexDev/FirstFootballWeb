@@ -1758,6 +1758,22 @@ F–H → I (con migración). Cada ítem cerrado se documenta en §4.
 
 ## 6. Bugs conocidos / cosas a vigilar
 
+- **Sedes de partidos incorrectas o incompletas — PENDIENTE DE VERIFICAR** (reportado por
+  Gerardo 2026-09-24, revisando la web). Consulta de solo lectura a `partidos` (todo viene de
+  SportMonks, `estadio`/`ciudad` tal cual los guarda `sync-partidos-sportmonks`):
+  | Partido | En la base | Problema |
+  |---|---|---|
+  | Atlante vs Monterrey (2026-09-26) | `Mexico City Stadium` / `Mexico City` | Es el Azteca/Banorte con el nombre neutral FIFA (Mundial 2026). Nombre no es el que usa la agencia. |
+  | Cruz Azul vs Toluca (2026-09-26) | Cruz Azul local, `Mexico City Stadium` | Gerardo dice que se juega en el estadio de Toluca → SportMonks tendría mal sede o localía. **Confirmar con el calendario oficial de Liga MX.** |
+  | Atlético Mineiro vs Bragantino (2026-10-03) | `Arena MRV` / ciudad `null` | Nombre OK; falta ciudad (Belo Horizonte) → la web muestra "sin dato". |
+  | Tigres vs Toluca (2026-10-10) | Tigres local, `Estadio Universitario` / ciudad `null` | Falta ciudad (Monterrey). Gerardo ve a **Toluca como local en pantalla** aunque la base dice Tigres → revisar si la UI pone primero al club del representado (¿`es_local` mal usado?). |
+  | Al Kholood vs Al-Qadisiyah (2026-10-09) | Completo | ✅ correcto |
+  Ideas a evaluar (NO implementar sin acordar — congelamiento de alcance, aunque esto es
+  corrección de datos): tabla/mapa de alias de estadios (`Mexico City Stadium` → `Estadio
+  Banorte (Azteca)`), rellenar `ciudad` desde `venue.city_id`/`GET /venues` de SportMonks cuando
+  venga null (mismo patrón que API-Football en `_shared/zona-pais.ts`), y revisar el orden
+  local/visitante en el hero/tarjeta.
+
 - **Proyección de aniversarios ±1 día cruzando años bisiestos** (preexistente desde `0001`,
   lo heredó `agenda_contenido` en `0014`). Los bloques de cumpleaños / aniversarios de
   `agenda_anual` y `agenda_contenido` proyectan con
