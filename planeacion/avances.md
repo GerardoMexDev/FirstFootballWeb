@@ -258,6 +258,8 @@ personas) → se mantiene el login por nombre (`felipe`, `pedro`, `maxi`, `alexi
   revertido a `demo1234`; logout → `/login` y `/partidos` sin sesión redirige. Desktop 1280 y
   mobile 390 sin scroll horizontal, 0 errores de consola. (El `ERR_ABORTED` de `/logout` en el
   reporte es el navegador cortando un 204 al navegar: el servidor respondió 204.)
+- **Recuperar contraseña:** en espera — Gerardo averigua el correo de la agencia / hosting.
+  Opciones y plan en §5 "Recuperar contraseña".
 - **Próximo:** `git push` → deploy Vercel + QA en prod. Al entregar: `npm run seed:usuarios --
   --reset-clave` y avisar a cada uno que la cambie en "Mi cuenta → Contraseña".
 
@@ -1256,6 +1258,32 @@ Charla con Gerardo (no se codeó nada): tres preguntas de la agencia / de él.
 - `.env.local.example` y `README.md` actualizados para apuntar a `.secretos/.env`.
 
 ## 5. Pendiente / próximos pasos
+
+### 🔑 Recuperar contraseña — EN ESPERA de Gerardo (anotado 2026-09-28, Sesión 12)
+
+Hoy no hay "olvidé mi contraseña": los mails internos (`@footballfirst.uy`) no existen, así que
+el reset lo hace un admin (`npm run seed:usuarios -- --reset-clave`, resetea los 4).
+**Gerardo está averiguando qué correo usa la agencia** (si tiene) y, si no, qué hosting/plan
+van a usar para publicar la webapp, para sacar el correo de ahí. Con eso se decide:
+
+- **Mails de prueba mientras tanto:** alias de Gmail de Gerardo (`gerardoagustin+felipe@gmail.com`,
+  `+pedro`, `+maxi`, `+alexis` — Supabase exige un mail distinto por cuenta; todos llegan a su
+  bandeja). Al entregar, un script `cambiar-mails` pone el mail real de cada uno (claves intactas).
+- **SMTP propio obligatorio:** el de Supabase gratis manda ~2 mails/h y solo a miembros del
+  equipo del proyecto. Opciones: SMTP del hosting/correo de la agencia (lo que averigua Gerardo),
+  Gmail SMTP con contraseña de aplicación (rápido, sin dominio) o Resend (gratis, requiere DNS
+  del dominio). La credencial SMTP la pega Gerardo en Supabase (Authentication → Emails → SMTP),
+  nunca pasa por Claude ni por el repo.
+- **Login pasaría a mail + contraseña** (recomendado; mantener el login por nombre obliga a una
+  búsqueda nombre→mail server-side y abre enumeración de usuarios). Pendiente de confirmar.
+- **Qué se construiría:** link "¿Olvidaste tu contraseña?" en `/login` (respuesta siempre igual,
+  exista o no el mail) → mail con link de 1 h → ruta pública `/auth/confirm` (`verifyOtp`,
+  tipo `recovery`) → página para elegir clave nueva → adentro. Configurar Site URL + Redirect URLs
+  en Supabase. Sumar a `test:seguridad`: link de un solo uso, misma respuesta con mail inexistente,
+  rutas nuevas sin datos sin sesión.
+- **Alternativa sin mail** (si no hay correo): texto en el login "Pedile a Felipe que te la
+  restablezca" + reset de UN usuario (`--reset-clave pedro`), o reset desde la web por el
+  Administrador (se cruza con los cambios de roles del documento de la agencia).
 
 ### ⚠️ ALCANCE DE FASE 1 — EN CONGELAMIENTO (acordado 2026-09-10, Sesión 7)
 
