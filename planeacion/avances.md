@@ -22,7 +22,8 @@ En Claude Code **no hay memoria entre sesiones**, así que este protocolo es obl
 **Última actualización:** 2026-09-28 (Sesión 12: login de los 4 usuarios + blindaje de
 seguridad. Primer cambio pedido por la agencia; mañana llega el documento con el resto.
 Registro público de Auth estaba ENCENDIDO en prod — Gerardo lo apagó. Migración `0024`
-aplicada. 23 tests de seguridad + 130 unitarios en verde. **Pendiente: `git push`** → deploy.)
+aplicada. 23 tests de seguridad + 130 unitarios en verde. **Desplegado y verificado en prod.**
+Recuperar contraseña: en espera — Gerardo averigua el correo de la agencia, ver §5.)
 **⏰ FECHA LÍMITE DEL PROYECTO: ~2026-10-04** (Gerardo, 2026-09-24). La agencia está juntando los
 requerimientos finales por escrito (botones extra, botón de copiar, cambios de roles — nada
 fijo aún); cuando lleguen se hacen uno a uno para cerrar el proyecto antes de esa fecha.
@@ -260,7 +261,11 @@ personas) → se mantiene el login por nombre (`felipe`, `pedro`, `maxi`, `alexi
   reporte es el navegador cortando un 204 al navegar: el servidor respondió 204.)
 - **Recuperar contraseña:** en espera — Gerardo averigua el correo de la agencia / hosting.
   Opciones y plan en §5 "Recuperar contraseña".
-- **Próximo:** `git push` → deploy Vercel + QA en prod. Al entregar: `npm run seed:usuarios --
+- **Desplegado y verificado en prod** (push de Gerardo, deploy `98f82df`): headers nuevos
+  activos; QA con login real (clave mala, saludo, actual incorrecta, cambio + reversión,
+  logout, redirección sin sesión) OK; `npm run test:seguridad` 23/23. Los únicos 400 de
+  consola son las claves incorrectas a propósito.
+- **Al entregar:** `npm run seed:usuarios --
   --reset-clave` y avisar a cada uno que la cambie en "Mi cuenta → Contraseña".
 
 ### 2026-09-24 — Sesión 11 (cierre de pendientes antes del cambio de roles)
