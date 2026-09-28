@@ -2254,6 +2254,7 @@ F–H → I (con migración). Cada ítem cerrado se documenta en §4.
 | Transcribir el roster del Excel a mano en seeds (Sesión 8) | 3 jugadores mal cargados | Releer el Excel al momento de cargar y verificar en la base después del seed |
 | Test de RLS "sin sesión no lee X" aceptando cualquier error (Sesión 12) | Pasaba con una tabla inexistente (`notas_agenda`): no probaba nada | Aceptar solo error `42501` o lista vacía, y un test de control con service_role que confirme que la tabla tiene filas |
 | Confiar en que `contexto.md` refleja la config de Supabase Auth (Sesión 12) | Decía "registro deshabilitado" y en prod estaba encendido | Verificar en vivo: `GET /auth/v1/settings` (lo hace `npm run test:seguridad`) |
+| `git push` desde Claude (Sesión 12, 2026-09-28) | Bloqueado por el auto-mode ("Out-of-Place Publication": el push despliega a Vercel) | Dejar los commits hechos y verificados; Gerardo corre `git push` y Claude hace el QA en prod después |
 
 ## 11. Dudas abiertas (de `contexto.md` §12)
 
