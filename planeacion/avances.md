@@ -1264,6 +1264,36 @@ Charla con Gerardo (no se codeó nada): tres preguntas de la agencia / de él.
 
 ## 5. Pendiente / próximos pasos
 
+### 🎫 Tickets de diseño (Admin/CM → Diseñador) — EN DISEÑO (brainstorming, 2026-09-28, Sesión 12)
+
+Nueva funcionalidad pedida por la agencia (vía Gerardo). Tratada como **arquitectónica**:
+preguntas → enfoques → diseño → spec escrita (revisa Gerardo) → plan → código. **No codeado.**
+
+**Decidido con Gerardo:**
+- Crean tickets el **Administrador** y el **Community Manager**; los recibe el **Diseñador**.
+- El ticket va **atado a un partido** (calendario de **Match Day**), y el partido a su día. Se
+  pinta **el chip del partido** (no la celda entera); clic → tarjeta grande con borde del color.
+  Partido sin ticket = no se hace nada, se ve como hoy.
+- Estados: 🔴 **Pendiente** (nuevo o devuelto con correcciones) → 🟡 **En revisión** (el
+  Diseñador lo terminó) → 🟢 **Aprobado** (el Diseñador lo publica). Si hay correcciones: vuelve a
+  🔴 y el ciclo se repite. **Revisa quien lo mandó** (la "pelotita" va entre esa persona y el
+  Diseñador).
+- **Fecha límite = 2 días antes del partido**, como valor configurable (mínimo 1).
+- **Historial tipo sistema de tickets:** conversación completa con fecha/hora/autor, cambios de
+  estado incluidos. **Solo se agrega, nunca se edita ni borra** (respaldo ante problemas de
+  entregas) — lo hace cumplir la base, no solo la pantalla.
+- **Mensajes automáticos del sistema** en la conversación cuando el partido se reprograma o se
+  cancela (trigger en la base sobre `partidos`, sirve para cualquier fuente de sync). Si se
+  reprograma, la fecha límite se mueve con el partido.
+- El diseño en sí **sigue por Dropbox**; esto es solo seguimiento.
+- Un ticket por partido (lo normal), pero la estructura admite más de uno por si hace falta.
+- Base existente a evaluar: tablas vacías de Fase 2 (`piezas`, `piezas_aprobaciones`,
+  `piezas_comentarios`, `piezas_versiones`, `campanas`).
+
+**⏳ A confirmar con la agencia:**
+- [ ] Días de anticipación de la fecha límite (hoy: 2; mínimo 1).
+- [ ] ¿Siempre un solo ticket/diseño por partido, o a veces más (previa, resultado, stats)?
+
 ### 🔑 Recuperar contraseña — EN ESPERA de Gerardo (anotado 2026-09-28, Sesión 12)
 
 Hoy no hay "olvidé mi contraseña": los mails internos (`@footballfirst.uy`) no existen, así que
