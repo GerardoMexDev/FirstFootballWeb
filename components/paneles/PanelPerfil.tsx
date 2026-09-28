@@ -1,8 +1,10 @@
 /**
  * Cuerpo del panel "Mi cuenta" (`abrirPerfil()` de la demo), con las 3 pestañas:
  *  - Datos: nombre (editable) + correo/rol (solo lectura — los cambia un admin).
- *  - Contraseña: nueva + repetir → `auth.updateUser`. Sin campo "actual": Supabase no lo
- *    verifica con la sesión activa, dejarlo implicaría un chequeo que no ocurre.
+ *  - Contraseña: actual + nueva + repetir. La actual se verifica de verdad re-autenticando
+ *    (`signInWithPassword`; Supabase no la pide en `updateUser`), así una sesión abierta en
+ *    una compu ajena no alcanza para cambiarla. Después de cambiarla se cierran las sesiones
+ *    de los OTROS dispositivos (`signOut({ scope: 'others' })`).
  *  - Notificaciones: 3 switches → `perfiles.avisos`. El ENVÍO es Fase 2; esto persiste la
  *    preferencia.
  * Sin bloque de foto (Fase 2, Storage).
@@ -92,28 +94,49 @@ export function PanelPerfil({
   }
 
   // ── Contraseña ──
+  const [actual, setActual] = useState('');
   const [nueva, setNueva] = useState('');
   const [repetir, setRepetir] = useState('');
   const [guardandoClave, setGuardandoClave] = useState(false);
   const [notaClave, setNotaClave] = useState<Nota>(null);
 
   async function guardarClave() {
-    const v = validarContrasena(nueva, repetir);
+    const v = validarContrasena(nueva, repetir, actual);
     if (!v.ok) {
       setNotaClave({ tipo: 'error', texto: v.mensaje ?? 'Revisá la contraseña.' });
       return;
     }
     setGuardandoClave(true);
     setNotaClave(null);
-    const { error } = await supabase.auth.updateUser({ password: nueva });
-    setGuardandoClave(false);
-    if (error) {
-      setNotaClave({ tipo: 'error', texto: error.message || 'No se pudo actualizar la contraseña.' });
+
+    // 1. Verificar la actual. Si es incorrecta, la sesión en curso no se toca.
+    const { error: errorActual } = await supabase.auth.signInWithPassword({
+      email: bundle.email,
+      password: actual,
+    });
+    if (errorActual) {
+      setGuardandoClave(false);
+      setNotaClave({ tipo: 'error', texto: 'La contraseña actual no es correcta.' });
       return;
     }
+
+    // 2. Cambiarla.
+    const { error } = await supabase.auth.updateUser({ password: nueva });
+    if (error) {
+      setGuardandoClave(false);
+      setNotaClave({ tipo: 'error', texto: 'No se pudo actualizar la contraseña. Probá de nuevo.' });
+      return;
+    }
+
+    // 3. Cerrar las sesiones de otros dispositivos (esta sigue abierta). Si falla, la clave
+    //    ya cambió igual: no se muestra como error.
+    await supabase.auth.signOut({ scope: 'others' });
+
+    setGuardandoClave(false);
+    setActual('');
     setNueva('');
     setRepetir('');
-    setNotaClave({ tipo: 'ok', texto: 'Contraseña actualizada.' });
+    setNotaClave({ tipo: 'ok', texto: 'Contraseña actualizada. Se cerró la sesión en tus otros dispositivos.' });
   }
 
   // ── Notificaciones ──
@@ -192,9 +215,21 @@ export function PanelPerfil({
         <div className="bloque">
           <span className="label">Cambiar contraseña</span>
           <div className="campo">
+            <label htmlFor="p-actual">Contraseña actual</label>
+            <input
+              id="p-actual"
+              type="password"
+              autoComplete="current-password"
+              placeholder="••••••••"
+              value={actual}
+              onChange={(e) => setActual(e.target.value)}
+            />
+          </div>
+          <div className="campo">
             <label htmlFor="p-nueva">Nueva contraseña</label>
             <input
               id="p-nueva"
+              autoComplete="new-password"
               type="password"
               placeholder="Mínimo 8 caracteres"
               value={nueva}
@@ -205,6 +240,7 @@ export function PanelPerfil({
             <label htmlFor="p-rep">Repetir nueva</label>
             <input
               id="p-rep"
+              autoComplete="new-password"
               type="password"
               placeholder="••••••••"
               value={repetir}

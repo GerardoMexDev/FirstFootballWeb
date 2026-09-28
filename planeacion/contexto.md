@@ -223,8 +223,10 @@ las rondas que hagan falta.**
 
 ### Usuarios semilla (Fase 1)
 
-Registro público **deshabilitado** en Supabase Auth. Confirmación de email desactivada.
-Cuentas creadas con `scripts/seed-usuarios.ts`. Supabase Auth pide email → el login acepta el
+Registro público **deshabilitado** en Supabase Auth (verificado en vivo 2026-09-28 — antes estaba
+encendido por error; lo controla `npm run test:seguridad`). Confirmación de email desactivada.
+Perfiles nuevos nacen `activo=false`; cargo/rol/activo solo los cambia service_role (migración 0024).
+Cuentas creadas con `scripts/seed-usuarios.mjs` (`-- --reset-clave` vuelve las claves a la demo). Supabase Auth pide email → el login acepta el
 nombre y la app le agrega el dominio.
 
 | Nombre | Login | Email interno | Contraseña | `cargo` |

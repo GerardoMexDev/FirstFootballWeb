@@ -1,9 +1,14 @@
 /**
  * Crea (o completa) las 4 cuentas fijas de Fase 1 en Supabase Auth + su fila en `perfiles`.
  * Usa la clave service_role (salta RLS) — solo se corre a mano, nunca desde el navegador.
- * Idempotente: si una cuenta ya existe, no falla, solo actualiza `cargo`/`nombre_completo`.
+ * Idempotente: si una cuenta ya existe, no falla, solo actualiza `cargo`/`nombre_completo`/`activo`.
  *
- * Uso:  npm run seed:usuarios   (o: node scripts/seed-usuarios.mjs)
+ * Uso:  npm run seed:usuarios                      crea las que falten, no toca claves
+ *       npm run seed:usuarios -- --reset-clave     además vuelve TODAS las claves a la demo
+ *                                                  (para la entrega: cada uno la cambia
+ *                                                  después desde "Mi cuenta")
+ *
+ * Desde la migración 0024 los perfiles nuevos nacen inactivos: acá se activan las 4 cuentas.
  *
  * Nota: el plan original (avances.md) preveía `seed-usuarios.ts`. Se escribe en `.mjs`,
  * como los otros scripts de administración (aplicar-migracion.mjs, generar-tipos.mjs),
@@ -23,6 +28,7 @@ if (!SUPABASE_SERVICE_ROLE_KEY) {
 const DOMINIO = 'footballfirst.uy';
 // Contraseña compartida de las 4 cuentas demo, confirmada por Gerardo (Sesión 1) — ver avances.md §8.
 const CONTRASENA_DEMO = 'demo1234';
+const RESETEAR_CLAVE = process.argv.includes('--reset-clave');
 
 /** Las 4 cuentas fijas de Fase 1 (contexto.md §"Usuarios semilla"). */
 const CUENTAS = [
@@ -71,16 +77,28 @@ for (const cuenta of CUENTAS) {
     }
     usuarioId = existente.id;
     console.log(`= ${correo} ya existía (id ${usuarioId})`);
+    if (RESETEAR_CLAVE) {
+      const { error: errorClave } = await admin.auth.admin.updateUserById(usuarioId, {
+        password: CONTRASENA_DEMO,
+      });
+      if (errorClave) {
+        console.error(`❌ clave de ${correo}: ${errorClave.message}`);
+        huboError = true;
+      } else {
+        console.log(`  clave reseteada a la demo`);
+      }
+    }
   } else {
     usuarioId = data.user.id;
     console.log(`+ ${correo} creada (id ${usuarioId})`);
   }
 
   // El trigger handle_new_user ya insertó la fila de perfiles con nombre_completo.
-  // Acá se fija (o corrige) nombre_completo + cargo; service_role salta la RLS.
+  // Acá se fija (o corrige) nombre_completo + cargo y se activa; service_role salta la RLS
+  // y el trigger de columnas protegidas (0024).
   const { error: errorPerfil } = await admin
     .from('perfiles')
-    .update({ nombre_completo: cuenta.nombreCompleto, cargo: cuenta.cargo })
+    .update({ nombre_completo: cuenta.nombreCompleto, cargo: cuenta.cargo, activo: true })
     .eq('id', usuarioId);
 
   if (errorPerfil) {

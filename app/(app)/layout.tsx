@@ -10,16 +10,25 @@
  *
  * `sesionActual()` está envuelto en React.cache: el layout raíz ya lo llamó para el tema,
  * así que acá no hay una segunda ida a la BD.
+ *
+ * Saludo de bienvenida ("Buenas tardes, Felipe") arriba de cada vista, con la hora de
+ * Uruguay. El layout ya es dinámico (lee cookies), así que se calcula en cada request.
  */
 import { Suspense } from 'react';
 import { redirect } from 'next/navigation';
+import { DateTime } from 'luxon';
 import { BarraSuperior } from '@/components/layout/BarraSuperior';
 import { PanelLateral } from '@/components/paneles/PanelLateral';
 import { sesionActual } from '@/lib/sesion/sesion-actual';
+import { saludoPorHora, primerNombre } from '@/lib/sesion/saludo';
+import { ZONA_AGENCIA } from '@/lib/fechas/zonas';
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const sesion = await sesionActual();
   if (!sesion) redirect('/login');
+
+  const saludo = saludoPorHora(DateTime.now().setZone(ZONA_AGENCIA).hour);
+  const nombre = primerNombre(sesion.nombreCompleto);
 
   return (
     <>
@@ -36,7 +45,18 @@ export default async function AppLayout({ children }: { children: React.ReactNod
             tema: sesion.tema,
           }}
         />
-        <main className="wrap">{children}</main>
+        <main className="wrap">
+          <p className="saludo" id="saludo">
+            {nombre ? (
+              <>
+                {saludo}, <b>{nombre}</b>
+              </>
+            ) : (
+              saludo
+            )}
+          </p>
+          {children}
+        </main>
       </div>
 
       {/* Panel lateral de detalle (partido / jugador). Se abre por la URL (?panel=…). */}

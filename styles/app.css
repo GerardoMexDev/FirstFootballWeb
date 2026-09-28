@@ -263,3 +263,11 @@
   color: var(--accent);
   background: var(--surface-3);
 }
+
+/* Saludo de bienvenida arriba de cada vista — app/(app)/layout.tsx. */
+.saludo {
+  margin-bottom: 20px;
+  font-size: var(--t-sm);
+  color: var(--text-2);
+}
+.saludo b { font-weight: 600; color: var(--text); }

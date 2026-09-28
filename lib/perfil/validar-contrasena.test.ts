@@ -25,3 +25,19 @@ test('rechaza si no coinciden', () => {
 test('el chequeo de largo va primero (corta y distinta → mensaje de largo)', () => {
   assert.match(validarContrasena('abc', 'xyz').mensaje ?? '', /8 caracteres/);
 });
+
+test('con actual: exige que venga escrita', () => {
+  const r = validarContrasena('unaclave8', 'unaclave8', '');
+  assert.equal(r.ok, false);
+  assert.match(r.mensaje ?? '', /actual/);
+});
+
+test('con actual: la nueva no puede ser igual a la actual', () => {
+  const r = validarContrasena('demo1234', 'demo1234', 'demo1234');
+  assert.equal(r.ok, false);
+  assert.match(r.mensaje ?? '', /distinta/);
+});
+
+test('con actual distinta y todo bien → ok', () => {
+  assert.deepEqual(validarContrasena('nuevaClave9', 'nuevaClave9', 'demo1234'), { ok: true });
+});

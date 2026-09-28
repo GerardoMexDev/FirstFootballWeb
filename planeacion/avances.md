@@ -19,9 +19,10 @@ En Claude Code **no hay memoria entre sesiones**, así que este protocolo es obl
 3. Rutina de cierre Git: `git add . && git commit -m "Sesión N: ..." && git push`.
 4. La sesión no se cierra hasta que `git push` terminó OK.
 
-**Última actualización:** 2026-09-24 (Sesión 11: carrera completa de los 5 de Contenido cargada
-desde el Excel + migración `0019` aplicada por Gerardo (SQL Editor) y verificada. **Sin
-pendientes técnicos.** Próximo bloque: cambios de roles + ajustes menores, a detallar por Gerardo.)
+**Última actualización:** 2026-09-28 (Sesión 12: login de los 4 usuarios + blindaje de
+seguridad. Primer cambio pedido por la agencia; mañana llega el documento con el resto.
+Registro público de Auth estaba ENCENDIDO en prod — Gerardo lo apagó. Migración `0024`
+aplicada. 23 tests de seguridad + 130 unitarios en verde. **Pendiente: `git push`** → deploy.)
 **⏰ FECHA LÍMITE DEL PROYECTO: ~2026-10-04** (Gerardo, 2026-09-24). La agencia está juntando los
 requerimientos finales por escrito (botones extra, botón de copiar, cambios de roles — nada
 fijo aún); cuando lleguen se hacen uno a uno para cerrar el proyecto antes de esa fecha.
@@ -221,6 +222,44 @@ diseñador → Community Manager.
 | `components/paneles/PanelPerfil.tsx` | Panel "Mi cuenta" (Mi perfil / Cambiar contraseña / Notificaciones) — necesita forms de Supabase | ⬜ |
 
 ## 4. Hecho (por fecha, más reciente primero)
+
+### 2026-09-28 — Sesión 12 (login: 4 usuarios, saludo, seguridad)
+
+Primer cambio de la agencia (el resto llega por documento). Pedido: 3 usuarios reales + 1 de
+prueba, cada uno con su sesión, clave demo que puedan cambiar, saludo por nombre, cerrar sesión,
+seguridad + tests. **Decisión de Gerardo:** sin Google y sin mails reales (ámbito cerrado de 3
+personas) → se mantiene el login por nombre (`felipe`, `pedro`, `maxi`, `alexis`) + `demo1234`.
+- **Cuentas** (ya existían, verificadas): Felipe Merola/Administrador, Pedro Vidal/Community
+  Manager, Maxi Rosales/Diseñador, Alexis Agustín/Prueba. `seed-usuarios.mjs` ahora las activa
+  explícitamente y acepta `-- --reset-clave` (vuelve las 4 claves a la demo — para la entrega).
+- **⚠️ Hallazgo: el registro público de Supabase Auth estaba ENCENDIDO** (`disable_signup:false`),
+  pese a que `contexto.md` decía lo contrario. Con la anon key (pública) cualquiera podía
+  registrarse, confirmar su mail y leer todos los datos. **Gerardo lo apagó** en el panel
+  (verificado: `disable_signup:true`).
+- **Migración `0024_perfiles_blindaje.sql`** (aplicada con `npm run migracion`, hoy sí hubo
+  IPv6): (1) trigger `perfiles_proteger_columnas` — un usuario logueado ya NO puede cambiarse
+  `cargo`/`rol`/`activo` (antes podía darse "Administrador" desde el navegador, aunque la UI
+  decía que no); service_role y SQL Editor sí. (2) perfiles nuevos nacen `activo=false`
+  (`handle_new_user` + default) → sin acceso a datos hasta que un admin los active.
+- **Saludo** "Buenos días / Buenas tardes / Buenas noches, **Felipe**" arriba de cada vista
+  (`app/(app)/layout.tsx`, hora de Uruguay, `lib/sesion/saludo.ts` + tests, `.saludo` en app.css).
+- **Cambio de contraseña endurecido** (`PanelPerfil`): pide la **actual** y la verifica
+  re-autenticando (Supabase no la pide en `updateUser`); la nueva debe ser distinta; al cambiarla
+  cierra las sesiones de los otros dispositivos (`signOut({scope:'others'})`).
+- **Headers de seguridad** (`next.config.mjs`): X-Frame-Options DENY + `frame-ancestors 'none'`,
+  nosniff, Referrer-Policy, Permissions-Policy, sin `X-Powered-By`.
+- **Tests:** `npm run test:seguridad` (`scripts/seguridad.test.mjs`, contra el Supabase real,
+  23 casos: registro cerrado, RLS sin sesión en 8 tablas, login malo sin enumeración, 4 cuentas
+  con cargo, perfil propio, no auto-cambio de cargo/activo, no editar a otro, alta inactiva,
+  logout revoca el refresh token). Antes del fix: 3 fallaban (los huecos); después: 23/23.
+  `npm test` 130/130, lint + build OK.
+- **QA navegador** (`next start` local, login real): clave mala → "Usuario o contraseña
+  incorrectos."; saludo en Partidos y Jugadores; actual incorrecta → rechazada; cambio OK y
+  revertido a `demo1234`; logout → `/login` y `/partidos` sin sesión redirige. Desktop 1280 y
+  mobile 390 sin scroll horizontal, 0 errores de consola. (El `ERR_ABORTED` de `/logout` en el
+  reporte es el navegador cortando un 204 al navegar: el servidor respondió 204.)
+- **Próximo:** `git push` → deploy Vercel + QA en prod. Al entregar: `npm run seed:usuarios --
+  --reset-clave` y avisar a cada uno que la cambie en "Mi cuenta → Contraseña".
 
 ### 2026-09-24 — Sesión 11 (cierre de pendientes antes del cambio de roles)
 
@@ -2185,6 +2224,8 @@ F–H → I (con migración). Cada ítem cerrado se documenta en §4.
 | Buscar la carrera completa de un jugador en SportMonks (2026-09-24) | El plan Starter solo tiene temporadas de sus 5 ligas; homónimos (Franco Romero n. 2000) | Carrera histórica = siempre manual (Transfermarkt → hoja "Hitos" del Excel) |
 | Matchear jugadores por substring (`.includes('nández')`) | Coincidió con Nández y con Fernández del mismo plantel | Matchear por token completo del apellido + fecha de nacimiento |
 | Transcribir el roster del Excel a mano en seeds (Sesión 8) | 3 jugadores mal cargados | Releer el Excel al momento de cargar y verificar en la base después del seed |
+| Test de RLS "sin sesión no lee X" aceptando cualquier error (Sesión 12) | Pasaba con una tabla inexistente (`notas_agenda`): no probaba nada | Aceptar solo error `42501` o lista vacía, y un test de control con service_role que confirme que la tabla tiene filas |
+| Confiar en que `contexto.md` refleja la config de Supabase Auth (Sesión 12) | Decía "registro deshabilitado" y en prod estaba encendido | Verificar en vivo: `GET /auth/v1/settings` (lo hace `npm run test:seguridad`) |
 
 ## 11. Dudas abiertas (de `contexto.md` §12)
 
