@@ -261,4 +261,56 @@ test('Checks: link no https y texto > 2000 rechazados a nivel tabla', () =>
     );
   }));
 
+test('RLS: nadie escribe a través de las vistas (perfiles_publicos, tickets_vista, tickets_historial_vista)', () =>
+  enTransaccion(async (cl) => {
+    const p = await partidoDePrueba(cl, ids.jugadorMd);
+    const t = await ticketDirecto(cl, p);
+    await como(cl, ids.maxi);
+    // perfiles_publicos es una vista de una sola tabla (auto-actualizable) que corre con los
+    // permisos del dueño, no de quien consulta: sin el revoke correcto, cualquier logueado
+    // podría escribir sobre `perfiles` a través de ella, esquivando su RLS.
+    await debeFallar(
+      cl,
+      `update perfiles_publicos set nombre_completo = 'x' where id = $1`,
+      [ids.felipe],
+      /permission denied/,
+    );
+    await debeFallar(cl, `delete from perfiles_publicos where id = $1`, [ids.felipe], /permission denied/);
+    await debeFallar(
+      cl,
+      `insert into perfiles_publicos (id, nombre_completo, cargo) values (gen_random_uuid(), 'x', 'Prueba')`,
+      [],
+      /permission denied/,
+    );
+    // tickets_vista y tickets_historial_vista son vistas con join (no auto-actualizables): ya
+    // rechazan la escritura por estructura, pero deben hacerlo sin exponer permiso de escritura.
+    await debeFallar(
+      cl,
+      `update tickets_vista set titulo = 'x' where id = $1`,
+      [t],
+      /permission denied|cannot update view/,
+    );
+    await debeFallar(
+      cl,
+      `delete from tickets_vista where id = $1`,
+      [t],
+      /permission denied|cannot delete from view/,
+    );
+    await debeFallar(
+      cl,
+      `update tickets_historial_vista set texto = 'x' where ticket_id = $1`,
+      [t],
+      /permission denied|cannot update view/,
+    );
+    await debeFallar(
+      cl,
+      `delete from tickets_historial_vista where ticket_id = $1`,
+      [t],
+      /permission denied|cannot delete from view/,
+    );
+    await comoDueno(cl);
+    const { rows } = await cl.query(`select nombre_completo from perfiles where id = $1`, [ids.felipe]);
+    assert.equal(rows[0].nombre_completo, 'Felipe Merola');
+  }));
+
 export { enTransaccion, como, comoAnon, comoServicio, comoDueno, debeFallar, partidoDePrueba };

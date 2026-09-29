@@ -6,8 +6,15 @@
 -- existentes. Las tablas de Fase 2 (piezas*, campanas) quedan sin tocar.
 --
 -- Seguridad:
---  - RLS: solo SELECT para usuarios activos. Nadie escribe directo (se revocan
---    insert/update/delete a anon y authenticated): todo pasa por las funciones ticket_*.
+--  - RLS: solo SELECT para usuarios activos. Nadie escribe directo: se revoca TODO (no solo
+--    insert/update/delete/truncate; también trigger/references/maintain, que Postgres concede
+--    por default a `authenticated` sobre lo que crea `postgres`) a anon y authenticated en las
+--    2 tablas y las 3 vistas — todo pasa por las funciones ticket_*.
+--  - `perfiles_publicos` es una vista de una sola tabla (auto-actualizable) que corre con los
+--    permisos del dueño, no de quien consulta (no lleva security_invoker): si no se le revoca
+--    TODO a `authenticated`, cualquier logueado podría escribir en `perfiles` a través de ella,
+--    esquivando su RLS. `tickets_vista`/`tickets_historial_vista` son joins con
+--    security_invoker = true, no auto-actualizables por estructura.
 --  - Historial imborrable: trigger que rechaza UPDATE/DELETE/TRUNCATE para TODOS los roles.
 --    Un ticket no se borra (se cancela). Única salida: scripts/limpiar-tickets.sql (dueño).
 -- ============================================================================
@@ -152,7 +159,7 @@ create policy tickets_select on tickets for select using (es_usuario_activo());
 create policy tickets_historial_select on tickets_historial for select using (es_usuario_activo());
 
 revoke all on tickets, tickets_historial, tickets_vista, tickets_historial_vista, perfiles_publicos from anon;
-revoke insert, update, delete, truncate on tickets, tickets_historial from authenticated;
+revoke all on tickets, tickets_historial, tickets_vista, tickets_historial_vista, perfiles_publicos from authenticated;
 grant select on tickets, tickets_historial, tickets_vista, tickets_historial_vista, perfiles_publicos to authenticated;
 
 -- (Tasks 2 y 3 agregan acá las funciones de acción y los triggers sobre partidos.)
