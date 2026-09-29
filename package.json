@@ -10,6 +10,7 @@
     "lint": "next lint",
     "test": "node --test \"lib/**/*.test.ts\" \"supabase/functions/**/*.test.ts\"",
     "test:seguridad": "node --test scripts/seguridad.test.mjs",
+    "test:tickets": "node --test scripts/tickets.test.mjs",
     "migracion": "node scripts/aplicar-migracion.mjs",
     "tipos:db": "node scripts/generar-tipos.mjs",
     "seed:usuarios": "node scripts/seed-usuarios.mjs",
