@@ -19,3 +19,13 @@ test('errores técnicos en inglés → mensaje genérico en español', () => {
   assert.equal(mensajeError({ message: 'Could not find the function', code: 'PGRST202' }), 'Esta función todavía no está disponible. Avisale a Gerardo.');
   assert.equal(mensajeError(null), 'No se pudo completar. Probá de nuevo.');
 });
+
+test('solo se muestra tal cual con code P0001/42501 (raise de las funciones de tickets); cualquier otro error técnico en inglés → genérico', () => {
+  assert.equal(mensajeError({ message: 'JWT expired', code: 'PGRST301' }), 'No se pudo completar. Probá de nuevo.');
+  assert.equal(mensajeError({ message: 'JWT expired' }), 'No se pudo completar. Probá de nuevo.');
+  assert.equal(
+    mensajeError({ message: "Could not find the 'x' column of 'tickets_vista' in the schema cache", code: 'PGRST204' }),
+    'No se pudo completar. Probá de nuevo.',
+  );
+  assert.equal(mensajeError({ message: 'Escribí qué hay que hacer.', code: 'P0001' }), 'Escribí qué hay que hacer.');
+});
