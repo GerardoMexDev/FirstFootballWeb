@@ -1374,6 +1374,10 @@ Orden: lucecita + calendario → filtros → pantalla Tickets → tickets desde 
   en Mexico City, y SportMonks la asigna a partidos de Tigres (su estadio es el Universitario
   de Nuevo León, San Nicolás). Es dato de la fuente, no un bug nuestro; si molesta, se puede
   corregir a mano la sede de esos partidos.
+  **Decisión de Gerardo (2026-09-29):** se deja para más adelante; Gerardo arma una lista de
+  estadios de las 5 ligas como respaldo para cuando SportMonks no tenga (o tenga mal) la sede.
+- **Decisión de Gerardo (2026-09-29):** en celular, barra de pestañas inferior (no hamburguesa)
+  cuando se sume "Tickets" a la navegación.
 
 **📝 Pedido de Gerardo (2026-09-29, mientras revisa en prod):**
 - En cada **tarjeta de partido** de /partidos (ej. "RB Bragantino vs Atlético Mineiro · Estadio… ·
