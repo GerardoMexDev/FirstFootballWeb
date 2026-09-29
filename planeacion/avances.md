@@ -1342,7 +1342,8 @@ detalle en §4 Sesión 12.
 Detalle en §4 Sesión 12. **⚠️ Hallazgo: la migración `0022` (años en el título del aniversario
 de club) NO está aplicada en prod** — `agenda_anual` y `agenda_contenido` siguen con
 "Aniversario de CA Peñarol" sin "(135 años)", aunque el `.sql` está commiteado desde `38e89f3`
-(junto con `0023`, que sí se aplicó). Consultado con Gerardo antes de aplicarla.
+(junto con `0023`, que sí se aplicó). Gerardo aprobó aplicarla; el auto-mode bloqueó a Claude →
+**la corre Gerardo:** `npm run migracion supabase/migrations/0022_aniversario_club_anios.sql`.
 
 ### 🔑 Recuperar contraseña — EN ESPERA de Gerardo (anotado 2026-09-28, Sesión 12)
 
@@ -2341,6 +2342,7 @@ F–H → I (con migración). Cada ítem cerrado se documenta en §4.
 | Confiar en que `contexto.md` refleja la config de Supabase Auth (Sesión 12) | Decía "registro deshabilitado" y en prod estaba encendido | Verificar en vivo: `GET /auth/v1/settings` (lo hace `npm run test:seguridad`) |
 | Detener `npx next start` con TaskStop (Sesión 12) | Mata el wrapper `npx` pero el `node … next start` hijo sigue vivo con el build VIEJO → el siguiente `next start` falla (puerto ocupado) y el QA ve chunks 400 | Después de TaskStop, cerrar el proceso hijo: `Get-CimInstance Win32_Process` filtrando `*next*start -p*3100*` → `Stop-Process` |
 | `npm run build` / `next start` de Claude mientras Gerardo tiene `npm run dev` abierto (Sesión 12) | Comparten `.next`: el build pisa la caché del dev → "Cannot find module './260.js'" en el navegador de Gerardo | Antes de compilar, preguntar si hay un `npm run dev` abierto; si lo hay, pedir que lo corte antes (o verificar con el dev de él en vez de compilar). Arreglo: Ctrl+C, borrar `.next`, `npm run dev` |
+| `npm run migracion …0022…` desde Claude (Sesión 12, con OK de Gerardo) | Bloqueado por el auto-mode ("Production Deploy"). Inconsistente: la `0024` pasó ese mismo día | Tratar toda migración como algo que puede bloquearse: dejarla verificada y pasarle a Gerardo el comando (o el SQL Editor); Claude verifica después con una consulta de solo lectura |
 | `git push` desde Claude (Sesión 12, 2026-09-28) | Bloqueado por el auto-mode ("Out-of-Place Publication": el push despliega a Vercel) | Dejar los commits hechos y verificados; Gerardo corre `git push` y Claude hace el QA en prod después |
 
 ## 11. Dudas abiertas (de `contexto.md` §12)
