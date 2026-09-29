@@ -17,7 +17,7 @@ export const PROVEEDOR = 'sportmonks';
 const NOVENTA_DIAS_MS = 90 * 86_400_000;
 
 /**
- * Los 6 clubes de la cartera, mapeados de su id de API-Football (como se guarda en
+ * Los clubes de la cartera (los 6 de Match Day + Tigres de Contenido desde 2026-09-29), mapeados de su id de API-Football (como se guarda en
  * `clubes.id_externo`, la clave que arma la cartera) a lo que necesita SportMonks.
  * `ligaExternoAF` engancha `competencia_id` reusando las competencias ya catalogadas por
  * API-Football (mismos ids que `sync-fixtures-espn`, verificado en vivo 2026-09-16).
@@ -29,6 +29,9 @@ export const CLUBES_SPORTMONKS: Record<string, { smTeamId: string; smLeagueId: n
   '794': { smTeamId: '7808', smLeagueId: 648, ligaExternoAF: '71' }, // RB Bragantino — Serie A
   '2315': { smTeamId: '7930', smLeagueId: 663, ligaExternoAF: '265' }, // Colo-Colo — Primera División
   '2933': { smTeamId: '13092', smLeagueId: 944, ligaExternoAF: '307' }, // Al-Qadsiah (Nández) — Pro League (Arabia)
+  // Tigres (Rodrigo Aguirre, solo Contenido) — Liga MX. Ids verificados en vivo 2026-09-29
+  // (equipo 609; Aguirre 129658 con fecha de nacimiento 1994-10-01, titular en la temporada).
+  '2279': { smTeamId: '609', smLeagueId: 743, ligaExternoAF: '262' },
 };
 
 export type JugadorDeCartera = { id: string; idSportmonks: string | null };

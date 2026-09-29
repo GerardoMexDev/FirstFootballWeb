@@ -61,13 +61,16 @@ Deno.serve(async (req: Request) => {
   const clubesConError: string[] = []; // un club que falla no tira abajo el resto de la cartera
 
   try {
-    // 1) Cartera: jugadores de Match Day + su club actual (id_externo de API-Football, zona,
-    //    y el id_externo_sportmonks de CADA JUGADOR para poder leer su convocatoria).
+    // 1) Cartera: jugadores de Match Day O de Contenido + su club actual (id_externo de
+    //    API-Football, zona, y el id_externo_sportmonks de CADA JUGADOR para poder leer su
+    //    convocatoria y estadísticas). Contenido entra desde 2026-09-29 (Rodrigo Aguirre sin
+    //    temporada): sus partidos se guardan pero no se ven en /partidos ni en la agenda,
+    //    que filtran por servicio_match_day (0014/0017).
     const { data: jugadores, error: errJugadores } = await supabase
       .from('jugadores')
       .select('id, id_externo_sportmonks, clubes(id, id_externo, zona_horaria)')
       .eq('activo', true)
-      .eq('servicio_match_day', true)
+      .or('servicio_match_day.eq.true,servicio_contenido.eq.true')
       .not('club_actual_id', 'is', null);
     if (errJugadores) throw errJugadores;
 

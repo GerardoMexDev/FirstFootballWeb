@@ -11,6 +11,7 @@
  * no un cron.
  *
  * Uso: node scripts/backfill-historico-sportmonks.mjs   (o: npm run backfill:sportmonks)
+ *      node scripts/backfill-historico-sportmonks.mjs 2279   → solo ese club (id API-Football)
  */
 import { createClient } from '@supabase/supabase-js';
 import { obtenerFixturesDeEquipo, esperarEntreLlamadasSportmonks } from '../supabase/functions/_shared/sportmonks.ts';
@@ -29,13 +30,19 @@ const supabase = createClient(NEXT_PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KE
 
 const VENTANA_ATRAS_DIAS = 400; // cubre de sobra la temporada actual de cualquiera de las 5 ligas
 const VENTANA_ADELANTE_DIAS = 300;
+// Opcional: un solo club, por su id de API-Football (ej. `2279` = Tigres, sumado 2026-09-29).
+const SOLO_CLUB = process.argv[2] ?? null;
+if (SOLO_CLUB && !CLUBES_SPORTMONKS[SOLO_CLUB]) {
+  console.error(`El club ${SOLO_CLUB} no está en CLUBES_SPORTMONKS.`);
+  process.exit(1);
+}
 
 // 1) Cartera: misma consulta que sync-partidos-sportmonks/index.ts.
 const { data: jugadores, error: errJugadores } = await supabase
   .from('jugadores')
   .select('id, id_externo_sportmonks, clubes(id, id_externo, zona_horaria)')
   .eq('activo', true)
-  .eq('servicio_match_day', true)
+  .or('servicio_match_day.eq.true,servicio_contenido.eq.true')
   .not('club_actual_id', 'is', null);
 if (errJugadores) throw errJugadores;
 
@@ -73,6 +80,7 @@ let registrosAfectados = 0;
 const resumen = [];
 
 for (const [afId, cfg] of Object.entries(CLUBES_SPORTMONKS)) {
+  if (SOLO_CLUB && afId !== SOLO_CLUB) continue;
   const club = carteraPorExterno.get(afId);
   if (!club) {
     console.log(`· club ${afId}: no está en la cartera activa, se saltea`);

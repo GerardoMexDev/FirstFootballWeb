@@ -1358,7 +1358,26 @@ contador del Admin y del CM que los creó.
   ciudad** ni el resto de los datos de la sede. Averiguar si SportMonks no la manda para ese
   estadio, si la sync no la guarda, o si la tarjeta no la muestra (revisar los otros partidos
   de Bragantino y la ficha del venue en la base).
-- **Rodrigo Aguirre — temporada 2026 vacía:** la ficha dice "la temporada recién arranca /
+- **Uruguayos de Contenido sin estadísticas (PENDIENTE, decisión de Gerardo 2026-09-29):** Abel
+  Hernández, Franco Romero (Peñarol), Gastón Martirena, Maxi Silvera (Nacional) tienen 0
+  estadísticas: la liga uruguaya no está en el plan Starter de SportMonks y API-Football free
+  no da la temporada actual. Opciones a futuro: ESPN (tiene `uru.1`) o carga manual.
+  Preguntar a la agencia si a Contenido le importan las estadísticas o solo las fechas.
+- **✅ Ciudad de la sede (Arena MRV / Estadio Universitario):** SportMonks manda `city_name`
+  null en esas sedes; ahora se pide `venue.city` y se usa de respaldo (commit 96a279d). Falta
+  deploy de `sync-partidos-sportmonks` (Gerardo).
+- **✅ (código listo, falta aplicar) Rodrigo Aguirre + doble conteo de totales — 0026:**
+  causa: la sync de SportMonks tomaba solo jugadores Match Day y Tigres/Aguirre no tenían id
+  de SportMonks (Tigres 609, Aguirre 129658). La sync ahora toma también Contenido y a
+  Tigres. Al investigar apareció un bug previo: `totales_jugador` sumaba stats anteriores a
+  `base_actualizada_en` (Nández 422→389 partidos, 36→28 goles; Pereira 263→229; Sosa
+  168→153…) → hitos inflados. 0026 corrige la vista y carga los 2 ids; probada en
+  transacción con ROLLBACK contra prod (totales exactos). Pasos: (1) Gerardo aplica 0026
+  (SQL Editor), (2) Gerardo `npm run deploy:funcion -- sync-partidos-sportmonks`,
+  (3) `node scripts/backfill-historico-sportmonks.mjs 2279` (solo Tigres) y verificar la
+  temporada de Aguirre. Nota: la vista da permisos de escritura a anon/authenticated desde
+  0003 (inofensivo: vista agregada, no actualizable) — revisar en una limpieza de grants.
+- **Rodrigo Aguirre — temporada 2026 vacía (reporte original):** la ficha dice "la temporada recién arranca /
   0 partidos registrados este año", pero la Liga MX ya va por la jornada 10–11 y **tenemos
   acceso a esa liga** en SportMonks. Averiguar por qué no entran sus estadísticas (¿id de
   temporada, id del jugador, la sync de stats no corre para Liga MX, o el filtro de "este año"?).
