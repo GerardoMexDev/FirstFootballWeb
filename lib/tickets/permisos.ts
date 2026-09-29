@@ -30,6 +30,20 @@ export function accionesPermitidas(p: { cargo: string; esCreador: boolean; estad
 
 /** Lo que "le toca" a cada cargo (contador de la barra), por fecha límite; sin fecha al final. */
 export function pendientesDe(cargo: string, usuarioId: string, tickets: ResumenTicket[]): ResumenTicket[] {
+  return tickets
+    .filter((t) => debeActuar(cargo, usuarioId, t))
+    .sort(
+      (a, b) =>
+        (a.fechaLimite ?? '9999-12-31').localeCompare(b.fechaLimite ?? '9999-12-31') ||
+        a.titulo.localeCompare(b.titulo, 'es'),
+    );
+}
+
+/**
+ * ¿Este ticket espera algo de este usuario? Mismo criterio que el contador de la barra; lo
+ * usan también la lucecita de las tarjetas, el panel del partido y el calendario (2026-09-29).
+ */
+export function debeActuar(cargo: string, usuarioId: string, t: ResumenTicket): boolean {
   const filtro: (t: ResumenTicket) => boolean =
     cargo === 'Diseñador'
       ? (t) => t.estado === 'pendiente' || t.estado === 'aprobado'
@@ -40,11 +54,5 @@ export function pendientesDe(cargo: string, usuarioId: string, tickets: ResumenT
         : cargo === 'Administrador'
           ? (t) => t.estado === 'en_revision' || (t.estado === 'pendiente' && t.partidoEliminado)
           : () => false;
-  return tickets
-    .filter(filtro)
-    .sort(
-      (a, b) =>
-        (a.fechaLimite ?? '9999-12-31').localeCompare(b.fechaLimite ?? '9999-12-31') ||
-        a.titulo.localeCompare(b.titulo, 'es'),
-    );
+  return filtro(t);
 }

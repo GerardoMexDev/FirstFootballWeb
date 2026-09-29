@@ -48,7 +48,18 @@ function chipEvento(e: EventoCalendario): { etiqueta: string; texto: string } {
   }
 }
 
-export function Calendario({ eventos, hoyUy, ticketsPorPartido = {} }: { eventos: EventoCalendario[]; hoyUy: string; ticketsPorPartido?: Record<string, ResumenPartido> }) {
+export function Calendario({
+  eventos,
+  hoyUy,
+  ticketsPorPartido = {},
+  alertasPorPartido = {},
+}: {
+  eventos: EventoCalendario[];
+  hoyUy: string;
+  ticketsPorPartido?: Record<string, ResumenPartido>;
+  /** `{ partidoId: texto }` de los tickets que esperan algo de quien mira (lucecita). */
+  alertasPorPartido?: Record<string, string>;
+}) {
   const { abrir } = usePanel();
   const [anio, setAnio] = useState(() => Number(hoyUy.slice(0, 4)));
   const [mes, setMes] = useState(() => Number(hoyUy.slice(5, 7)) - 1); // 0-11
@@ -137,9 +148,14 @@ export function Calendario({ eventos, hoyUy, ticketsPorPartido = {} }: { eventos
                     >
                       {tk && (
                         <small className="ev__tk">
-                          <span aria-hidden="true">{META_ESTADO[tk.estado].simbolo}</span>{' '}
+                          {/* Si el partido espera algo de quien mira: lucecita + texto de la alerta. */}
+                          {alertasPorPartido[refId] ? (
+                            <span className="tka__luz" aria-hidden="true" />
+                          ) : (
+                            <span aria-hidden="true">{META_ESTADO[tk.estado].simbolo}</span>
+                          )}{' '}
                           <span className="ev__w">
-                            {META_ESTADO[tk.estado].corta}
+                            {alertasPorPartido[refId] ?? META_ESTADO[tk.estado].corta}
                             {tk.ticketIds.length > 1 ? ` · ${tk.ticketIds.length}` : ''}
                           </span>
                         </small>

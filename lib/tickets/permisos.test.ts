@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { accionesPermitidas, pendientesDe, puedeCrear } from './permisos.ts';
+import { accionesPermitidas, debeActuar, pendientesDe, puedeCrear } from './permisos.ts';
 import type { ResumenTicket } from './tipos.ts';
 
 test('puedeCrear: solo Administrador y Community Manager', () => {
@@ -68,4 +68,22 @@ test('pendientesDe: un pendiente huérfano (partido borrado) lo ve quien puede c
   assert.deepEqual(pendientesDe('Community Manager', 'pedro', lista).map((x) => x.id), ['h1']);
   assert.deepEqual(pendientesDe('Community Manager', 'otro', lista), []);
   assert.deepEqual(pendientesDe('Diseñador', 'maxi', lista).map((x) => x.id), ['h1', 'h2', 'n']);
+});
+
+test('debeActuar: el Diseñador actúa en pendiente y aprobado, no en revisión', () => {
+  assert.equal(debeActuar('Diseñador', 'maxi', r('a', 'pendiente', 'felipe', null)), true);
+  assert.equal(debeActuar('Diseñador', 'maxi', r('a', 'aprobado', 'felipe', null)), true);
+  assert.equal(debeActuar('Diseñador', 'maxi', r('a', 'en_revision', 'felipe', null)), false);
+});
+
+test('debeActuar: el CM revisa solo lo suyo; el Admin revisa todo; Prueba nunca', () => {
+  assert.equal(debeActuar('Community Manager', 'pedro', r('a', 'en_revision', 'pedro', null)), true);
+  assert.equal(debeActuar('Community Manager', 'pedro', r('a', 'en_revision', 'felipe', null)), false);
+  assert.equal(debeActuar('Administrador', 'felipe', r('a', 'en_revision', 'pedro', null)), true);
+  assert.equal(debeActuar('Prueba', 'alexis', r('a', 'pendiente', 'felipe', null)), false);
+});
+
+test('debeActuar: publicado y cancelado no le tocan a nadie', () => {
+  assert.equal(debeActuar('Administrador', 'felipe', r('a', 'publicado', 'felipe', null)), false);
+  assert.equal(debeActuar('Diseñador', 'maxi', r('a', 'cancelado', 'felipe', null)), false);
 });

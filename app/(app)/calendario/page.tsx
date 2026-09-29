@@ -11,7 +11,8 @@ import { Calendario } from '@/components/calendario/Calendario';
 import { notasProximas } from '@/lib/agenda/notas-proximas';
 import { RepositorioAgendaSupabase } from '@/lib/repositorios/repositorio-agenda';
 import { RepositorioTicketsSupabase } from '@/lib/repositorios/repositorio-tickets';
-import { resumirPorPartido } from '@/lib/tickets/estados';
+import { alertasPorPartido, resumirPorPartido } from '@/lib/tickets/estados';
+import { pendientesDeSesion } from '@/lib/tickets/pendientes-de-sesion';
 import { crearClienteServidor } from '@/lib/supabase/cliente-servidor';
 import { ZONA_AGENCIA } from '@/lib/fechas/zonas';
 
@@ -21,7 +22,7 @@ export default async function PaginaCalendario() {
 
   const supabase = crearClienteServidor();
   const repo = new RepositorioAgendaSupabase(supabase);
-  const [eventosNota, eventos, tickets] = await Promise.all([
+  const [eventosNota, eventos, tickets, pendientes] = await Promise.all([
     repo.listarEventosParaNotas(hoyUy),
     // Misma ventana que proyecta agenda_anual (cumpleaños/aniversarios): [-1, +2] años.
     repo.listarEventos(`${anio - 1}-01-01`, `${anio + 2}-12-31`),
@@ -30,6 +31,8 @@ export default async function PaginaCalendario() {
       console.error('tickets (calendario):', e);
       return [];
     }),
+    // Lo que le toca a quien mira (lucecita en el chip); misma lectura cacheada que la barra.
+    pendientesDeSesion(),
   ]);
   const notas = notasProximas(eventosNota, hoyUy);
 
@@ -46,7 +49,12 @@ export default async function PaginaCalendario() {
 
       <NotasAgenda notas={notas} />
 
-      <Calendario eventos={eventos} hoyUy={hoyUy} ticketsPorPartido={resumirPorPartido(tickets)} />
+      <Calendario
+        eventos={eventos}
+        hoyUy={hoyUy}
+        ticketsPorPartido={resumirPorPartido(tickets)}
+        alertasPorPartido={alertasPorPartido(pendientes)}
+      />
     </section>
   );
 }

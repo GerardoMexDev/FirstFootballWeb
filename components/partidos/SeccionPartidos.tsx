@@ -22,6 +22,7 @@ export function SeccionPartidos({
   linksDropbox,
   fechas = [],
   hoyUy,
+  alertasTicket = {},
 }: {
   partidos: PartidoProximo[];
   partidosConHito: Set<string>;
@@ -30,6 +31,8 @@ export function SeccionPartidos({
   fechas?: FechaContenido[];
   /** YYYY-MM-DD en Uruguay, para los filtros Hoy / Esta semana de las fechas. */
   hoyUy: string;
+  /** `{ partidoId: texto }` de la lucecita de ticket del usuario (`alertasPorPartido`). */
+  alertasTicket?: Record<string, string>;
 }) {
   const [filtro, setFiltro] = useState<FiltroPartidos>('todos');
   const { abrir } = usePanel();
@@ -49,6 +52,7 @@ export function SeccionPartidos({
           onAbrirPartido={(partidoId) => abrir('partido', partidoId)}
           linksDropbox={linksDropbox}
           fechas={fechasFiltradas}
+          alertasTicket={alertasTicket}
         />
       </div>
     </>

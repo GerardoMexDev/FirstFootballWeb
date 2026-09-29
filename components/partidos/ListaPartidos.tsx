@@ -21,8 +21,11 @@ export function ListaPartidos({
   onAbrirPartido,
   linksDropbox,
   fechas = [],
+  alertasTicket = {},
 }: {
   partidos: PartidoProximo[];
+  /** `{ partidoId: texto }` de la lucecita de ticket (`alertasPorPartido`). */
+  alertasTicket?: Record<string, string>;
   /** Fechas de Contenido ya filtradas; van debajo de los partidos de su día. */
   fechas?: FechaContenido[];
   partidosConHito?: Set<string>;
@@ -57,6 +60,7 @@ export function ListaPartidos({
                   tieneHito={partidosConHito.has(p.partidoId)}
                   onAbrir={onAbrirPartido ? () => onAbrirPartido(p.partidoId) : undefined}
                   linksDropbox={linksDropbox ? (linksDropbox[p.jugadorId] ?? SIN_LINKS) : undefined}
+                  alertaTicket={alertasTicket[p.partidoId]}
                 />
               ))}
               {fechasDelDia.map((f) => (

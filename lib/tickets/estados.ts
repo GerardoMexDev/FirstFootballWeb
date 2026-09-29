@@ -15,7 +15,30 @@ export const META_ESTADO: Record<EstadoTicket, { etiqueta: string; corta: string
   cancelado: { etiqueta: 'Cancelado', corta: 'Cancelado', simbolo: '○' },
 };
 
-const URGENCIA: EstadoTicket[] = ['pendiente', 'en_revision', 'aprobado', 'publicado'];
+/**
+ * Texto de la lucecita roja (2026-09-29) según lo que hay que hacer. Solo en los estados en
+ * los que alguien tiene que actuar; a quién le toca lo decide `debeActuar` (permisos.ts).
+ */
+export const TEXTO_ALERTA: Partial<Record<EstadoTicket, string>> = {
+  pendiente: 'Ticket pendiente',
+  en_revision: 'Para revisar',
+  aprobado: 'Para publicar',
+};
+
+/**
+ * `{ partidoId: texto }` a partir de los tickets que ya le tocan al usuario (`pendientesDe`).
+ * Con varios tickets en un partido manda el más urgente. Tickets sin partido no alertan.
+ */
+export function alertasPorPartido(pendientes: ResumenTicket[]): Record<string, string> {
+  const alertas: Record<string, string> = {};
+  for (const [partidoId, r] of Object.entries(resumirPorPartido(pendientes))) {
+    const texto = TEXTO_ALERTA[r.estado];
+    if (texto) alertas[partidoId] = texto;
+  }
+  return alertas;
+}
+
+const URGENCIA: EstadoTicket[] =['pendiente', 'en_revision', 'aprobado', 'publicado'];
 
 /** El estado más urgente de la lista (cancelado no cuenta). `null` si no queda ninguno. */
 export function estadoMasUrgente(estados: EstadoTicket[]): EstadoTicket | null {

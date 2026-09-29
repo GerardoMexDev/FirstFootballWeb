@@ -1357,6 +1357,14 @@ contador del Admin y del CM que los creó.
 5. Filtros: "Match Day" = partidos de jugadores Match Day; "Contenido" = partidos + fechas de
    los jugadores de Contenido.
 Orden: lucecita + calendario → filtros → pantalla Tickets → tickets desde ficha (migración).
+- **✅ 1 y 2 HECHOS (2026-09-29, falta push):** `debeActuar` (permisos) + `TEXTO_ALERTA` /
+  `alertasPorPartido` (estados) con tests; `pendientesDeSesion` (React.cache, una sola lectura
+  por request para barra + páginas); `AlertaTicket` en tarjeta de /partidos, panel del partido
+  y chip de /calendario (Match Day). Tarjeta tentativa con alerta no se atenúa. QA con los 4
+  usuarios en dev :3100: Maxi "Ticket pendiente", Felipe "Para revisar" tras la entrega,
+  Pedro/Alexis nada; animación 1 s × 5; 390 px sin scroll. Ticket de QA 8b6c198c cancelado.
+  Nota: el "Calendario general" no muestra tickets porque hoy todo ticket es de un partido
+  (van en Match Day); aparecerán ahí con los tickets desde la ficha (punto 4).
 
 **📝 Pedido de Gerardo (2026-09-29, mientras revisa en prod):**
 - En cada **tarjeta de partido** de /partidos (ej. "RB Bragantino vs Atlético Mineiro · Estadio… ·

@@ -20,6 +20,8 @@ import { RepositorioJugadoresSupabase } from '@/lib/repositorios/repositorio-jug
 import { crearClienteServidor } from '@/lib/supabase/cliente-servidor';
 import { ZONA_AGENCIA } from '@/lib/fechas/zonas';
 import { hastaFechas } from '@/lib/partidos/fechas-contenido';
+import { pendientesDeSesion } from '@/lib/tickets/pendientes-de-sesion';
+import { alertasPorPartido } from '@/lib/tickets/estados';
 
 export default async function PaginaPartidos() {
   // Fecha de hoy en hora de Uruguay (lo que la demo pone en #fecha-hoy).
@@ -36,7 +38,7 @@ export default async function PaginaPartidos() {
 
   const repositorioHitos = new RepositorioHitosSupabase(supabase);
   const repositorioAgenda = new RepositorioAgendaSupabase(supabase);
-  const [jugadores, totales, escalas, eventosAgenda, linksDropbox, fechasContenido] = await Promise.all([
+  const [jugadores, totales, escalas, eventosAgenda, linksDropbox, fechasContenido, pendientes] = await Promise.all([
     repositorioHitos.listarJugadoresActivos(),
     repositorioHitos.listarTotales(),
     repositorioHitos.listarEscalasActivas(),
@@ -44,6 +46,8 @@ export default async function PaginaPartidos() {
     new RepositorioJugadoresSupabase(supabase).listarLinksDropbox(),
     // Fechas de Contenido para mezclar en la lista: de hoy al último partido cargado.
     repositorioAgenda.listarFechasContenido(hoyUy, hastaFechas(partidos, hoyUy)),
+    // Lo que le toca al usuario (misma lectura que el contador de la barra, cacheada).
+    pendientesDeSesion(),
   ]);
   const totalesPorJugador = new Map(totales.map((t) => [t.jugadorId, t]));
   const hitos = ordenarHitos(
@@ -74,6 +78,7 @@ export default async function PaginaPartidos() {
         linksDropbox={linksDropbox}
         fechas={fechasContenido}
         hoyUy={hoyUy}
+        alertasTicket={alertasPorPartido(pendientes)}
       />
     </section>
   );

@@ -423,3 +423,19 @@ html { overflow-x: clip; }
 @media (max-width: 370px) {
   .nav button { font-size: var(--t-xs); }
 }
+
+/* Lucecita de ticket (2026-09-29): "Ticket pendiente" / "Para revisar" / "Para publicar".
+   La luz late 5 veces (1 por segundo, lejos del límite de 3 destellos/s) y queda fija:
+   WCAG 2.2.2 pide poder parar lo que parpadea más de 5 s. El texto va siempre. */
+.tka { display: inline-flex; align-items: center; gap: 7px; padding: 5px 11px; border-radius: 999px; background: var(--tk-rojo-bg); color: var(--tk-rojo); font-size: var(--t-xs); font-weight: 600; white-space: nowrap; line-height: 1.4; }
+.tka__luz { flex-shrink: 0; width: 8px; height: 8px; border-radius: 50%; background: var(--tk-rojo-borde); animation: tka-late 1s ease-in-out 5; }
+@keyframes tka-late {
+  0%, 100% { opacity: 1; box-shadow: 0 0 0 0 color-mix(in srgb, var(--tk-rojo-borde) 55%, transparent); }
+  50% { opacity: .25; box-shadow: 0 0 0 5px transparent; }
+}
+@media (prefers-reduced-motion: reduce) { .tka__luz { animation: none; } }
+/* En el chip del calendario la luz va sola delante del texto corto. */
+.ev__tk .tka__luz { display: inline-block; width: 7px; height: 7px; margin-right: 4px; vertical-align: middle; }
+/* Una tarjeta tentativa se atenúa entera (demo.css); con alerta de ticket no, para que la
+   alerta se lea bien. Sigue marcada como tentativa por el rótulo "Tentativa". */
+.match--tent.match--tka { opacity: 1; }

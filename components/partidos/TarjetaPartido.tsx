@@ -14,11 +14,13 @@
  * - Con `onAbrir`, la tarjeta abre el panel de detalle del partido (clic, Enter o Espacio),
  *   con `role="button"` y foco — igual que `.match` en la demo. Sin `onAbrir` (por si se
  *   reusa en otro contexto) queda como bloque no interactivo.
+ * - Con `alertaTicket`, la lucecita roja de ticket junto a la cara (2026-09-29).
  */
 import { Ico } from '@/components/comunes/Ico';
 import { Escudo } from '@/components/comunes/Escudo';
 import { CaraJugador } from '@/components/comunes/CaraJugador';
 import { BotonesDropbox } from '@/components/jugadores/BotonesDropbox';
+import { AlertaTicket } from '@/components/tickets/AlertaTicket';
 import type { LinksDropbox } from '@/lib/jugadores/links-dropbox';
 import { horaCortaEnUruguay, horaCortaEnSede, marcadorCambioDeDia } from '@/lib/fechas/zonas';
 import { mostrar } from '@/lib/formato/valores';
@@ -30,9 +32,12 @@ export function TarjetaPartido({
   tieneHito = false,
   onAbrir,
   linksDropbox,
+  alertaTicket,
 }: {
   partido: PartidoProximo;
   tieneHito?: boolean;
+  /** "Ticket pendiente" / "Para revisar" / "Para publicar" si el partido espera algo del usuario. */
+  alertaTicket?: string;
   onAbrir?: () => void;
   /** Si se pasa, muestra los botones de Dropbox junto a la cara del jugador. */
   linksDropbox?: LinksDropbox;
@@ -48,7 +53,7 @@ export function TarjetaPartido({
 
   return (
     <article
-      className={`match ${claseTarjeta(p)} ${hoy ? 'match--hoy' : ''} ${p.tentativo ? 'match--tent' : ''} ${p.esInternacional ? 'match--int' : ''}`}
+      className={`match ${claseTarjeta(p)} ${hoy ? 'match--hoy' : ''} ${p.tentativo ? 'match--tent' : ''} ${p.esInternacional ? 'match--int' : ''} ${alertaTicket ? 'match--tka' : ''}`}
       data-id={p.partidoId}
       {...(onAbrir && {
         role: 'button',
@@ -139,6 +144,7 @@ export function TarjetaPartido({
               Hito
             </span>
           )}
+          {alertaTicket && <AlertaTicket texto={alertaTicket} />}
           {linksDropbox && (
             <BotonesDropbox links={linksDropbox} nombreJugador={p.jugadorApodo || p.jugadorNombre} />
           )}

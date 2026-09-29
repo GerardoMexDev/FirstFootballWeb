@@ -20,7 +20,9 @@ import { CaraJugador } from '@/components/comunes/CaraJugador';
 import { BotonesDropbox } from '@/components/jugadores/BotonesDropbox';
 import { CrearTicket } from '@/components/tickets/CrearTicket';
 import { PastillaEstado } from '@/components/tickets/PastillaEstado';
-import { puedeCrear } from '@/lib/tickets/permisos';
+import { AlertaTicket } from '@/components/tickets/AlertaTicket';
+import { debeActuar, puedeCrear } from '@/lib/tickets/permisos';
+import { TEXTO_ALERTA } from '@/lib/tickets/estados';
 import { SIN_LINKS } from '@/lib/jugadores/links-dropbox';
 import { EstadoSinDatos } from '@/components/comunes/EstadoSinDatos';
 import { usePanel } from '@/lib/paneles/use-panel';
@@ -189,12 +191,24 @@ export function PanelPartido({ bundle }: { bundle: DetallePartidoBundle }) {
               <div className="tkp">
                 {(bundle.tickets ?? [])
                   .filter((t) => t.jugadorId === j.jugadorId)
-                  .map((t) => (
-                    <button key={t.id} type="button" className="tkp__t" aria-label={`Ver ticket de ${j.nombre}`} onClick={() => abrir('ticket', t.id)}>
-                      <PastillaEstado estado={t.estado} />
-                      <span>Ver ticket</span>
-                    </button>
-                  ))}
+                  .map((t) => {
+                    // Lucecita si el ticket espera algo de quien mira (mismo criterio que la barra).
+                    const alerta =
+                      bundle.usuario && debeActuar(bundle.usuario.cargo, bundle.usuario.id, t) ? TEXTO_ALERTA[t.estado] : undefined;
+                    return (
+                      <button
+                        key={t.id}
+                        type="button"
+                        className="tkp__t"
+                        aria-label={`Ver ticket de ${j.nombre}${alerta ? ` — ${alerta}` : ''}`}
+                        onClick={() => abrir('ticket', t.id)}
+                      >
+                        <PastillaEstado estado={t.estado} />
+                        {alerta && <AlertaTicket texto={alerta} />}
+                        <span>Ver ticket</span>
+                      </button>
+                    );
+                  })}
                 {bundle.usuario &&
                   !bundle.ticketsError &&
                   puedeCrear(bundle.usuario.cargo) &&
