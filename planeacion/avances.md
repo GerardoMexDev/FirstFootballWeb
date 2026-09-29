@@ -2561,8 +2561,9 @@ F–H → I (con migración). Cada ítem cerrado se documenta en §4.
 - ¿La preferencia de tema se persiste por usuario (`perfiles`) o solo en `localStorage` del dispositivo?
 - Versión de Next: se usó **14.2.x** (contexto.md pide "14+"). Migrar a 15 es opción, no urgencia.
 
-### 🎫 Pantalla Tickets + barra inferior — ✅ IMPLEMENTADA en rama `pantalla-tickets` (2026-09-29, Sesión 13) — FALTA revisión final + integrar
+### 🎫 Pantalla Tickets + barra inferior — ✅ REVISADA E INTEGRADA a main (2026-09-29, Sesión 14) — falta `git push` + prueba en iPhone
 - Plan `planeacion/plans/2026-09-29-pantalla-tickets.md`, tareas 1–5 hechas (ledger en `.superpowers/sdd/2026-09-29-pantalla-tickets/progress.md`).
 - QA :3100 con los 4 usuarios OK: contadores/filtros, Pedro solo los suyos, Maxi "Ticket pendiente", Felipe "Para revisar" tras la entrega, Alexis sin pestaña y redirigido, 360–1280 px sin scroll, barra inferior no tapa la última tarjeta, ticket de QA 41a26c36 cancelado.
 - Rulings: barra inferior en **≤ 960 px** (no 900: con el globito la barra de arriba desbordaba a 901–940); entre 961 y 1180 px la barra de arriba se compacta (sin nombre, buscador solo lupa) porque el avatar quedaba cortado; el chequeo por scrollWidth no sirve con `html{overflow-x:clip}` → medir el borde derecho real.
-- **Próxima sesión:** (1) revisión final de la rama (executing-plans: review-package + revisor), (2) integrar a main (finishing-a-development-branch), (3) Gerardo `git push`, (4) probar en su iPhone. Después: tickets desde la ficha del jugador (punto 4).
+- Revisión final (subagente opus): "listo con arreglos"; se corrigieron contraste de los contadores (5.2:1), menús de arriba por encima de la barra inferior (z-index 85) y nav con desplazamiento en 961–1180 px. Menores pendientes: comentarios de app.css con "901", tope de 300 filas descarta los abiertos más viejos, mensaje vacío del CM con solo cerrados viejos, `diasHasta` duplicado, test del borde de 1 día.
+- **Siguiente:** Gerardo `git push` → QA en prod → probar en iPhone. Después: tickets desde la ficha del jugador (punto 4; Aguirre cumple el 1/10).
