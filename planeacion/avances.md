@@ -1386,6 +1386,14 @@ contador del Admin y del CM que los creó.
   incluir cancelados/publicados o solo abiertos por defecto, paginación (la consulta debe ir
   acotada — ver hallazgo "consulta sin límite" de la revisión).
 
+**📝 Pedido de Gerardo (2026-09-29) — dos filtros más en /partidos:**
+- Hoy: Todos · Hoy · Esta semana · Internacional · Con hito · Fechas. Agregar:
+  - **Match Day** → solo los partidos de jugadores con cobertura Match Day.
+  - **Contenido** → solo lo de los jugadores de Contenido.
+- A definir: si "Contenido" muestra los partidos de esos jugadores, sus fechas (cumpleaños/
+  aniversarios) o ambos; verificar en la base cómo está marcado cada jugador (Match Day vs
+  Contenido) antes de filtrar.
+
 **Candidatos para una migración `0026` (menores, no bloquean):** `search_path = public, pg_temp`
 en las funciones security definer; límite de largo del link; `ticket_dias_anticipacion()` stable
 en vez de immutable; separar el update de `inicio_utc_conocido` del aviso (hoy si falla el texto
