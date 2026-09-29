@@ -22,6 +22,9 @@ import { PanelLateral } from '@/components/paneles/PanelLateral';
 import { sesionActual } from '@/lib/sesion/sesion-actual';
 import { saludoPorHora, primerNombre } from '@/lib/sesion/saludo';
 import { ZONA_AGENCIA } from '@/lib/fechas/zonas';
+import { RepositorioTicketsSupabase } from '@/lib/repositorios/repositorio-tickets';
+import { crearClienteServidor } from '@/lib/supabase/cliente-servidor';
+import { pendientesDe } from '@/lib/tickets/permisos';
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const sesion = await sesionActual();
@@ -29,6 +32,10 @@ export default async function AppLayout({ children }: { children: React.ReactNod
 
   const saludo = saludoPorHora(DateTime.now().setZone(ZONA_AGENCIA).hour);
   const nombre = primerNombre(sesion.nombreCompleto);
+  const hoyUy = DateTime.now().setZone(ZONA_AGENCIA).toISODate() ?? '';
+  // Degradación elegante: si la lectura de tickets falla, la barra se ve sin contador.
+  const tickets = await new RepositorioTicketsSupabase(crearClienteServidor()).listarResumen().catch(() => []);
+  const pendientes = pendientesDe(sesion.cargo, sesion.usuarioId, tickets);
 
   return (
     <>
@@ -44,6 +51,8 @@ export default async function AppLayout({ children }: { children: React.ReactNod
             email: sesion.email,
             tema: sesion.tema,
           }}
+          pendientes={pendientes}
+          hoyUy={hoyUy}
         />
         <main className="wrap">
           <p className="saludo" id="saludo">

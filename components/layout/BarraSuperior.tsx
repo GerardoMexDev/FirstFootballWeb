@@ -14,9 +14,11 @@ import { Nav } from '@/components/layout/Nav';
 import { Ico } from '@/components/comunes/Ico';
 import { Buscador } from '@/components/buscador/Buscador';
 import { ToggleTema } from '@/components/layout/ToggleTema';
+import { ContadorTickets } from '@/components/tickets/ContadorTickets';
 import { rutaPanel } from '@/lib/paneles/use-panel';
 import { crearClienteNavegador } from '@/lib/supabase/cliente-navegador';
 import type { Tema } from '@/lib/sesion/sesion-actual';
+import type { ResumenTicket } from '@/lib/tickets/tipos';
 
 export interface PerfilBarra {
   usuarioId: string;
@@ -26,7 +28,7 @@ export interface PerfilBarra {
   tema: Tema;
 }
 
-export function BarraSuperior({ perfil }: { perfil: PerfilBarra }) {
+export function BarraSuperior({ perfil, pendientes, hoyUy }: { perfil: PerfilBarra; pendientes: ResumenTicket[]; hoyUy: string }) {
   const router = useRouter();
   const pathname = usePathname();
   const [abierto, setAbierto] = useState(false);
@@ -87,6 +89,8 @@ export function BarraSuperior({ perfil }: { perfil: PerfilBarra }) {
           <Buscador />
 
           <ToggleTema usuarioId={perfil.usuarioId} temaInicial={perfil.tema} />
+
+          <ContadorTickets pendientes={pendientes} hoyUy={hoyUy} />
 
           <div className="who" ref={contenedorRef}>
             <button
