@@ -698,10 +698,20 @@ test('Concurrencia: aprobar y devolver a la vez → gana uno solo', async () => 
     assert.equal(rows[0].estado, 'aprobado');
   } finally {
     try {
+      // Si el test se cortó entre el `begin`+lock de `a` y su `commit` (p. ej. porque la
+      // aserción de "b sigue pendiente" falló), `a` puede seguir reteniendo el lock de fila del
+      // ticket. Liberarlo (y el de `b`, por las dudas) ANTES de que `c` intente borrar esa fila
+      // evita una espera circular: `c` bloqueado por el lock de `a`, y `a.end()`/`b.end()` sin
+      // correr todavía porque están en el finally más externo, después de esta limpieza.
+      await a.query('rollback').catch(() => {});
+      await b.query('rollback').catch(() => {});
       await c.query('rollback').catch(() => {});
       await c.query('reset role').catch(() => {});
       await c.query('begin');
       try {
+        // Red de seguridad: si por algún motivo imprevisto igual queda un lock (p. ej. otra
+        // sesión), que la limpieza tire en vez de colgar la suite para siempre.
+        await c.query(`set local lock_timeout = '10s'`);
         await c.query('alter table tickets_historial disable trigger tickets_historial_inmutable');
         await c.query('alter table tickets disable trigger tickets_sin_borrado');
         try {
