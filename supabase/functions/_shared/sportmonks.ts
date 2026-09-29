@@ -59,7 +59,9 @@ export interface FixtureSportmonks {
   starting_at_timestamp: number; // unix seconds UTC — más confiable que `starting_at` (sin 'Z')
   state?: { state?: string | null } | null;
   participants?: ParticipanteSportmonks[] | null;
-  venue?: { name?: string | null; city_name?: string | null } | null;
+  // `city` viene con `include=venue.city`: algunas sedes (Arena MRV, Estadio Universitario)
+  // traen `city_name` en null pero sí el id de ciudad → verificado en vivo 2026-09-29.
+  venue?: { name?: string | null; city_name?: string | null; city?: { name?: string | null } | null } | null;
   lineups?: LineupSportmonks[] | null;
   events?: EventoSportmonks[] | null;
 }
@@ -92,7 +94,7 @@ export async function obtenerFixturesDeEquipo(
 ): Promise<FixtureSportmonks[]> {
   const fixtures: FixtureSportmonks[] = [];
   let url: URL | null = new URL(`${BASE}/fixtures/between/${desdeIso}/${hastaIso}/${teamId}`);
-  url.searchParams.set('include', 'lineups.player;lineups.details;participants;state;venue;events');
+  url.searchParams.set('include', 'lineups.player;lineups.details;participants;state;venue.city;events');
 
   for (let i = 0; i < 20 && url; i++) {
     url.searchParams.set('api_token', apiKey);

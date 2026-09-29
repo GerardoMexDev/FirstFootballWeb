@@ -76,6 +76,20 @@ test('sede ausente: campos en null, sin romper', () => {
   assert.equal(p.sedeCiudad, null);
 });
 
+test('venue sin city_name: la ciudad sale de venue.city (Arena MRV, verificado en vivo 2026-09-29)', () => {
+  const evento = fixtureTolucaDeVisitante();
+  evento.venue = { name: 'Arena MRV', city_name: null, city: { name: 'Belo Horizonte' } };
+  const p = normalizarFixture(evento, '967');
+  assert.equal(p.sedeNombre, 'Arena MRV');
+  assert.equal(p.sedeCiudad, 'Belo Horizonte');
+});
+
+test('venue con city_name y city: gana city_name (lo que ya venía andando)', () => {
+  const evento = fixtureTolucaDeVisitante();
+  evento.venue = { name: 'Mexico City Stadium', city_name: 'Mexico City', city: { name: 'Ciudad de México' } };
+  assert.equal(normalizarFixture(evento, '967').sedeCiudad, 'Mexico City');
+});
+
 test('nuestro equipo no está entre los participantes: lanza (nunca debería pasar)', () => {
   assert.throws(() => normalizarFixture(fixtureTolucaDeVisitante(), '99999'), /no aparece/i);
 });

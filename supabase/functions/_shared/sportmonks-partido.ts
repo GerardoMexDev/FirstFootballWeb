@@ -53,7 +53,8 @@ export function normalizarFixture(fixture: FixtureSportmonks, nuestroTeamId: str
     rivalNombre: rival.name || null,
     rivalEscudoUrl: rival.image_path || null,
     sedeNombre: fixture.venue?.name ?? null,
-    sedeCiudad: fixture.venue?.city_name ?? null,
+    // city_name a veces viene null aunque la sede tenga ciudad: respaldo en venue.city.
+    sedeCiudad: fixture.venue?.city_name || fixture.venue?.city?.name || null,
     estado: mapearEstadoSportmonks(fixture.state?.state),
   };
 }
