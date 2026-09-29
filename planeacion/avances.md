@@ -1312,7 +1312,24 @@ Charla con Gerardo (no se codeó nada): tres preguntas de la agencia / de él.
 
 ## 5. Pendiente / próximos pasos
 
-### 🎫 Tickets de diseño (Admin/CM → Diseñador) — SPEC ESCRITA, en revisión de Gerardo (`planeacion/specs/2026-09-28-tickets-diseno.md`)
+### 🎫 Tickets de diseño — EN IMPLEMENTACIÓN (rama `tickets-diseno`, pausa 2026-09-29)
+
+**Cómo retomar:** rama `tickets-diseno` (NO está en main ni en producción, salvo la base).
+Plan: `planeacion/plans/2026-09-28-tickets-diseno.md`; registro de avance del método de
+subagentes: `.superpowers/sdd/2026-09-28-tickets-diseno/progress.md` (gitignored; manda el
+registro + `git log`). **Hecho y revisado:** Tasks 1–6 (migración 0025 con 33 tests en
+`npm run test:tickets`, **0025 YA APLICADA en prod**, tipos regenerados, lógica pura, repositorio,
+RPC). **Task 7** (panel del ticket) implementada en `957cf6f`, **falta su revisión**. Faltan
+Tasks 8–11 (crear desde el panel del partido, chips del calendario, contador, QA final).
+Hallazgos importantes corregidos en el camino: `perfiles_publicos` era escribible por
+cualquier logueado (revoke all), `ticket__mover` fallaba abierto, limpieza del test de
+concurrencia, `mensajeError` filtraba errores técnicos en inglés.
+**Pendiente para Gerardo:** crear `scripts/limpiar-tickets.sql` (el auto-mode bloqueó a Claude
+escribirlo; contenido en el plan, Task 4 Step 6) — solo hace falta para la entrega.
+**Para comentar con la agencia:** un partido cancelado en la fuente llega como `sin_datos` y no
+genera aviso en el ticket.
+
+### 🎫 Tickets de diseño (Admin/CM → Diseñador) — SPEC APROBADA (`planeacion/specs/2026-09-28-tickets-diseno.md`)
 
 Nueva funcionalidad pedida por la agencia (vía Gerardo). Tratada como **arquitectónica**:
 preguntas → enfoques → diseño → spec escrita (revisa Gerardo) → plan → código. **No codeado.**
