@@ -34,9 +34,11 @@ export function pendientesDe(cargo: string, usuarioId: string, tickets: ResumenT
     cargo === 'Diseñador'
       ? (t) => t.estado === 'pendiente' || t.estado === 'aprobado'
       : cargo === 'Community Manager'
-        ? (t) => t.estado === 'en_revision' && t.creadoPor === usuarioId
+        ? (t) =>
+            (t.estado === 'en_revision' && t.creadoPor === usuarioId) ||
+            (t.estado === 'pendiente' && t.partidoEliminado && t.creadoPor === usuarioId)
         : cargo === 'Administrador'
-          ? (t) => t.estado === 'en_revision'
+          ? (t) => t.estado === 'en_revision' || (t.estado === 'pendiente' && t.partidoEliminado)
           : () => false;
   return tickets
     .filter(filtro)

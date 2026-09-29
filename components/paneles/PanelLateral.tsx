@@ -64,12 +64,27 @@ export function PanelLateral() {
   // tipo+id del último contenido cargado: si solo cambia `version` (recarga tras una acción)
   // se refresca en silencio, sin pasar por "cargando" (no desmonta el panel ni pierde el foco).
   const claveCargada = useRef<string | null>(null);
+  // Quienes esperan que termine la recarga silenciosa (ver `recargar`).
+  const esperandoRecarga = useRef<Array<() => void>>([]);
+  const avisarRecarga = useCallback(() => {
+    const lista = esperandoRecarga.current;
+    esperandoRecarga.current = [];
+    lista.forEach((r) => r());
+  }, []);
+  // Recarga el panel abierto y devuelve una promesa que se resuelve cuando ya se pintó el contenido nuevo.
+  const recargar = useCallback(() => {
+    return new Promise<void>((resolver) => {
+      esperandoRecarga.current.push(resolver);
+      setVersion((v) => v + 1);
+    });
+  }, []);
 
   // Traer los datos al abrir / cambiar de entidad. Mientras no está abierto no se toca el
   // contenido (así queda visible durante la animación de salida).
   useEffect(() => {
     if (!abierto || !tipo) {
       claveCargada.current = null;
+      avisarRecarga();
       return;
     }
     let vivo = true;
@@ -101,12 +116,16 @@ export function PanelLateral() {
       })
       .catch(() => {
         if (vivo) setContenido({ fase: 'error', mensaje: 'No pudimos cargar el detalle. Probá de nuevo.' });
+      })
+      .finally(() => {
+        // Si otra recarga la pisó (vivo = false), la que sigue avisa.
+        if (vivo) avisarRecarga();
       });
 
     return () => {
       vivo = false;
     };
-  }, [abierto, tipo, id, version]);
+  }, [abierto, tipo, id, version, avisarRecarga]);
 
   // Foco: al abrir, guardar el actual y llevar al botón Cerrar; al cerrar, restaurar.
   useEffect(() => {
@@ -194,7 +213,7 @@ export function PanelLateral() {
           )}
           {contenido?.fase === 'partido' && <PanelPartido bundle={contenido.datos} />}
           {contenido?.fase === 'ticket' && (
-            <PanelTicket bundle={contenido.datos} onActualizar={() => setVersion((v) => v + 1)} />
+            <PanelTicket bundle={contenido.datos} onActualizar={recargar} />
           )}
           {contenido?.fase === 'perfil' && (
             <PanelPerfil

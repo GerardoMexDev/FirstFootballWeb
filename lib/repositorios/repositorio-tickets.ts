@@ -10,6 +10,8 @@ import type { DetalleTicket, EstadoTicket, EventoHistorial, ResumenTicket, TipoE
 
 type ClienteSupabase = ReturnType<typeof crearClienteServidor>;
 
+type FilaResumen = Omit<FilaTicket, 'nota' | 'link_entrega' | 'estado_partido'>;
+
 interface FilaTicket {
   id: string;
   partido_id: string | null;
@@ -38,10 +40,13 @@ interface FilaHistorial {
   creado_en: string;
 }
 
+// Listas: sin `nota` (solo el detalle la necesita).
+const CAMPOS_RESUMEN =
+  'id, partido_id, jugador_id, jugador_nombre, titulo, estado, creado_por, creado_por_nombre, inicio_utc, fecha_limite, partido_eliminado';
 const CAMPOS =
   'id, partido_id, jugador_id, jugador_nombre, titulo, nota, estado, link_entrega, creado_por, creado_por_nombre, inicio_utc, estado_partido, partido_eliminado, fecha_limite';
 
-function aResumen(f: FilaTicket): ResumenTicket {
+function aResumen(f: FilaResumen): ResumenTicket {
   return {
     id: f.id,
     partidoId: f.partido_id,
@@ -60,15 +65,28 @@ function aResumen(f: FilaTicket): ResumenTicket {
 export class RepositorioTicketsSupabase {
   constructor(private readonly supabase: ClienteSupabase) {}
 
-  /** Todos los tickets no cancelados (tabla chica: 3 usuarios). */
-  async listarResumen(): Promise<ResumenTicket[]> {
+  /** Tickets que todavía "le tocan" a alguien (contador de la barra): pendiente, en revisión, aprobado. */
+  async listarPendientes(): Promise<ResumenTicket[]> {
     const { data, error } = await this.supabase
       .from('tickets_vista')
-      .select(CAMPOS)
-      .neq('estado', 'cancelado')
+      .select(CAMPOS_RESUMEN)
+      .in('estado', ['pendiente', 'en_revision', 'aprobado'])
       .order('creado_en', { ascending: true })
-      .returns<FilaTicket[]>();
-    if (error) throw new Error(`No se pudo leer tickets: ${error.message}`);
+      .returns<FilaResumen[]>();
+    if (error) throw new Error(`No se pudo leer tickets pendientes: ${error.message}`);
+    return (data ?? []).map(aResumen);
+  }
+
+  /** Tickets no cancelados con partido desde `desdeIso` (yyyy-mm-dd, inicio de la ventana del calendario). */
+  async listarParaCalendario(desdeIso: string): Promise<ResumenTicket[]> {
+    const { data, error } = await this.supabase
+      .from('tickets_vista')
+      .select(CAMPOS_RESUMEN)
+      .neq('estado', 'cancelado')
+      .gte('inicio_utc', desdeIso)
+      .order('inicio_utc', { ascending: true })
+      .returns<FilaResumen[]>();
+    if (error) throw new Error(`No se pudo leer tickets del calendario: ${error.message}`);
     return (data ?? []).map(aResumen);
   }
 
@@ -76,11 +94,11 @@ export class RepositorioTicketsSupabase {
   async listarPorPartido(partidoId: string): Promise<ResumenTicket[]> {
     const { data, error } = await this.supabase
       .from('tickets_vista')
-      .select(CAMPOS)
+      .select(CAMPOS_RESUMEN)
       .eq('partido_id', partidoId)
       .neq('estado', 'cancelado')
       .order('creado_en', { ascending: true })
-      .returns<FilaTicket[]>();
+      .returns<FilaResumen[]>();
     if (error) throw new Error(`No se pudo leer tickets del partido: ${error.message}`);
     return (data ?? []).map(aResumen);
   }

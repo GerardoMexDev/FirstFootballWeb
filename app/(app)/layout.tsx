@@ -34,7 +34,14 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   const nombre = primerNombre(sesion.nombreCompleto);
   const hoyUy = DateTime.now().setZone(ZONA_AGENCIA).toISODate() ?? '';
   // Degradación elegante: si la lectura de tickets falla, la barra se ve sin contador.
-  const tickets = await new RepositorioTicketsSupabase(crearClienteServidor()).listarResumen().catch(() => []);
+  // "Prueba" nunca tiene pendientes: ni se consulta.
+  const tickets =
+    sesion.cargo === 'Prueba'
+      ? []
+      : await new RepositorioTicketsSupabase(crearClienteServidor()).listarPendientes().catch((e) => {
+          console.error('tickets (layout):', e);
+          return [];
+        });
   const pendientes = pendientesDe(sesion.cargo, sesion.usuarioId, tickets);
 
   return (

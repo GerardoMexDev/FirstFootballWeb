@@ -190,7 +190,7 @@ export function PanelPartido({ bundle }: { bundle: DetallePartidoBundle }) {
                 {(bundle.tickets ?? [])
                   .filter((t) => t.jugadorId === j.jugadorId)
                   .map((t) => (
-                    <button key={t.id} type="button" className="tkp__t" onClick={() => abrir('ticket', t.id)}>
+                    <button key={t.id} type="button" className="tkp__t" aria-label={`Ver ticket de ${j.nombre}`} onClick={() => abrir('ticket', t.id)}>
                       <PastillaEstado estado={t.estado} />
                       <span>Ver ticket</span>
                     </button>

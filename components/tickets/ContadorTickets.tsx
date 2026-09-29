@@ -75,6 +75,8 @@ export function ContadorTickets({ pendientes, hoyUy }: { pendientes: ResumenTick
               className="tkc__i"
               onClick={() => {
                 setAbierto(false);
+                // El foco vuelve a este botón al cerrar el panel (el ítem se oculta con el desplegable).
+                botonRef.current?.focus();
                 router.push(rutaPanel(pathname, 'ticket', t.id), { scroll: false });
               }}
             >

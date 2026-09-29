@@ -56,3 +56,16 @@ test('pendientesDe: qué le toca a cada cargo, ordenado por fecha límite (sin f
   assert.deepEqual(pendientesDe('Administrador', 'felipe', lista).map((x) => x.id), ['d', 'b']);
   assert.deepEqual(pendientesDe('Prueba', 'alexis', lista), []);
 });
+
+test('pendientesDe: un pendiente huérfano (partido borrado) lo ve quien puede cancelarlo', () => {
+  const huerfano = (id: string, creadoPor: string): ResumenTicket => ({
+    ...r(id, 'pendiente', creadoPor, '2026-10-02'),
+    partidoId: null,
+    partidoEliminado: true,
+  });
+  const lista = [huerfano('h1', 'pedro'), huerfano('h2', 'felipe'), r('n', 'pendiente', 'pedro', '2026-10-03')];
+  assert.deepEqual(pendientesDe('Administrador', 'felipe', lista).map((x) => x.id), ['h1', 'h2']);
+  assert.deepEqual(pendientesDe('Community Manager', 'pedro', lista).map((x) => x.id), ['h1']);
+  assert.deepEqual(pendientesDe('Community Manager', 'otro', lista), []);
+  assert.deepEqual(pendientesDe('Diseñador', 'maxi', lista).map((x) => x.id), ['h1', 'h2', 'n']);
+});

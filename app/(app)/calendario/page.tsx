@@ -26,7 +26,10 @@ export default async function PaginaCalendario() {
     // Misma ventana que proyecta agenda_anual (cumpleaños/aniversarios): [-1, +2] años.
     repo.listarEventos(`${anio - 1}-01-01`, `${anio + 2}-12-31`),
     // Degradación elegante: si la lectura de tickets falla, el calendario se ve como antes.
-    new RepositorioTicketsSupabase(supabase).listarResumen().catch(() => []),
+    new RepositorioTicketsSupabase(supabase).listarParaCalendario(`${anio - 1}-01-01`).catch((e) => {
+      console.error('tickets (calendario):', e);
+      return [];
+    }),
   ]);
   const notas = notasProximas(eventosNota, hoyUy);
 

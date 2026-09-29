@@ -11,6 +11,7 @@
 'use client';
 
 import { useRef, useState } from 'react';
+import { usePanel } from '@/lib/paneles/use-panel';
 import { useRouter } from 'next/navigation';
 import { Ico } from '@/components/comunes/Ico';
 import { PastillaEstado } from '@/components/tickets/PastillaEstado';
@@ -57,8 +58,9 @@ const TITULO_EVENTO: Record<EventoHistorial['tipo'], string> = {
   sistema: 'Aviso del sistema',
 };
 
-export function PanelTicket({ bundle, onActualizar }: { bundle: DetalleTicketBundle; onActualizar: () => void }) {
+export function PanelTicket({ bundle, onActualizar }: { bundle: DetalleTicketBundle; onActualizar: () => Promise<void> }) {
   const router = useRouter();
+  const { abrir } = usePanel();
   const { ticket, historial, usuario, hoyUy } = bundle;
   const acciones = accionesPermitidas({
     cargo: usuario.cargo,
@@ -79,19 +81,25 @@ export function PanelTicket({ bundle, onActualizar }: { bundle: DetalleTicketBun
     setEnviando(true);
     setError(null);
     const r = await ejecutarAccion(crearClienteNavegador(), accion, ticket.id, datos);
-    setEnviando(false);
     if (!r.ok) {
+      setEnviando(false);
       setError(r.mensaje);
       return;
     }
+    // Se sigue "enviando" hasta que el panel muestre el estado nuevo: así no reaparecen los botones viejos.
+    router.refresh();
+    try {
+      await onActualizar();
+    } catch {
+      // Si la recarga falla se sigue igual: la acción ya se guardó.
+    }
+    setEnviando(false);
     setAbierta(null);
     setCampo('');
     setComentario('');
     setAviso(AVISO_OK[accion]);
     // El botón que se apretó puede desaparecer al cambiar el estado: el foco va a un lugar estable.
     tituloRef.current?.focus();
-    onActualizar();
-    router.refresh();
   }
 
   function alBoton(accion: Accion) {
@@ -133,10 +141,19 @@ export function PanelTicket({ bundle, onActualizar }: { bundle: DetalleTicketBun
         <p className="tk__nota">{ticket.nota}</p>
       </div>
 
-      {ticket.linkEntrega && (
-        <a href={ticket.linkEntrega} target="_blank" rel="noopener noreferrer" className="btn btn--g" style={{ marginBottom: 24 }}>
-          Abrir diseño
-        </a>
+      {(ticket.linkEntrega || (ticket.partidoId && !ticket.partidoEliminado)) && (
+        <div className="linea" style={{ gap: 10, marginBottom: 24 }}>
+          {ticket.linkEntrega && (
+            <a href={ticket.linkEntrega} target="_blank" rel="noopener noreferrer" className="btn btn--g">
+              Abrir diseño
+            </a>
+          )}
+          {ticket.partidoId && !ticket.partidoEliminado && (
+            <button type="button" className="btn btn--g" onClick={() => abrir('partido', ticket.partidoId!)}>
+              Ver partido
+            </button>
+          )}
+        </div>
       )}
 
       {acciones.some((a) => a !== 'comentar') && !formulario && (
@@ -156,21 +173,24 @@ export function PanelTicket({ bundle, onActualizar }: { bundle: DetalleTicketBun
           <div className="campo">
             <label htmlFor="tk-campo">{formulario.etiqueta}</label>
             {formulario.esLink ? (
-              <input id="tk-campo" type="url" inputMode="url" placeholder={formulario.placeholder} value={campo} onChange={(e) => setCampo(e.target.value)} />
+              <input id="tk-campo" type="url" required aria-required="true" inputMode="url" placeholder={formulario.placeholder} value={campo} onChange={(e) => setCampo(e.target.value)} />
             ) : (
-              <textarea id="tk-campo" rows={3} maxLength={2000} placeholder={formulario.placeholder} value={campo} onChange={(e) => setCampo(e.target.value)} />
+              <textarea id="tk-campo" rows={3} required aria-required="true" maxLength={2000} placeholder={formulario.placeholder} value={campo} onChange={(e) => setCampo(e.target.value)} />
             )}
           </div>
           <div className="linea" style={{ gap: 10 }}>
             <button
               type="button"
               className="btn btn--a"
-              disabled={enviando}
+              disabled={enviando || !campo.trim()}
               onClick={() => correr(abierta, formulario.esLink ? { link: campo } : { texto: campo })}
             >
               {enviando ? 'Guardando…' : formulario.boton}
             </button>
-            <button type="button" className="btn btn--g" disabled={enviando} onClick={() => setAbierta(null)}>
+            <button type="button" className="btn btn--g" disabled={enviando} onClick={() => {
+                setAbierta(null);
+                setError(null);
+              }}>
               Volver
             </button>
           </div>
