@@ -1371,6 +1371,21 @@ contador del Admin y del CM que los creó.
   (cumpleaños/aniversario/fecha manual) para calcular la fecha límite; cómo se ve en el
   calendario (¿chip en el día del cumpleaños?) y en el globito de pendientes.
 
+**📝 Pedido de Gerardo (2026-09-29) — alerta de ticket en el calendario general:**
+- En /calendario, si un partido tiene un ticket abierto, que se vea una **alerta explícita**
+  ("Ticket abierto"). Ojo: hoy ya hay un chip de color por estado (Task 9) — confirmar con
+  Gerardo si no lo vio (con la base limpia no había tickets) o si quiere algo más visible
+  (texto + mismo parpadeo que en las tarjetas de /partidos).
+
+**📝 Pedido de Gerardo (2026-09-29) — pantalla "Tickets" (historial):**
+- Nueva opción en la **barra de navegación** ("Tickets" / "Historial de tickets") que abra una
+  pantalla con la **lista de tickets del más nuevo al más viejo**, con el estilo del detalle de
+  partido. Objetivo: que Pedro (y Felipe/Maxi) vean de un vistazo qué está pendiente, **por
+  vencer** y **vencido**, y actúen ahí mismo (clic → panel del ticket).
+- A definir: qué ve cada cargo (¿todos los tickets o solo los suyos?), filtros por estado,
+  incluir cancelados/publicados o solo abiertos por defecto, paginación (la consulta debe ir
+  acotada — ver hallazgo "consulta sin límite" de la revisión).
+
 **Candidatos para una migración `0026` (menores, no bloquean):** `search_path = public, pg_temp`
 en las funciones security definer; límite de largo del link; `ticket_dias_anticipacion()` stable
 en vez de immutable; separar el update de `inicio_utc_conocido` del aviso (hoy si falla el texto
