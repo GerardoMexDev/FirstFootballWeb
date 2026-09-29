@@ -1314,21 +1314,21 @@ Charla con Gerardo (no se codeó nada): tres preguntas de la agencia / de él.
 
 ## 5. Pendiente / próximos pasos
 
-### 🎫 Tickets de diseño — ✅ IMPLEMENTADO Y REVISADO en rama `tickets-diseno` (2026-09-30, Sesión 13) — falta integrar + deploy
+### 🎫 Tickets de diseño — ✅ EN PRODUCCIÓN (2026-09-29, Sesión 13)
 
 **Estado:** las 11 tareas del plan hechas con subagentes (implementador + revisor por tarea +
 revisión final de toda la rama con el modelo más capaz → "listo tras arreglos" → tanda F1–F8
 aplicada y re-revisada). `npm test` 158/158, `test:seguridad` 23/23, `test:tickets` 33/33,
 lint + tsc OK. QA del ciclo completo con los 4 usuarios contra el dev de Gerardo: OK.
-**0025 ya aplicada en prod** (aditiva). El código NO está en main ni en producción todavía.
 
-**Pasos para salir a producción (en este orden):**
-1. Integrar la rama a main (Gerardo decide): `git switch main && git merge --ff-only tickets-diseno`.
-2. `git push` (Gerardo) → deploy Vercel → Claude hace QA en prod (crea 1 ticket "QA —" y lo cancela).
-3. **Limpieza** — crear `scripts/limpiar-tickets.sql` con el contenido del plan (Task 4 Step 6;
-   el auto-mode no dejó a Claude escribirlo) y correrlo en el SQL Editor. Borra TODOS los tickets:
-   hoy hay 2 de QA **publicados** (6cf76d7a…, 566a03eb…, en partidos de may-2027: se verían como
-   chip verde) + varios cancelados. Claude verifica después que quede 0.
+**Salida a producción (hecha):**
+1. Rama `tickets-diseno` integrada a main (fast-forward) y borrada; tests + lint OK sobre main.
+2. `git push` (Gerardo) → deploy Vercel. QA en prod: Felipe creó un ticket "QA —" (Genk vs
+   Mechelen) y lo canceló → `pendiente` → `cancelado`, historial `creado, cancelado`, 0 errores.
+3. Limpieza: Gerardo corrió el SQL de limpieza (plan Task 4 Step 6) en el SQL Editor; Claude
+   verificó `tickets` = 0 y `tickets_historial` = 0. La base queda limpia para la entrega.
+   `scripts/limpiar-tickets.sql` NO está en el repo (el auto-mode no dejó a Claude escribirlo);
+   el SQL está en el plan si hace falta de nuevo.
 
 **Hallazgos importantes corregidos durante la implementación** (detalle en los commits):
 `perfiles_publicos` escribible por cualquier logueado → `revoke all`; `ticket__mover` fallaba
