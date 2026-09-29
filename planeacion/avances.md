@@ -1343,7 +1343,22 @@ tal cual mensajes con código P0001/42501; si falla la lectura de tickets en el 
 se oculta "Crear" (evita duplicados); tickets pendientes de un partido borrado aparecen en el
 contador del Admin y del CM que los creó.
 
-**📝 Pedido de Gerardo (2026-09-29, mientras revisa en prod) — NO empezar hasta que termine de revisar:**
+**✅ Decisiones de Gerardo sobre los pedidos de tickets (2026-09-29, "todo como recomendás"):**
+1. Lucecita: a cada uno lo que le toca (`pendientesDe`): Diseñador → "Ticket pendiente"
+   (pendientes/devueltos); Admin/CM → "Para revisar" (en revisión: Admin todos, CM los suyos).
+   Resto: solo el chip, sin parpadeo. Parpadea ~5 s al entrar y queda roja fija (WCAG 2.2.2);
+   sin animación con `prefers-reduced-motion`.
+2. Calendario general: al chip actual se le suma el texto corto + la misma lucecita.
+3. Pantalla "Tickets": Admin todos, CM los que creó, Diseñador todos, Prueba no la ve.
+   Abre con los abiertos (del más nuevo al más viejo) + filtro para ver publicados/cancelados.
+   Se llama "Tickets". En celular: barra inferior o hamburguesa (se decide al diseñarla).
+4. Ticket desde la ficha del jugador: quien crea elige la fecha del evento (cumpleaños viene
+   precargado); límite = 2 días antes; chip en el día del evento; más de uno por jugador OK.
+5. Filtros: "Match Day" = partidos de jugadores Match Day; "Contenido" = partidos + fechas de
+   los jugadores de Contenido.
+Orden: lucecita + calendario → filtros → pantalla Tickets → tickets desde ficha (migración).
+
+**📝 Pedido de Gerardo (2026-09-29, mientras revisa en prod):**
 - En cada **tarjeta de partido** de /partidos (ej. "RB Bragantino vs Atlético Mineiro · Estadio… ·
   Fotografías · Match Day") mostrar una alerta **"Ticket pendiente"** con una **lucecita roja que
   parpadea**, para que Maxi la vea aunque no mire el globito de la barra superior.
