@@ -1317,7 +1317,7 @@ preguntas → enfoques → diseño → spec escrita (revisa Gerardo) → plan �
 - [ ] Días de anticipación de la fecha límite (hoy: 2; mínimo 1).
 - [ ] ¿Siempre un solo ticket/diseño por partido, o a veces más (previa, resultado, stats)?
 
-### 📁 Botones Dropbox también en partidos — ✅ HECHO (2026-09-28, Sesión 12) — falta `git push`
+### 📁 Botones Dropbox también en partidos — ✅ HECHO y en producción (deploy `674ca0f`, QA en prod OK, 2026-09-28)
 
 Pedido del Diseñador: tener "Fotografías / Match Day" a mano sin ir hasta Jugadores. Ver
 detalle en §4 Sesión 12.
