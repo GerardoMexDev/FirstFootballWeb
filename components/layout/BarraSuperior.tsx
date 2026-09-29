@@ -83,7 +83,7 @@ export function BarraSuperior({ perfil, pendientes, hoyUy }: { perfil: PerfilBar
           <b>Football First</b>
         </div>
 
-        <Nav />
+        <Nav cargo={perfil.cargo} />
 
         <div className="top__acc">
           <Buscador />

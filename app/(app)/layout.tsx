@@ -18,6 +18,7 @@ import { Suspense } from 'react';
 import { redirect } from 'next/navigation';
 import { DateTime } from 'luxon';
 import { BarraSuperior } from '@/components/layout/BarraSuperior';
+import { BarraInferior } from '@/components/layout/BarraInferior';
 import { PanelLateral } from '@/components/paneles/PanelLateral';
 import { sesionActual } from '@/lib/sesion/sesion-actual';
 import { saludoPorHora, primerNombre } from '@/lib/sesion/saludo';
@@ -63,6 +64,8 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           </p>
           {children}
         </main>
+        {/* Pestañas abajo en celular/tablet (≤ 960 px); en desktop manda la nav de arriba. */}
+        <BarraInferior cargo={sesion.cargo} pendientes={pendientes.length} />
       </div>
 
       {/* Panel lateral de detalle (partido / jugador). Se abre por la URL (?panel=…). */}

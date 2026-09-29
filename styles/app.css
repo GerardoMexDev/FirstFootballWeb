@@ -411,19 +411,6 @@ html { overflow-x: clip; }
 .panel { visibility: hidden; transition: transform .5s var(--ease), visibility 0s linear .5s; }
 .panel.on { visibility: visible; transition: transform .5s var(--ease), visibility 0s; }
 
-/* En celular la nav no entraba al lado de la marca (quedaba "Parti…" con scroll escondido):
-   pasa a una segunda fila a todo el ancho. */
-@media (max-width: 620px) {
-  .top__in { flex-wrap: wrap; height: auto; min-height: 64px; row-gap: 2px; padding-top: 12px; padding-bottom: 4px; }
-  .top__acc { margin-left: auto; }
-  .nav { order: 3; flex: 1 0 100%; margin-right: 0; justify-content: space-between; gap: 0; }
-  .nav button { padding: 9px 6px; font-size: var(--t-sm); white-space: nowrap; }
-  .nav button.on::after { left: 6px; right: 6px; }
-}
-@media (max-width: 370px) {
-  .nav button { font-size: var(--t-xs); }
-}
-
 /* Lucecita de ticket (2026-09-29): "Ticket pendiente" / "Para revisar" / "Para publicar".
    La luz late 5 veces (1 por segundo, lejos del límite de 3 destellos/s) y queda fija:
    WCAG 2.2.2 pide poder parar lo que parpadea más de 5 s. El texto va siempre. */
@@ -459,4 +446,44 @@ html { overflow-x: clip; }
   .tkk .kpi { padding: 16px 14px 14px; }
   .tkk .kpi b { font-size: 32px; }
   .tkk .kpi span { margin-top: 8px; }
+}
+
+/* Barra de pestañas inferior (≤ 960 px, 2026-09-29; 960 y no 900 porque con el globito de tickets la barra de arriba no entra hasta ~940 px). Reemplaza a la nav de arriba, que con 5
+   opciones no entra al lado de la marca. z-index: sobre el contenido (la barra de arriba es 90),
+   debajo del velo (110) y del panel lateral (120). */
+.binf { display: none; }
+@media (max-width: 960px) {
+  .top .nav { display: none; }
+  .binf {
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 95;
+    display: grid; grid-auto-flow: column; grid-auto-columns: 1fr;
+    padding: 4px 4px calc(4px + env(safe-area-inset-bottom));
+    background: color-mix(in srgb, var(--bg) 92%, transparent);
+    backdrop-filter: blur(20px) saturate(1.4);
+    border-top: 1px solid var(--line);
+  }
+  .binf__b { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; min-height: 52px; padding: 4px 2px; border-radius: var(--r-sm); color: var(--text-2); font-size: var(--t-xs); font-weight: 500; }
+  .binf__b.on { color: var(--text); font-weight: 600; }
+  .binf__b.on .binf__i { color: var(--accent); }
+  .binf__b:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+  .binf__i { position: relative; display: inline-flex; }
+  .binf__n { position: absolute; top: -6px; right: -12px; min-width: 18px; height: 18px; padding: 0 5px; border-radius: 999px; background: var(--tk-rojo-bg); color: var(--tk-rojo); border: 1px solid var(--tk-rojo-borde); font-size: 11px; font-weight: 700; line-height: 16px; text-align: center; }
+  .binf__t { white-space: nowrap; }
+  .toast { bottom: calc(84px + env(safe-area-inset-bottom)); }
+}
+/* 901–1180 px: con 5 secciones la nav no entra en una línea si además va el nombre del usuario
+   (a 920 px "Calendario general" y "Felipe Merola" partían en dos renglones). */
+@media (max-width: 1180px) {
+  .who__t { display: none; }
+  .nav button { white-space: nowrap; }
+}
+/* 901–1100 px: además, barra compacta (lo que demo.css hace recién en ≤ 900): buscador solo con
+   la lupa, menos aire entre bloques y botones de la nav. Sin esto, a 920 px el avatar quedaba
+   cortado (el overflow-x: clip del html lo escondía en vez de dar scroll). */
+@media (max-width: 1100px) {
+  .top__in { gap: 20px; }
+  .nav button { padding: 9px 12px; }
+  .nav button.on::after { left: 12px; right: 12px; }
+  .buscabtn { width: 37px; height: 37px; justify-content: center; padding: 0; }
+  .buscabtn span, .buscabtn kbd { display: none; }
 }
