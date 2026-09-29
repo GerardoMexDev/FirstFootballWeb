@@ -15,6 +15,9 @@ import type { crearClienteServidor } from '@/lib/supabase/cliente-servidor';
 import { RepositorioHitosSupabase } from '@/lib/repositorios/repositorio-hitos';
 import { RepositorioPartidosSupabase } from '@/lib/repositorios/repositorio-partidos';
 import { RepositorioJugadoresSupabase } from '@/lib/repositorios/repositorio-jugadores';
+import { RepositorioTicketsSupabase } from '@/lib/repositorios/repositorio-tickets';
+import { sesionActual } from '@/lib/sesion/sesion-actual';
+import type { ResumenTicket } from '@/lib/tickets/tipos';
 import type { LinksDropbox } from '@/lib/jugadores/links-dropbox';
 import type { Hito } from '@/lib/motor-hitos/tipos';
 
@@ -27,6 +30,10 @@ export interface DetallePartidoBundle {
   hoyUy: string;
   /** Carpetas de Dropbox por jugadorId (botones de "Jugador a cubrir"). */
   linksDropbox: Record<string, LinksDropbox>;
+  /** Tickets de diseño no cancelados de este partido (0025). */
+  tickets: ResumenTicket[];
+  /** Quién mira (para "Crear ticket"). */
+  usuario: { id: string; cargo: string } | null;
 }
 
 /** Devuelve el bundle, o `null` si el partido no tiene filas en `proximos_partidos`. */
@@ -40,12 +47,14 @@ export async function cargarDetallePartido(
   if (!detalle) return null;
 
   const repositorioHitos = new RepositorioHitosSupabase(supabase);
-  const [proximos, jugadoresBasicos, totales, escalas, linksDropbox] = await Promise.all([
+  const [proximos, jugadoresBasicos, totales, escalas, linksDropbox, tickets, sesion] = await Promise.all([
     repositorioPartidos.listarProximos(),
     repositorioHitos.listarJugadoresActivos(),
     repositorioHitos.listarTotales(),
     repositorioHitos.listarEscalasActivas(),
     new RepositorioJugadoresSupabase(supabase).listarLinksDropbox(),
+    new RepositorioTicketsSupabase(supabase).listarPorPartido(partidoId).catch(() => [] as ResumenTicket[]),
+    sesionActual(),
   ]);
 
   const totalesPorJugador = new Map(totales.map((t) => [t.jugadorId, t]));
@@ -58,5 +67,7 @@ export async function cargarDetallePartido(
     hitos,
     hoyUy: DateTime.now().setZone(ZONA_AGENCIA).toISODate() ?? '',
     linksDropbox,
+    tickets,
+    usuario: sesion ? { id: sesion.usuarioId, cargo: sesion.cargo } : null,
   };
 }

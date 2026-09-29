@@ -18,6 +18,9 @@ import { Ico } from '@/components/comunes/Ico';
 import { Escudo } from '@/components/comunes/Escudo';
 import { CaraJugador } from '@/components/comunes/CaraJugador';
 import { BotonesDropbox } from '@/components/jugadores/BotonesDropbox';
+import { CrearTicket } from '@/components/tickets/CrearTicket';
+import { PastillaEstado } from '@/components/tickets/PastillaEstado';
+import { puedeCrear } from '@/lib/tickets/permisos';
 import { SIN_LINKS } from '@/lib/jugadores/links-dropbox';
 import { EstadoSinDatos } from '@/components/comunes/EstadoSinDatos';
 import { usePanel } from '@/lib/paneles/use-panel';
@@ -177,6 +180,21 @@ export function PanelPartido({ bundle }: { bundle: DetallePartidoBundle }) {
                 nombreJugador={j.nombre}
                 style={{ padding: '10px 16px 6px' }}
               />
+              <div className="tkp">
+                {(bundle.tickets ?? [])
+                  .filter((t) => t.jugadorId === j.jugadorId)
+                  .map((t) => (
+                    <button key={t.id} type="button" className="tkp__t" onClick={() => abrir('ticket', t.id)}>
+                      <PastillaEstado estado={t.estado} />
+                      <span>Ver ticket</span>
+                    </button>
+                  ))}
+                {bundle.usuario &&
+                  puedeCrear(bundle.usuario.cargo) &&
+                  !(bundle.tickets ?? []).some((t) => t.jugadorId === j.jugadorId) && (
+                    <CrearTicket partidoId={d.partidoId} jugadorId={j.jugadorId} jugadorNombre={j.nombre} />
+                  )}
+              </div>
             </div>
           ))}
         </div>
