@@ -1,0 +1,198 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tickets de diseño — Instructivo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Archivo:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  /* Instructivo de tickets para la agencia (versión de prueba, 2026-09-29).
+     Fuente de este HTML → PDF A4 con el navegador de QA. Colores y tipografías de la app. */
+  :root {
+    --bg: #FFFFFF; --surface: #FAF9F8; --surface-2: #F3F1EF; --line: #EDEBE8;
+    --text: #141110; --text-2: #5E5852; --accent: #E64227; --accent-soft: #FDF0ED;
+    --rojo: #B42318; --rojo-bg: #FDECEA; --amarillo: #7A5200; --amarillo-bg: #FFF4D6;
+    --verde: #1E6B35; --verde-bg: #E6F4EA; --pub: #1F4E8C; --pub-bg: #E7EEF9;
+    --display: 'Anton', Impact, sans-serif; --ui: 'Archivo', Arial, sans-serif;
+  }
+  @page { size: A4; margin: 16mm 16mm 18mm; }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: var(--ui); font-size: 10.5pt; line-height: 1.5; color: var(--text); background: var(--bg); }
+  h1, h2 { font-family: var(--display); text-transform: uppercase; font-weight: 400; letter-spacing: -.01em; line-height: .95; margin: 0; }
+  h1 { font-size: 40pt; }
+  h1 em { font-style: normal; color: var(--accent); }
+  h2 { font-size: 17pt; margin: 22px 0 10px; padding-top: 14px; border-top: 2px solid var(--text); break-after: avoid; }
+  h2 .n { color: var(--accent); margin-right: 6px; }
+  h3 { font-size: 11pt; margin: 14px 0 4px; break-after: avoid; }
+  p { margin: 0 0 8px; }
+  ul, ol { margin: 0 0 8px; padding-left: 18px; }
+  li { margin-bottom: 3px; }
+  b { font-weight: 700; }
+  .portada { padding: 10px 0 8px; }
+  .marca { display: flex; align-items: center; gap: 10px; font-family: var(--display); text-transform: uppercase; font-size: 12pt; margin-bottom: 26px; }
+  .marca i { width: 16px; height: 16px; background: var(--accent); transform: rotate(45deg); display: inline-block; border-radius: 3px; }
+  .sub { font-size: 12pt; color: var(--text-2); margin-top: 12px; max-width: 520px; }
+  .meta { display: flex; gap: 18px; flex-wrap: wrap; margin-top: 16px; font-size: 9.5pt; color: var(--text-2); }
+  .meta b { color: var(--text); }
+  .caja { background: var(--surface); border-radius: 10px; padding: 12px 14px; margin: 8px 0 12px; break-inside: avoid; }
+  .caja--a { background: var(--accent-soft); border-left: 4px solid var(--accent); }
+  table { width: 100%; border-collapse: collapse; margin: 6px 0 12px; font-size: 9.5pt; break-inside: avoid; }
+  th, td { text-align: left; vertical-align: top; padding: 7px 8px; border-bottom: 1px solid var(--line); }
+  th { background: var(--surface-2); font-weight: 700; font-size: 9pt; text-transform: uppercase; letter-spacing: .02em; }
+  td.si { color: var(--verde); font-weight: 700; }
+  td.no { color: #8A837D; }
+  .p { display: inline-block; padding: 1px 8px; border-radius: 999px; font-size: 9pt; font-weight: 600; white-space: nowrap; }
+  .p--pend { background: var(--rojo-bg); color: var(--rojo); }
+  .p--rev { background: var(--amarillo-bg); color: var(--amarillo); }
+  .p--apr { background: var(--verde-bg); color: var(--verde); }
+  .p--pub { background: var(--pub-bg); color: var(--pub); }
+  .p--can { background: var(--surface-2); color: #6E6862; }
+  .flujo { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; margin: 8px 0 6px; }
+  .flujo .f { color: #8A837D; font-weight: 700; }
+  .luz { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--accent); margin-right: 5px; vertical-align: middle; }
+  .dos { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .dos .caja { margin: 0; }
+  .pasos { counter-reset: paso; list-style: none; padding: 0; }
+  .pasos li { counter-increment: paso; position: relative; padding-left: 28px; margin-bottom: 6px; }
+  .pasos li::before { content: counter(paso); position: absolute; left: 0; top: 0; width: 20px; height: 20px; border-radius: 50%; background: var(--text); color: #fff; font-size: 9pt; font-weight: 700; display: grid; place-items: center; }
+  .plantilla { font-family: var(--ui); background: var(--surface); border: 1px dashed #CFC9C3; border-radius: 10px; padding: 12px 14px; }
+  .plantilla div { padding: 4px 0; border-bottom: 1px solid var(--line); }
+  .plantilla div:last-child { border-bottom: 0; }
+  .salto { break-before: page; }
+  .pie { margin-top: 22px; font-size: 8.5pt; color: #8A837D; }
+</style>
+</head>
+<body>
+
+<section class="portada">
+  <div class="marca"><i></i>Football First</div>
+  <h1>Tickets<br><em>de diseño</em></h1>
+  <p class="sub">Instructivo de uso para la prueba: qué es un ticket, qué puede hacer cada puesto, cómo se crea, cómo avanza y dónde se ve lo que te toca.</p>
+  <div class="meta">
+    <span><b>Web:</b> first-football-web.vercel.app</span>
+    <span><b>Versión:</b> prueba, septiembre 2026</span>
+  </div>
+</section>
+
+<h2><span class="n">1</span>Qué es un ticket</h2>
+<p>Un <b>ticket de diseño</b> es un pedido de una pieza gráfica: quien lo crea escribe <b>qué hay que hacer</b>, el Diseñador lo resuelve y lo entrega con un link de Dropbox, y quien lo pidió lo revisa. Todo queda registrado en el ticket: quién hizo qué y cuándo.</p>
+<p>Un ticket puede estar atado a:</p>
+<ul>
+  <li><b>Un partido</b> de un jugador de Match Day (por ejemplo, la pieza del partido del sábado).</li>
+  <li><b>Una fecha</b> de un jugador: su cumpleaños, un aniversario o cualquier otra fecha especial (por ejemplo, una convocatoria a la selección).</li>
+</ul>
+<div class="caja caja--a"><b>Para entrar:</b> abrí <b>first-football-web.vercel.app</b> e ingresá con tu usuario y contraseña (se comparten por separado). La contraseña se puede cambiar desde el menú de tu inicial → <b>Cambiar contraseña</b>.</div>
+
+<h2><span class="n">2</span>Quién hace qué</h2>
+<table>
+  <thead><tr><th style="width:34%">Acción</th><th>Administrador</th><th>Community Manager</th><th>Diseñador</th><th>Prueba</th></tr></thead>
+  <tbody>
+    <tr><td>Ver los tickets</td><td class="si">Todos</td><td class="si">Todos (en la pantalla Tickets, los suyos)</td><td class="si">Todos</td><td class="si">Todos (solo mirar)</td></tr>
+    <tr><td>Crear un ticket</td><td class="si">Sí</td><td class="si">Sí</td><td class="no">No</td><td class="no">No</td></tr>
+    <tr><td>Entregar el diseño (link de Dropbox)</td><td class="no">No</td><td class="no">No</td><td class="si">Sí</td><td class="no">No</td></tr>
+    <tr><td>Aprobar o devolver una entrega</td><td class="si">Cualquiera</td><td class="si">Solo los que creó</td><td class="no">No</td><td class="no">No</td></tr>
+    <tr><td>Marcar como publicado</td><td class="no">No</td><td class="no">No</td><td class="si">Sí</td><td class="no">No</td></tr>
+    <tr><td>Cancelar un ticket pendiente</td><td class="si">Cualquiera</td><td class="si">Solo los que creó</td><td class="no">No</td><td class="no">No</td></tr>
+    <tr><td>Comentar</td><td class="si">Sí</td><td class="si">Sí</td><td class="si">Sí</td><td class="no">No</td></tr>
+    <tr><td>Pantalla <b>Tickets</b> en el menú</td><td class="si">Sí</td><td class="si">Sí</td><td class="si">Sí</td><td class="no">No</td></tr>
+  </tbody>
+</table>
+
+<h2><span class="n">3</span>El recorrido de un ticket</h2>
+<div class="flujo">
+  <span class="p p--pend">● Pendiente</span><span class="f">→</span>
+  <span class="p p--rev">◐ En revisión</span><span class="f">→</span>
+  <span class="p p--apr">✓ Aprobado</span><span class="f">→</span>
+  <span class="p p--pub">✓✓ Publicado</span>
+</div>
+<table>
+  <thead><tr><th style="width:22%">Estado</th><th>Qué significa</th><th style="width:30%">Quién tiene que actuar</th></tr></thead>
+  <tbody>
+    <tr><td><span class="p p--pend">Pendiente</span></td><td>El pedido está creado y espera el diseño. Si la entrega fue devuelta, vuelve a este estado con el comentario de qué corregir.</td><td>Diseñador: <b>Entregar</b>.</td></tr>
+    <tr><td><span class="p p--rev">En revisión</span></td><td>El Diseñador entregó el link de Dropbox.</td><td>Administrador, o el Community Manager que lo creó: <b>Aprobar</b> o <b>Devolver</b>.</td></tr>
+    <tr><td><span class="p p--apr">Aprobado</span></td><td>El diseño está OK para salir.</td><td>Diseñador: <b>Marcar publicado</b> cuando sale.</td></tr>
+    <tr><td><span class="p p--pub">Publicado</span></td><td>La pieza ya se publicó. El ticket queda cerrado.</td><td>Nadie.</td></tr>
+    <tr><td><span class="p p--can">Cancelado</span></td><td>El pedido se dejó sin efecto (solo se puede cancelar mientras está pendiente).</td><td>Nadie.</td></tr>
+  </tbody>
+</table>
+
+<h2 class="salto"><span class="n">4</span>Cómo crear un ticket</h2>
+<p>Solo el <b>Administrador</b> y el <b>Community Manager</b> ven el botón <b>Crear ticket de diseño</b>.</p>
+<div class="dos">
+  <div class="caja">
+    <h3 style="margin-top:0">A · Desde un partido</h3>
+    <ol class="pasos">
+      <li>En <b>Partidos</b>, tocá la tarjeta del partido.</li>
+      <li>En el detalle, junto al jugador, tocá <b>Crear ticket de diseño</b>.</li>
+      <li>Escribí <b>qué hay que hacer</b> (por ejemplo: "diseño del Match Day con la foto de local").</li>
+      <li>Tocá <b>Crear ticket</b>. Se abre el ticket recién creado.</li>
+    </ol>
+  </div>
+  <div class="caja">
+    <h3 style="margin-top:0">B · Desde la ficha del jugador</h3>
+    <ol class="pasos">
+      <li>Abrí la ficha del jugador (desde <b>Jugadores</b>, el buscador o el calendario).</li>
+      <li>En el bloque <b>Tickets de diseño</b>, tocá <b>Crear ticket de diseño</b>.</li>
+      <li>En <b>¿Para qué fecha?</b> elegí una de sus próximas fechas (cumpleaños, aniversario del club, debut…) u <b>Otra fecha</b>.</li>
+      <li>Escribí <b>qué hay que hacer</b> y tocá <b>Crear ticket</b>.</li>
+    </ol>
+  </div>
+</div>
+<div class="caja caja--a"><b>Otra fecha:</b> sirve para lo que no está en la lista, por ejemplo <i>"Convocado a la selección: Uruguay vs Brasil"</i>. Elegí el día y escribí el motivo (hasta 120 caracteres). No se pueden elegir días que ya pasaron.</div>
+<p>El título del ticket se arma solo: <b>Match Day — Jugador · Club vs Rival</b> para los de partido, y <b>Contenido — Jugador · Motivo (día/mes)</b> para los de fecha. Se puede crear más de un ticket por jugador.</p>
+
+<h2><span class="n">5</span>Fecha límite y vencimientos</h2>
+<ul>
+  <li>La <b>fecha límite</b> es <b>2 días antes</b> del partido o de la fecha del evento.</li>
+  <li><b>Por vencer:</b> la fecha límite es hoy, mañana o pasado mañana.</li>
+  <li><b>Vencido:</b> la fecha límite ya pasó y el diseño todavía no se entregó o no se aprobó. Se ve en rojo.</li>
+  <li>Un ticket <b>aprobado</b> ya no vence: solo falta publicarlo.</li>
+  <li>Si un partido cambia de horario o de día, el sistema lo anota solo en el historial del ticket.</li>
+</ul>
+
+<h2><span class="n">6</span>Dónde ver lo que te toca</h2>
+<table>
+  <tbody>
+    <tr><td style="width:30%"><b>Número rojo</b> (arriba, junto a tu nombre)</td><td>Cuántos tickets esperan algo de vos. Al tocarlo se despliega la lista, ordenada por fecha límite.</td></tr>
+    <tr><td><b><span class="luz"></span>Lucecita roja</b></td><td>Aparece en las tarjetas de partido, en el detalle del partido, en la ficha del jugador, en la pantalla Tickets y en los calendarios. Late unos segundos y queda fija. Dice lo que hay que hacer:<br><b>Ticket pendiente</b> (Diseñador: diseñarlo) · <b>Para revisar</b> (Administrador o Community Manager) · <b>Para publicar</b> (Diseñador).</td></tr>
+    <tr><td><b>Pantalla Tickets</b> (menú)</td><td>Arriba, tres contadores que también filtran: <b>Vencidos · Por vencer · Al día</b>. Abajo, los filtros <b>Abiertos · Cerrados · Todos</b> y la lista del más nuevo al más viejo. Tocá una fila para abrir el ticket. Los cerrados se muestran de los últimos 60 días.</td></tr>
+    <tr><td><b>Calendario Match Day</b></td><td>Los tickets de partido aparecen como un chip de color sobre el partido.</td></tr>
+    <tr><td><b>Calendario general</b></td><td>Los tickets de fecha aparecen como un chip en el día del evento.</td></tr>
+  </tbody>
+</table>
+<div class="caja"><b>En el celular</b> el menú pasa a una barra abajo: <b>Partidos · Match Day · General · Jugadores · Tickets</b>. La pestaña Tickets muestra el mismo número rojo.</div>
+
+<h2 class="salto"><span class="n">7</span>Reglas importantes</h2>
+<ul>
+  <li><b>Un ticket no se borra.</b> Si ya no hace falta, se <b>cancela</b> (solo mientras está pendiente) indicando el motivo.</li>
+  <li><b>Entregar</b> pide el <b>link de Dropbox</b> del diseño (tiene que empezar con https://).</li>
+  <li><b>Devolver</b> pide escribir <b>qué hay que corregir</b>. El ticket vuelve a Pendiente con ese comentario.</li>
+  <li><b>Comentarios:</b> se pueden dejar en cualquier momento para conversar dentro del ticket.</li>
+  <li>El <b>historial</b> de cada ticket muestra todo lo que pasó, con autor y hora de Uruguay, y no se puede modificar.</li>
+  <li>La fecha de un ticket ya creado no se cambia: si cambió, se cancela y se crea otro.</li>
+</ul>
+
+<h2><span class="n">8</span>Qué todavía no hace</h2>
+<ul>
+  <li>No manda mails ni notificaciones al celular: los avisos se ven al entrar a la web.</li>
+  <li>No se puede recuperar la contraseña por mail. Si alguien la olvida, hay que pedir que se la reinicien.</li>
+</ul>
+
+<h2><span class="n">9</span>Cómo mandar comentarios</h2>
+<p>Queremos saber qué funciona, qué no se entiende y qué falta. Para cada comentario, contanos:</p>
+<div class="plantilla">
+  <div><b>Puesto:</b> Administrador / Community Manager / Diseñador</div>
+  <div><b>Pantalla:</b> Partidos, ficha del jugador, Tickets, calendario…</div>
+  <div><b>Qué hiciste:</b> los pasos, en orden</div>
+  <div><b>Qué pasó:</b> lo que viste</div>
+  <div><b>Qué esperabas:</b> lo que te hubiera servido</div>
+  <div><b>Dispositivo:</b> computadora o celular (y cuál)</div>
+  <div><b>Captura de pantalla:</b> si podés, adjuntala</div>
+</div>
+<p style="margin-top:10px">Mandá los comentarios a la persona que te compartió el acceso. Todo sirve: errores, textos confusos o ideas.</p>
+
+<p class="pie">Football First · Instructivo de tickets de diseño · versión de prueba, septiembre 2026.</p>
+</body>
+</html>
