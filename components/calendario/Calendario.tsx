@@ -137,8 +137,11 @@ export function Calendario({ eventos, hoyUy, ticketsPorPartido = {} }: { eventos
                     >
                       {tk && (
                         <small className="ev__tk">
-                          <span aria-hidden="true">{META_ESTADO[tk.estado].simbolo}</span> {META_ESTADO[tk.estado].corta}
-                          {tk.ticketIds.length > 1 ? ` · ${tk.ticketIds.length}` : ''}
+                          <span aria-hidden="true">{META_ESTADO[tk.estado].simbolo}</span>{' '}
+                          <span className="ev__w">
+                            {META_ESTADO[tk.estado].corta}
+                            {tk.ticketIds.length > 1 ? ` · ${tk.ticketIds.length}` : ''}
+                          </span>
                         </small>
                       )}
                       <b>{etiqueta}</b>
