@@ -82,7 +82,7 @@ create type tipo_evento_ticket as enum
 |---|---|---|
 | `id` | uuid pk | `gen_random_uuid()` |
 | `partido_id` | uuid null → `partidos(id)` **on delete set null** | El ticket sobrevive si la sync borra el partido |
-| `jugador_id` | uuid not null → `jugadores(id)` on delete restrict | |
+| `jugador_id` | uuid not null → `jugadores(id)` on delete restrict | **A propósito:** un jugador con tickets no se puede borrar (protege el historial). Si hace falta sacarlo, se desactiva (`activo=false`) |
 | `titulo` | text not null | Armado al crear: `Match Day — <apodo/nombre> · <local> vs <visitante>` |
 | `nota` | text not null, 1–2000 caracteres | |
 | `estado` | `estado_ticket` not null default `pendiente` | |
@@ -128,11 +128,20 @@ create function ticket_dias_anticipacion() returns int language sql immutable as
 − ticket_dias_anticipacion()`. Si el partido no tiene hora o ya no existe → se usa
 `inicio_utc_conocido`; si tampoco hay → null ("sin fecha límite").
 
-### 4.6 Vista `tickets_vista` (`security_invoker = true`)
+### 4.6 Vista `perfiles_publicos` (sin `security_invoker`)
+
+La RLS de `perfiles` solo deja ver la fila propia (`perfiles_select_propio`, 0001), pero la
+tarjeta necesita el nombre de quien creó el ticket y de cada autor del historial. Vista con
+los permisos del dueño que expone **solo** `id`, `nombre_completo`, `cargo`, filtrada
+`where es_usuario_activo()` (sin sesión activa → 0 filas). Nada de correo, tema, avisos ni
+`activo`. `grant select` a `authenticated`; `revoke` a `anon`.
+
+### 4.7 Vista `tickets_vista` (`security_invoker = true`)
 
 `tickets` + datos del partido (inicio_utc, estado del partido, competencia) + `fecha_limite` +
-nombre del creador + nombre/apodo del jugador. La consume la UI (calendario, tarjeta,
-contador). La conversación se lee de `tickets_historial` ordenada por `id`.
+nombre del creador (vía `perfiles_publicos`) + nombre/apodo del jugador. La consume la UI
+(calendario, tarjeta, contador). La conversación se lee de `tickets_historial` ordenada por
+`id`, con el nombre del autor vía `perfiles_publicos`.
 
 ## 5. Permisos y acciones
 
@@ -178,6 +187,12 @@ hora de Uruguay (días de la semana armados con un array propio — no depender 
 
 `finalizado` y `en_juego` no generan aviso. Cada `update` de `inicio_utc` válido también
 actualiza `tickets.inicio_utc_conocido`.
+
+**Regla dura: un aviso nunca rompe la sincronización.** Estos triggers corren dentro de las
+Edge Functions que escriben `partidos` (y de `seed`/migraciones). El cuerpo de cada trigger va
+en `begin … exception when others then raise warning '…'; end;` y siempre devuelve la fila:
+si el aviso falla, se pierde el aviso (queda el warning en el log de Postgres), nunca el
+`update`/`delete` del partido. Test en §8.2.
 
 ## 7. Pantallas
 
@@ -256,6 +271,10 @@ de Felipe / Pedro / Maxi / Alexis). Casos:
 - Historial: `update`/`delete` fallan **también como `service_role`**; `delete` de ticket falla.
 - Alexis (`Prueba`) y un perfil inactivo: toda acción rechazada.
 - Concurrencia: dos conexiones, una aprueba y otra devuelve el mismo ticket → una sola gana.
+- `perfiles_publicos`: con sesión activa ve los 4 nombres/cargos y ninguna otra columna; sin
+  sesión (`anon`) no ve nada; un perfil inactivo no ve nada.
+- Un error dentro del trigger de avisos no frena el `update` del partido (se fuerza un fallo
+  y se verifica que el `update` igual se aplicó).
 - Avisos: `update inicio_utc` (+2 h) → 1 aviso con texto esperado; +30 s → 0 avisos;
   → `suspendido` → aviso; `delete` del partido → ticket vive, `partido_id` null, aviso.
   (El partido de prueba se crea dentro de la misma transacción.)
