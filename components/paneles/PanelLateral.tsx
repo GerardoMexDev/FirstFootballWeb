@@ -119,6 +119,14 @@ export function PanelLateral() {
     if (previo && document.contains(previo)) previo.focus();
   }, [abierto]);
 
+  // Al pasar de un panel a otro con el panel ya abierto (ej. partido -> ticket recién creado)
+  // el foco vuelve al botón Cerrar. No depende de `version`: el refetch silencioso no mueve el foco.
+  useEffect(() => {
+    if (!abierto) return;
+    const t = window.setTimeout(() => cerrarRef.current?.focus(), 0);
+    return () => window.clearTimeout(t);
+  }, [tipo, id]);
+
   const alTeclado = useCallback(
     (evento: React.KeyboardEvent<HTMLElement>) => {
       if (evento.key === 'Escape') {

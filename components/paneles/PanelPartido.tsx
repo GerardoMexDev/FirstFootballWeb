@@ -165,6 +165,12 @@ export function PanelPartido({ bundle }: { bundle: DetallePartidoBundle }) {
       <div className="bloque">
         <span className="label">{d.jugadores.length > 1 ? 'Jugadores a cubrir' : 'Jugador a cubrir'}</span>
         <div className="lst">
+          {bundle.ticketsError && (
+            <div className="aviso" style={{ margin: '0 16px 12px' }}>
+              <Ico nombre="alerta" clase="ico ico--sm" />
+              <span>No pudimos cargar los tickets de este partido. Recargá para crear uno.</span>
+            </div>
+          )}
           {d.jugadores.map((j) => (
             <div key={j.jugadorId}>
               <button className="pm" type="button" onClick={() => abrir('jugador', j.jugadorId)}>
@@ -190,6 +196,7 @@ export function PanelPartido({ bundle }: { bundle: DetallePartidoBundle }) {
                     </button>
                   ))}
                 {bundle.usuario &&
+                  !bundle.ticketsError &&
                   puedeCrear(bundle.usuario.cargo) &&
                   !(bundle.tickets ?? []).some((t) => t.jugadorId === j.jugadorId) && (
                     <CrearTicket partidoId={d.partidoId} jugadorId={j.jugadorId} jugadorNombre={j.nombre} />

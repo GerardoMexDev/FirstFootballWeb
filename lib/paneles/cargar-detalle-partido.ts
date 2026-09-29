@@ -34,6 +34,8 @@ export interface DetallePartidoBundle {
   tickets: ResumenTicket[];
   /** Quién mira (para "Crear ticket"). */
   usuario: { id: string; cargo: string } | null;
+  /** true si no se pudieron leer los tickets: no se ofrece "Crear" (podría duplicar). */
+  ticketsError?: boolean;
 }
 
 /** Devuelve el bundle, o `null` si el partido no tiene filas en `proximos_partidos`. */
@@ -46,6 +48,7 @@ export async function cargarDetallePartido(
   const detalle = plegarDetallePartido(filas);
   if (!detalle) return null;
 
+  let ticketsError = false;
   const repositorioHitos = new RepositorioHitosSupabase(supabase);
   const [proximos, jugadoresBasicos, totales, escalas, linksDropbox, tickets, sesion] = await Promise.all([
     repositorioPartidos.listarProximos(),
@@ -53,7 +56,10 @@ export async function cargarDetallePartido(
     repositorioHitos.listarTotales(),
     repositorioHitos.listarEscalasActivas(),
     new RepositorioJugadoresSupabase(supabase).listarLinksDropbox(),
-    new RepositorioTicketsSupabase(supabase).listarPorPartido(partidoId).catch(() => [] as ResumenTicket[]),
+    new RepositorioTicketsSupabase(supabase).listarPorPartido(partidoId).catch(() => {
+      ticketsError = true;
+      return [] as ResumenTicket[];
+    }),
     sesionActual(),
   ]);
 
@@ -68,6 +74,7 @@ export async function cargarDetallePartido(
     hoyUy: DateTime.now().setZone(ZONA_AGENCIA).toISODate() ?? '',
     linksDropbox,
     tickets,
+    ...(ticketsError ? { ticketsError } : {}),
     usuario: sesion ? { id: sesion.usuarioId, cargo: sesion.cargo } : null,
   };
 }

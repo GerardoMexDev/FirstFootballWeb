@@ -8,7 +8,7 @@
  */
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Ico } from '@/components/comunes/Ico';
 import { usePanel } from '@/lib/paneles/use-panel';
@@ -23,6 +23,19 @@ export function CrearTicket({ partidoId, jugadorId, jugadorNombre }: { partidoId
   const [enviando, setEnviando] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const idCampo = `nota-${jugadorId}`;
+  const notaRef = useRef<HTMLTextAreaElement>(null);
+  const disparadorRef = useRef<HTMLButtonElement>(null);
+  const yaAbierto = useRef(false);
+
+  // Foco: al abrir el formulario va al campo; al cancelarlo vuelve al botón que lo abrió.
+  useEffect(() => {
+    if (abierto) {
+      yaAbierto.current = true;
+      notaRef.current?.focus();
+    } else if (yaAbierto.current) {
+      disparadorRef.current?.focus();
+    }
+  }, [abierto]);
 
   async function crear() {
     setEnviando(true);
@@ -39,7 +52,7 @@ export function CrearTicket({ partidoId, jugadorId, jugadorNombre }: { partidoId
 
   if (!abierto) {
     return (
-      <button type="button" className="btn btn--g btn--sm" onClick={() => setAbierto(true)}>
+      <button ref={disparadorRef} type="button" className="btn btn--g btn--sm" onClick={() => setAbierto(true)}>
         Crear ticket de diseño
       </button>
     );
@@ -51,6 +64,7 @@ export function CrearTicket({ partidoId, jugadorId, jugadorNombre }: { partidoId
         <label htmlFor={idCampo}>Qué hay que hacer para {jugadorNombre}</label>
         <textarea
           id={idCampo}
+          ref={notaRef}
           rows={3}
           maxLength={2000}
           placeholder="Ej.: diseño del Match Day con la foto de local"
