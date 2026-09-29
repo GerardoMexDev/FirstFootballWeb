@@ -8,7 +8,7 @@
 import { diasDesdeHoyUy } from '@/lib/fechas/zonas';
 import type { PartidoProximo } from '@/lib/repositorios/tipos';
 
-export type FiltroPartidos = 'todos' | 'hoy' | 'semana' | 'int' | 'hito';
+export type FiltroPartidos = 'todos' | 'hoy' | 'semana' | 'int' | 'hito' | 'fechas';
 
 /** Día con el que se agrupa/cuenta el partido: el de la sede, con fallback al de Uruguay. */
 export function diaDePartido(p: PartidoProximo): string | null {
@@ -57,6 +57,8 @@ export function filtrarPartidos(
       return lista.filter((p) => p.esInternacional);
     case 'hito':
       return partidosConHito ? lista.filter((p) => partidosConHito.has(p.partidoId)) : lista;
+    case 'fechas':
+      return []; // solo fechas de Contenido (ver lib/partidos/fechas-contenido.ts)
     case 'todos':
     default:
       return lista;

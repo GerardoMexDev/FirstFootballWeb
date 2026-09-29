@@ -278,6 +278,21 @@ personas) → se mantiene el login por nombre (`felipe`, `pedro`, `maxi`, `alexi
   botones; ficha OK; hero verificado adelantando el reloj del navegador al 2/10 (hoy no hay
   partido en 3 días y el hero no se muestra); desktop 1280 + mobile 390 sin scroll horizontal,
   0 errores de consola. `npm test` 135/135, lint + build OK.
+- **Eventos de Contenido en /partidos** (pedido de la agencia, diseño aprobado en chat): la
+  lista mezcla, por día, los partidos (primero, por hora) y las fechas de `agenda_contenido`
+  (cumpleaños, debut profesional, debut en selección, aniversario de club — los 11 de
+  Contenido, que incluyen a los 6 de Match Day), de hoy al último partido cargado. Filtros:
+  Todos/Hoy/Esta semana → partidos + fechas; Internacional/Con hito → solo partidos; **Fechas**
+  (chip nuevo) → solo fechas. Contador "86 partidos · 24 fechas" (barra y cada día).
+  Cumpleaños/debuts abren el panel del jugador; aniversario de club no es clickeable (sin
+  panel de club, mismo criterio que el calendario). **`lib/partidos/fechas-contenido.ts`** (puro,
+  8 tests: ventana, dedupe/orden, filtros, mezcla, textos) + `RepositorioAgenda
+  .listarFechasContenido()` + `TarjetaFecha` (`.fechac` en app.css: fila liviana con borde
+  punteado e ícono, distinta de `.match`). Sin migración. KPIs/hero/"Fechas señaladas" sin
+  cambios. **QA contra el `npm run dev` de Gerardo** (no se compiló: tenía el dev abierto, ver
+  §10b): conteos por filtro OK, orden partidos→fechas en cada día, clic en cumpleaños abre el
+  panel, desktop + mobile sin scroll horizontal, 0 errores. `npm test` 143/143, lint OK,
+  `tsc` sin errores nuevos.
 - **Recuperar contraseña:** en espera — Gerardo averigua el correo de la agencia / hosting.
   Opciones y plan en §5 "Recuperar contraseña".
 - **Desplegado y verificado en prod** (push de Gerardo, deploy `98f82df`): headers nuevos
@@ -1322,13 +1337,12 @@ preguntas → enfoques → diseño → spec escrita (revisa Gerardo) → plan �
 Pedido del Diseñador: tener "Fotografías / Match Day" a mano sin ir hasta Jugadores. Ver
 detalle en §4 Sesión 12.
 
-### 🗓️ Página Partidos: sumar eventos de los jugadores de Contenido — PEDIDO (2026-09-28, Sesión 12)
+### 🗓️ Página Partidos: eventos de Contenido — ✅ HECHO (2026-09-28, Sesión 12) — falta `git push`
 
-En los filtros/lista de `/partidos` incluir, además de los partidos de Match Day, las fechas de
-los **jugadores de Contenido**: cumpleaños, debut en carrera, debut en selección, fundación del
-club donde juegan. "Como si se juntaran los calendarios de Match Day y Contenido" en todos los
-filtros. Reusa la vista `agenda_contenido` (0014). Sin diseño todavía — faltan preguntas
-(cómo se ven en la lista, qué pasa con "Internacional"/"Con hito", KPIs).
+Detalle en §4 Sesión 12. **⚠️ Hallazgo: la migración `0022` (años en el título del aniversario
+de club) NO está aplicada en prod** — `agenda_anual` y `agenda_contenido` siguen con
+"Aniversario de CA Peñarol" sin "(135 años)", aunque el `.sql` está commiteado desde `38e89f3`
+(junto con `0023`, que sí se aplicó). Consultado con Gerardo antes de aplicarla.
 
 ### 🔑 Recuperar contraseña — EN ESPERA de Gerardo (anotado 2026-09-28, Sesión 12)
 

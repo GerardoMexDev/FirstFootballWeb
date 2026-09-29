@@ -5,6 +5,7 @@
 'use client';
 
 import type { FiltroPartidos } from '@/lib/partidos/utilidades';
+import { textoCantidades } from '@/lib/partidos/fechas-contenido';
 
 const FILTROS: { f: FiltroPartidos; etiqueta: string }[] = [
   { f: 'todos', etiqueta: 'Todos' },
@@ -12,16 +13,20 @@ const FILTROS: { f: FiltroPartidos; etiqueta: string }[] = [
   { f: 'semana', etiqueta: 'Esta semana' },
   { f: 'int', etiqueta: 'Internacional' },
   { f: 'hito', etiqueta: 'Con hito' },
+  { f: 'fechas', etiqueta: 'Fechas' },
 ];
 
 export function BarraFiltros({
   filtro,
   onCambiar,
   cantidad,
+  cantidadFechas = 0,
 }: {
   filtro: FiltroPartidos;
   onCambiar: (filtro: FiltroPartidos) => void;
   cantidad: number;
+  /** Fechas de Contenido visibles con el filtro actual. */
+  cantidadFechas?: number;
 }) {
   return (
     <div className="barra" id="filtros">
@@ -36,7 +41,7 @@ export function BarraFiltros({
         </button>
       ))}
       <span className="cuenta" id="cuenta">
-        {cantidad} partido{cantidad !== 1 ? 's' : ''}
+        {textoCantidades(cantidad, cantidadFechas)}
       </span>
     </div>
   );

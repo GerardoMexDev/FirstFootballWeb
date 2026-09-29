@@ -19,6 +19,7 @@ import { RepositorioAgendaSupabase } from '@/lib/repositorios/repositorio-agenda
 import { RepositorioJugadoresSupabase } from '@/lib/repositorios/repositorio-jugadores';
 import { crearClienteServidor } from '@/lib/supabase/cliente-servidor';
 import { ZONA_AGENCIA } from '@/lib/fechas/zonas';
+import { hastaFechas } from '@/lib/partidos/fechas-contenido';
 
 export default async function PaginaPartidos() {
   // Fecha de hoy en hora de Uruguay (lo que la demo pone en #fecha-hoy).
@@ -34,12 +35,15 @@ export default async function PaginaPartidos() {
   const partidos = await new RepositorioPartidosSupabase(supabase).listarProximos();
 
   const repositorioHitos = new RepositorioHitosSupabase(supabase);
-  const [jugadores, totales, escalas, eventosAgenda, linksDropbox] = await Promise.all([
+  const repositorioAgenda = new RepositorioAgendaSupabase(supabase);
+  const [jugadores, totales, escalas, eventosAgenda, linksDropbox, fechasContenido] = await Promise.all([
     repositorioHitos.listarJugadoresActivos(),
     repositorioHitos.listarTotales(),
     repositorioHitos.listarEscalasActivas(),
-    new RepositorioAgendaSupabase(supabase).listarEventosParaNotas(hoyUy),
+    repositorioAgenda.listarEventosParaNotas(hoyUy),
     new RepositorioJugadoresSupabase(supabase).listarLinksDropbox(),
+    // Fechas de Contenido para mezclar en la lista: de hoy al último partido cargado.
+    repositorioAgenda.listarFechasContenido(hoyUy, hastaFechas(partidos, hoyUy)),
   ]);
   const totalesPorJugador = new Map(totales.map((t) => [t.jugadorId, t]));
   const hitos = ordenarHitos(
@@ -68,6 +72,8 @@ export default async function PaginaPartidos() {
         partidos={partidos}
         partidosConHito={partidosConHito(hitos)}
         linksDropbox={linksDropbox}
+        fechas={fechasContenido}
+        hoyUy={hoyUy}
       />
     </section>
   );

@@ -10,6 +10,7 @@ import { DateTime } from 'luxon';
 import type { crearClienteServidor } from '@/lib/supabase/cliente-servidor';
 import { DIAS_AVISO_AGENDA, type EventoAgenda, type FuenteAgenda } from '@/lib/agenda/notas-proximas';
 import type { EventoCalendario } from '@/lib/calendario/eventos';
+import { normalizarFechas, type FechaContenido, type FuenteFecha } from '@/lib/partidos/fechas-contenido';
 
 type ClienteSupabase = ReturnType<typeof crearClienteServidor>;
 
@@ -60,6 +61,34 @@ export class RepositorioAgendaSupabase {
         r.fuente !== null && r.titulo !== null && r.dia_uy !== null,
       )
       .map((r) => ({ fuente: r.fuente, titulo: r.titulo, diaUy: r.dia_uy }));
+  }
+
+  /**
+   * Fechas de los jugadores de Contenido (cumpleaños y aniversarios) entre `desdeIso` y
+   * `hastaIso`, para mezclarlas con los partidos en `/partidos`. Siempre lee
+   * `agenda_contenido` (roster de Contenido, que incluye a los de Match Day), sin importar
+   * la vista con la que se construyó el repositorio.
+   */
+  async listarFechasContenido(desdeIso: string, hastaIso: string): Promise<FechaContenido[]> {
+    const { data, error } = await this.supabase
+      .from('agenda_contenido')
+      .select('fuente, ref_id, titulo, dia_uy')
+      .in('fuente', FUENTES_FECHA_FIJA)
+      .gte('dia_uy', desdeIso)
+      .lte('dia_uy', hastaIso)
+      .returns<(FilaAgenda & { ref_id: string | null })[]>();
+    if (error) throw new Error(`No se pudo leer agenda_contenido: ${error.message}`);
+
+    return normalizarFechas(
+      (data ?? [])
+        .filter((r) => r.fuente !== null && r.titulo !== null && r.dia_uy !== null)
+        .map((r) => ({
+          fuente: r.fuente as FuenteFecha,
+          refId: r.ref_id,
+          titulo: r.titulo!,
+          dia: r.dia_uy!,
+        })),
+    );
   }
 
   /**

@@ -3,11 +3,15 @@
  * `partidos` ya viene filtrado (por `SeccionPartidos`) y ordenado por `inicioUtc` desde el
  * repositorio — acá solo se agrupa y se pinta. El día es el de la sede del partido
  * (`agruparPorDia` de `lib/partidos/utilidades`), no el de Uruguay (punto I).
+ *
+ * Desde 2026-09-28 cada día puede traer además las fechas de Contenido (cumpleaños,
+ * aniversarios), debajo de sus partidos (`mezclarPorDia`, `lib/partidos/fechas-contenido`).
  */
 import { EstadoSinDatos } from '@/components/comunes/EstadoSinDatos';
 import { TarjetaPartido } from '@/components/partidos/TarjetaPartido';
+import { TarjetaFecha } from '@/components/partidos/TarjetaFecha';
 import { diasDesdeHoyUy, etiquetaDiaUy } from '@/lib/fechas/zonas';
-import { agruparPorDia } from '@/lib/partidos/utilidades';
+import { mezclarPorDia, textoCantidades, type FechaContenido } from '@/lib/partidos/fechas-contenido';
 import type { PartidoProximo } from '@/lib/repositorios/tipos';
 import { SIN_LINKS, type LinksDropbox } from '@/lib/jugadores/links-dropbox';
 
@@ -16,15 +20,18 @@ export function ListaPartidos({
   partidosConHito = new Set<string>(),
   onAbrirPartido,
   linksDropbox,
+  fechas = [],
 }: {
   partidos: PartidoProximo[];
+  /** Fechas de Contenido ya filtradas; van debajo de los partidos de su día. */
+  fechas?: FechaContenido[];
   partidosConHito?: Set<string>;
   /** Carpetas de Dropbox por jugadorId. Si se pasa, cada tarjeta muestra sus botones. */
   linksDropbox?: Record<string, LinksDropbox>;
   /** Abre el panel de detalle del partido. Si no se pasa, las tarjetas quedan no interactivas. */
   onAbrirPartido?: (partidoId: string) => void;
 }) {
-  if (!partidos.length) {
+  if (!partidos.length && !fechas.length) {
     return (
       <EstadoSinDatos style={{ justifyContent: 'center', padding: 56 }}>
         Sin resultados para este filtro.
@@ -34,15 +41,13 @@ export function ListaPartidos({
 
   return (
     <>
-      {agruparPorDia(partidos).map(([dia, partidosDelDia]) => {
+      {mezclarPorDia(partidos, fechas).map(({ dia, partidos: partidosDelDia, fechas: fechasDelDia }) => {
         const hoy = dia !== 'sin-fecha' && diasDesdeHoyUy(dia) === 0;
         return (
           <section key={dia} className={`grupo ${hoy ? 'grupo--hoy' : ''}`}>
             <div className="grupo__t">
               <h2 className="d3">{dia === 'sin-fecha' ? 'Sin fecha confirmada' : etiquetaDiaUy(dia)}</h2>
-              <span>
-                {partidosDelDia.length} partido{partidosDelDia.length !== 1 ? 's' : ''}
-              </span>
+              <span>{textoCantidades(partidosDelDia.length, fechasDelDia.length)}</span>
             </div>
             <div className="lista__g">
               {partidosDelDia.map((p) => (
@@ -53,6 +58,9 @@ export function ListaPartidos({
                   onAbrir={onAbrirPartido ? () => onAbrirPartido(p.partidoId) : undefined}
                   linksDropbox={linksDropbox ? (linksDropbox[p.jugadorId] ?? SIN_LINKS) : undefined}
                 />
+              ))}
+              {fechasDelDia.map((f) => (
+                <TarjetaFecha key={`${f.fuente}-${f.refId ?? f.titulo}`} fecha={f} />
               ))}
             </div>
           </section>
