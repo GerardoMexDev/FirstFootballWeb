@@ -1394,6 +1394,15 @@ contador del Admin y del CM que los creó.
   aniversarios) o ambos; verificar en la base cómo está marcado cada jugador (Match Day vs
   Contenido) antes de filtrar.
 
+**🐞 Bug reportado por Gerardo (2026-09-29) — PRIORIDAD ALTA: scroll horizontal en iPhone 14:**
+- En el iPhone 14 (390 px de ancho) la web es más ancha que la pantalla: hay **scroll a los
+  costados** y la **barra de navegación se corta** (se oculta la "F" del avatar de Felipe o el
+  logo de Football First).
+- Sospecha: el **globito de tickets** (`ContadorTickets`) sumado a la barra superior en esta
+  entrega la ensanchó. El QA de Task 11 midió 390 px sin scroll con Alexis (que no tiene
+  globito) — no con Felipe/Pedro/Maxi. Reproducir a 390 px con cada usuario y en Safari iOS
+  (barra de direcciones, `100vw` vs ancho real) antes de arreglar.
+
 **Candidatos para una migración `0026` (menores, no bloquean):** `search_path = public, pg_temp`
 en las funciones security definer; límite de largo del link; `ticket_dias_anticipacion()` stable
 en vez de immutable; separar el update de `inicio_utc_conocido` del aviso (hoy si falla el texto
