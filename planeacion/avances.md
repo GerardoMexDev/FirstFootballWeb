@@ -1358,6 +1358,18 @@ contador del Admin y del CM que los creó.
   ciudad** ni el resto de los datos de la sede. Averiguar si SportMonks no la manda para ese
   estadio, si la sync no la guarda, o si la tarjeta no la muestra (revisar los otros partidos
   de Bragantino y la ficha del venue en la base).
+- **Rodrigo Aguirre — temporada 2026 vacía:** la ficha dice "la temporada recién arranca /
+  0 partidos registrados este año", pero la Liga MX ya va por la jornada 10–11 y **tenemos
+  acceso a esa liga** en SportMonks. Averiguar por qué no entran sus estadísticas (¿id de
+  temporada, id del jugador, la sync de stats no corre para Liga MX, o el filtro de "este año"?).
+
+**📝 Pedido de Gerardo (2026-09-29) — tickets desde la ficha del jugador:**
+- Botón **"Crear ticket de diseño"** también en la **ficha del jugador**, para pedidos que no
+  son de un partido (ej. diseño por el cumpleaños de Rodrigo Aguirre). Lo crean Admin y CM.
+- A definir (Regla 0): hoy `ticket_crear` exige un partido y la fecha límite sale de la fecha
+  del partido → hace falta migración (0026): ticket sin partido, con **fecha del evento**
+  (cumpleaños/aniversario/fecha manual) para calcular la fecha límite; cómo se ve en el
+  calendario (¿chip en el día del cumpleaños?) y en el globito de pendientes.
 
 **Candidatos para una migración `0026` (menores, no bloquean):** `search_path = public, pg_temp`
 en las funciones security definer; límite de largo del link; `ticket_dias_anticipacion()` stable
