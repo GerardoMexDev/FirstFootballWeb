@@ -125,7 +125,7 @@ export function PanelLateral() {
     if (!abierto) return;
     const t = window.setTimeout(() => cerrarRef.current?.focus(), 0);
     return () => window.clearTimeout(t);
-  }, [tipo, id]);
+  }, [abierto, tipo, id]);
 
   const alTeclado = useCallback(
     (evento: React.KeyboardEvent<HTMLElement>) => {
