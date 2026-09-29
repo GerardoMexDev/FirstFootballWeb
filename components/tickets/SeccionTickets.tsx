@@ -67,7 +67,7 @@ export function SeccionTickets({
 
   const vacio =
     !tickets.length && cargo === 'Community Manager'
-      ? 'Todavía no creaste tickets. Se crean desde el detalle de un partido.'
+      ? 'Todavía no creaste tickets. Se crean desde el detalle de un partido o desde la ficha de un jugador.'
       : urg
         ? CONTADORES.find((c) => c.u === urg)!.vacio
         : ESTADOS.find((x) => x.e === estado)!.vacio;

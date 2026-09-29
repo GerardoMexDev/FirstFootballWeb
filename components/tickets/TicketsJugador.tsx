@@ -12,7 +12,7 @@ import { AlertaTicket } from '@/components/tickets/AlertaTicket';
 import { CrearTicketEvento } from '@/components/tickets/CrearTicketEvento';
 import { usePanel } from '@/lib/paneles/use-panel';
 import { debeActuar, puedeCrear } from '@/lib/tickets/permisos';
-import { TEXTO_ALERTA } from '@/lib/tickets/estados';
+import { META_ESTADO, TEXTO_ALERTA } from '@/lib/tickets/estados';
 import type { TicketsJugadorBundle } from '@/lib/tickets/cargar-tickets-jugador';
 
 export function TicketsJugador({
@@ -41,7 +41,7 @@ export function TicketsJugador({
                 key={t.id}
                 type="button"
                 className="tkj__t"
-                aria-label={`${t.titulo}. ${alerta ?? ''}`.trim()}
+                aria-label={[t.titulo, META_ESTADO[t.estado].etiqueta, alerta].filter(Boolean).join('. ')}
                 onClick={() => abrir('ticket', t.id)}
               >
                 <PastillaEstado estado={t.estado} />

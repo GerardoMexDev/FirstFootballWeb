@@ -208,8 +208,9 @@ export function Calendario({
                     )}{' '}
                     <span className="ev__w">{alertasPorTicket[t.id] ?? META_ESTADO[t.estado].corta}</span>
                   </small>
-                  <b>{t.jugadorNombre}</b>
-                  {t.motivo}
+                  {/* Como el resto de los chips: <b> = qué (en celular se oculta), texto = quién. */}
+                  <b>{t.motivo}</b>
+                  {t.jugadorNombre}
                 </button>
               ))}
             </div>
