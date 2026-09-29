@@ -1403,6 +1403,9 @@ contador del Admin y del CM que los creó.
   el CSS en prod: 390/375/360 px sin scroll y nav completa; tablet y desktop sin cambios.
   Ojo: si se agrega "Tickets" a la nav (pedido de más abajo) no entra una 5.ª opción en
   celular → habrá que resolverlo en ese diseño (ícono, o menú).
+  **Decisión de Gerardo (2026-09-29):** por ahora quedan las pestañas visibles en 2.ª fila; al
+  hacer la pantalla "Tickets" se elige entre menú hamburguesa y barra de pestañas inferior
+  (Claude recomienda la barra inferior: secciones a la vista y al alcance del pulgar).
 - Reporte original:
 - En el iPhone 14 (390 px de ancho) la web es más ancha que la pantalla: hay **scroll a los
   costados** y la **barra de navegación se corta** (se oculta la "F" del avatar de Felipe o el
