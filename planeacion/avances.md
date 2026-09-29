@@ -293,6 +293,17 @@ personas) → se mantiene el login por nombre (`felipe`, `pedro`, `maxi`, `alexi
   §10b): conteos por filtro OK, orden partidos→fechas en cada día, clic en cumpleaños abre el
   panel, desktop + mobile sin scroll horizontal, 0 errores. `npm test` 143/143, lint OK,
   `tsc` sin errores nuevos.
+- **Migración `0022` aplicada por Gerardo y verificada**: "Aniversario de CA Peñarol (135 años)"
+  en `agenda_contenido` y `agenda_anual` (369 filas). ⚠️ Dato a revisar con la agencia: RB
+  Bragantino sale "(7 años)" — su `fecha_fundacion` cargada es la del rebranding Red Bull
+  (2019), no la del club original (1928).
+- **🔒 Bug de seguridad del login arreglado** (existía desde Sesión 2; lo destapó el QA en prod
+  durante un arranque en frío): si se enviaba el form antes de que React hidratara, el navegador
+  lo mandaba por GET y la contraseña quedaba en la URL (`/login?usuario=maxi&pass=…` →
+  historial y logs de Vercel). Fix en `FormularioLogin`: `method="post"` + botón "Ingresar"
+  deshabilitado hasta hidratar (sin botón habilitado, Enter tampoco envía). QA contra el dev de
+  Gerardo bloqueando los chunks JS: botón deshabilitado, Enter no navega, URL limpia; con JS el
+  login entra normal.
 - **Recuperar contraseña:** en espera — Gerardo averigua el correo de la agencia / hosting.
   Opciones y plan en §5 "Recuperar contraseña".
 - **Desplegado y verificado en prod** (push de Gerardo, deploy `98f82df`): headers nuevos

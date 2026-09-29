@@ -2,10 +2,16 @@
  * Formulario de login. El usuario escribe solo el nombre (`maxi`, `pedro`, `felipe`,
  * `alexis`); la app arma el correo agregando `@${NEXT_PUBLIC_DOMINIO_LOGIN}` y llama a
  * `signInWithPassword`. Registro público deshabilitado — no hay más entrada que esta.
+ *
+ * Envío antes de hidratar (2026-09-28): con la página todavía sin JS (arranque en frío de
+ * Vercel, red lenta) el navegador mandaba el form por su cuenta como GET y la contraseña
+ * quedaba en la URL (`/login?usuario=…&pass=…` → historial, logs). Dos defensas:
+ * `method="post"` (nunca va a la URL) + botón deshabilitado hasta hidratar (sin botón de
+ * envío habilitado, el navegador tampoco envía con Enter).
  */
 'use client';
 
-import { useState, type FormEvent } from 'react';
+import { useEffect, useState, type FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import { Ico } from '@/components/comunes/Ico';
 import { crearClienteNavegador } from '@/lib/supabase/cliente-navegador';
@@ -33,6 +39,9 @@ export function FormularioLogin() {
   const [claveVisible, setClaveVisible] = useState(false);
   const [enviando, setEnviando] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // false en el HTML del servidor; true recién cuando React tomó el control del form.
+  const [hidratado, setHidratado] = useState(false);
+  useEffect(() => setHidratado(true), []);
 
   async function alEnviar(evento: FormEvent<HTMLFormElement>) {
     evento.preventDefault();
@@ -59,7 +68,7 @@ export function FormularioLogin() {
   }
 
   return (
-    <form className="form" id="form" onSubmit={alEnviar}>
+    <form className="form" id="form" method="post" onSubmit={alEnviar}>
       <h1>
         Panel de
         <br />
@@ -112,7 +121,7 @@ export function FormularioLogin() {
         </div>
       )}
 
-      <button className="btn btn--a" type="submit" disabled={enviando}>
+      <button className="btn btn--a" type="submit" disabled={enviando || !hidratado}>
         {enviando ? 'Ingresando…' : 'Ingresar'}
       </button>
       <p className="form__pie">Acceso interno — agencia Football First.</p>
