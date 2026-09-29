@@ -1287,12 +1287,31 @@ preguntas → enfoques → diseño → spec escrita (revisa Gerardo) → plan �
   reprograma, la fecha límite se mueve con el partido.
 - El diseño en sí **sigue por Dropbox**; esto es solo seguimiento.
 - Un ticket por partido (lo normal), pero la estructura admite más de uno por si hace falta.
+- **4º estado ✅ Publicado** (el Diseñador lo marca después de 🟢; queda fecha/hora de cada paso).
+- **Permisos (opción a):** los 3 ven todo y escriben en la conversación; crean Admin y CM;
+  el Diseñador marca 🟡 y ✅; aprueba/devuelve **quien lo creó**, y el **Admin cualquiera**
+  (respaldo si el CM no está). El historial registra quién hizo cada paso.
 - Base existente a evaluar: tablas vacías de Fase 2 (`piezas`, `piezas_aprobaciones`,
   `piezas_comentarios`, `piezas_versiones`, `campanas`).
 
-**⏳ A confirmar con la agencia:**
+**⏳ A confirmar con la agencia (tickets):**
 - [ ] Días de anticipación de la fecha límite (hoy: 2; mínimo 1).
 - [ ] ¿Siempre un solo ticket/diseño por partido, o a veces más (previa, resultado, stats)?
+
+### 📁 Botones Dropbox también en partidos — PEDIDO (2026-09-28, Sesión 12, pedido del Diseñador)
+
+Los botones **Fotografías / Match Day** (hoy solo en `components/jugadores/FichaJugador.tsx`,
+ver Sesión 9/"botones ficha") también en: (1) la **ficha de detalle del partido**
+(`PanelPartido`) y (2) la **tarjeta del partido junto a la foto del jugador**
+(`TarjetaPartido` / hero — a confirmar cuál). Sin diseño todavía.
+
+### 🗓️ Página Partidos: sumar eventos de los jugadores de Contenido — PEDIDO (2026-09-28, Sesión 12)
+
+En los filtros/lista de `/partidos` incluir, además de los partidos de Match Day, las fechas de
+los **jugadores de Contenido**: cumpleaños, debut en carrera, debut en selección, fundación del
+club donde juegan. "Como si se juntaran los calendarios de Match Day y Contenido" en todos los
+filtros. Reusa la vista `agenda_contenido` (0014). Sin diseño todavía — faltan preguntas
+(cómo se ven en la lista, qué pasa con "Internacional"/"Con hito", KPIs).
 
 ### 🔑 Recuperar contraseña — EN ESPERA de Gerardo (anotado 2026-09-28, Sesión 12)
 
