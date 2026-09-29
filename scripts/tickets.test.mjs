@@ -647,4 +647,68 @@ test('Un error dentro del aviso NO frena el update del partido', () =>
     assert.deepEqual(await avisos(cl, t), []);
   }));
 
+// ═════════════ Task 4: concurrencia (necesita la 0025 aplicada) ═════════════
+// Usa datos COMMITEADOS (dos conexiones no ven lo no commiteado de la otra) sobre un
+// partido falso en el año 2000 (no aparece en "próximos"), y los borra al final como
+// dueño deshabilitando los triggers de inmutabilidad (igual que limpiar-tickets.sql).
+
+test('Concurrencia: aprobar y devolver a la vez → gana uno solo', async () => {
+  // Necesita la 0025 aplicada (datos commiteados). Si no lo está, no hay nada que probar.
+  if (!aplicada) return;
+  const a = conexion();
+  const b = conexion();
+  await a.connect();
+  await b.connect();
+  let partido;
+  let ticket;
+  try {
+    const r = await c.query(
+      `insert into partidos (inicio_utc, estado, origen) values ('2000-01-01T20:00:00Z','programado','manual') returning id`,
+    );
+    partido = r.rows[0].id;
+    await c.query(`insert into partidos_jugadores (partido_id, jugador_id) values ($1,$2)`, [partido, ids.jugadorMd]);
+    await c.query('begin');
+    await como(c, ids.felipe);
+    ticket = (await c.query(`select ticket_crear($1,$2,'concurrencia') id`, [partido, ids.jugadorMd])).rows[0].id;
+    await como(c, ids.maxi);
+    await c.query(`select ticket_entregar($1,'https://x.com/c')`, [ticket]);
+    await c.query('commit');
+    await c.query('reset role');
+
+    await a.query('begin');
+    await como(a, ids.felipe);
+    await a.query(`select ticket_aprobar($1)`, [ticket]); // toma el lock
+    await b.query('begin');
+    await como(b, ids.felipe);
+    const devolver = b.query(`select ticket_devolver($1,'tarde')`, [ticket]).then(
+      () => null,
+      (e) => e,
+    );
+    await new Promise((res) => setTimeout(res, 500)); // b queda esperando el lock
+    await a.query('commit');
+    const error = await devolver;
+    await b.query('rollback');
+    assert.ok(error, 'la segunda acción debería fallar');
+    assert.match(error.message, /cambió de estado/);
+    const { rows } = await c.query(`select estado from tickets where id = $1`, [ticket]);
+    assert.equal(rows[0].estado, 'aprobado');
+  } finally {
+    await c.query('rollback').catch(() => {});
+    await c.query('reset role');
+    await c.query('begin');
+    await c.query('alter table tickets_historial disable trigger tickets_historial_inmutable');
+    await c.query('alter table tickets disable trigger tickets_sin_borrado');
+    if (ticket) {
+      await c.query('delete from tickets_historial where ticket_id = $1', [ticket]);
+      await c.query('delete from tickets where id = $1', [ticket]);
+    }
+    if (partido) await c.query('delete from partidos where id = $1', [partido]);
+    await c.query('alter table tickets_historial enable trigger tickets_historial_inmutable');
+    await c.query('alter table tickets enable trigger tickets_sin_borrado');
+    await c.query('commit');
+    await a.end();
+    await b.end();
+  }
+});
+
 export { enTransaccion, como, comoAnon, comoServicio, comoDueno, debeFallar, partidoDePrueba };
