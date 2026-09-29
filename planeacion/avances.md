@@ -1353,6 +1353,12 @@ contador del Admin y del CM que los creó.
   2.2: parpadeo suave (pulso, < 3 destellos por segundo), apagado con `prefers-reduced-motion`,
   y el texto "Ticket pendiente" siempre visible (el color/movimiento no es la única señal).
 
+**📝 Pedido de Gerardo (2026-09-29) — investigar cuando termine de revisar:**
+- Partido **RB Bragantino vs Atlético Mineiro**: muestra el estadio ("Arena MRV") pero **no la
+  ciudad** ni el resto de los datos de la sede. Averiguar si SportMonks no la manda para ese
+  estadio, si la sync no la guarda, o si la tarjeta no la muestra (revisar los otros partidos
+  de Bragantino y la ficha del venue en la base).
+
 **Candidatos para una migración `0026` (menores, no bloquean):** `search_path = public, pg_temp`
 en las funciones security definer; límite de largo del link; `ticket_dias_anticipacion()` stable
 en vez de immutable; separar el update de `inicio_utc_conocido` del aviso (hoy si falla el texto
