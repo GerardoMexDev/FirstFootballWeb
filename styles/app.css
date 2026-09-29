@@ -497,3 +497,16 @@ html { overflow-x: clip; }
   .nav { min-width: 0; overflow-x: auto; scrollbar-width: none; }
   .nav::-webkit-scrollbar { display: none; }
 }
+
+/* Tickets de diseño en la ficha del jugador y formulario de ticket de fecha (0028, 2026-09-29). */
+.tkj { display: flex; flex-direction: column; gap: 6px; margin-bottom: 12px; }
+.tkj__t { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; width: 100%; padding: 10px 12px; border-radius: var(--r-sm); background: var(--surface-2); text-align: left; cursor: pointer; }
+.tkj__t:hover { background: var(--surface-3); }
+.tkj__t:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.tkj__n { flex: 1; min-width: 0; font-size: var(--t-sm); font-weight: 600; overflow-wrap: anywhere; }
+.tke__f { border: 0; padding: 0; margin: 0 0 14px; display: flex; flex-direction: column; gap: 8px; }
+.tke__f legend { font-size: var(--t-sm); font-weight: 600; margin-bottom: 8px; }
+.tke__o { display: flex; align-items: center; gap: 10px; min-height: 36px; font-size: var(--t-md); cursor: pointer; }
+.tke__o input { width: 18px; height: 18px; accent-color: var(--accent); }
+.tke__otra { display: grid; grid-template-columns: 180px 1fr; gap: 12px; }
+@media (max-width: 620px) { .tke__otra { grid-template-columns: 1fr; } }

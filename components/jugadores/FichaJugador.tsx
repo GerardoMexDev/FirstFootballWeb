@@ -68,6 +68,7 @@ export function FichaJugador({
   proximos,
   hoyUy,
   destacar,
+  tickets,
 }: {
   jugador: JugadorFicha;
   temporada: TemporadaActual | null;
@@ -79,6 +80,8 @@ export function FichaJugador({
   hoyUy: string;
   /** `fuente` del evento del calendario que abrió el panel (p.ej. `cumpleanos`), o `null`/undefined. */
   destacar?: string | null;
+  /** Bloque de tickets de diseño (lo pasa el panel lateral; la página SSR no, 0028). */
+  tickets?: React.ReactNode;
 }) {
   const datos = datosParaContenido(jugador, hoyUy);
   const anio = hoyUy.slice(0, 4);
@@ -118,6 +121,8 @@ export function FichaJugador({
         }}
         style={{ marginBottom: 32 }}
       />
+
+      {tickets}
 
       {/* ── Hitos por alcanzar ── */}
       <div className="bloque">

@@ -14,6 +14,7 @@ import { proximasFechas, type ProximaFecha } from '@/lib/jugadores/datos-conteni
 import { RepositorioJugadoresSupabase } from '@/lib/repositorios/repositorio-jugadores';
 import type { crearClienteServidor } from '@/lib/supabase/cliente-servidor';
 import type { JugadorFicha } from '@/lib/repositorios/tipos';
+import { cargarTicketsJugador, type TicketsJugadorBundle } from '@/lib/tickets/cargar-tickets-jugador';
 
 type ClienteSupabase = ReturnType<typeof crearClienteServidor>;
 
@@ -26,6 +27,8 @@ export interface FichaContenidoBundle {
   proximas: ProximaFecha[];
   /** Día de hoy en Uruguay, YYYY-MM-DD. */
   hoyUy: string;
+  /** Bloque "Tickets de diseño" de la ficha (0028). */
+  ticketsJugador: TicketsJugadorBundle;
 }
 
 /** Devuelve el bundle, o `null` si el jugador no existe, está inactivo, o no es `soloContenido`. */
@@ -39,6 +42,7 @@ export async function cargarFichaContenido(
   const hoyUy = DateTime.now().setZone(ZONA_AGENCIA).toISODate() ?? '';
 
   const proximas = proximasFechas(jugador, hoyUy);
+  const ticketsJugador = await cargarTicketsJugador(supabase, jugador, hoyUy);
 
-  return { jugador, proximas, hoyUy };
+  return { jugador, proximas, hoyUy, ticketsJugador };
 }

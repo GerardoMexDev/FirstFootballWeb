@@ -16,6 +16,7 @@ import { RepositorioJugadoresSupabase } from '@/lib/repositorios/repositorio-jug
 import { RepositorioHitosSupabase } from '@/lib/repositorios/repositorio-hitos';
 import { RepositorioPartidosSupabase } from '@/lib/repositorios/repositorio-partidos';
 import type { Hito } from '@/lib/motor-hitos/tipos';
+import { cargarTicketsJugador, type TicketsJugadorBundle } from '@/lib/tickets/cargar-tickets-jugador';
 import type { JugadorFicha, PartidoProximo, TemporadaActual } from '@/lib/repositorios/tipos';
 
 type ClienteSupabase = ReturnType<typeof crearClienteServidor>;
@@ -29,6 +30,8 @@ export interface FichaJugadorBundle {
   proximos: PartidoProximo[];
   /** Día de hoy en Uruguay, YYYY-MM-DD. */
   hoyUy: string;
+  /** Bloque "Tickets de diseño" de la ficha (0028). */
+  ticketsJugador: TicketsJugadorBundle;
 }
 
 /** Devuelve el bundle, o `null` si el jugador no existe / está inactivo. */
@@ -40,13 +43,15 @@ export async function cargarFichaJugador(
   const jugador = await repositorioJugadores.obtener(jugadorId);
   if (!jugador) return null;
 
+  const hoyUy = DateTime.now().setZone(ZONA_AGENCIA).toISODate() ?? '';
   const repositorioHitos = new RepositorioHitosSupabase(supabase);
-  const [temporada, proximos, jugadoresBasicos, totales, escalas] = await Promise.all([
+  const [temporada, proximos, jugadoresBasicos, totales, escalas, ticketsJugador] = await Promise.all([
     repositorioJugadores.temporadaActual(jugador.id),
     new RepositorioPartidosSupabase(supabase).listarPorJugador(jugador.id),
     repositorioHitos.listarJugadoresActivos(),
     repositorioHitos.listarTotales(),
     repositorioHitos.listarEscalasActivas(),
+    cargarTicketsJugador(supabase, jugador, hoyUy),
   ]);
 
   const totalesPorJugador = new Map(totales.map((t) => [t.jugadorId, t]));
@@ -64,6 +69,7 @@ export async function cargarFichaJugador(
     temporada,
     hitos,
     proximos: proximos.slice(0, MAXIMO_PROXIMOS),
-    hoyUy: DateTime.now().setZone(ZONA_AGENCIA).toISODate() ?? '',
+    hoyUy,
+    ticketsJugador,
   };
 }

@@ -34,12 +34,15 @@ export function FichaContenido({
   proximas,
   hoyUy,
   destacar,
+  tickets,
 }: {
   jugador: JugadorFicha;
   proximas: ProximaFecha[];
   hoyUy: string;
   /** `fuente` del evento del calendario que abrió el panel (p.ej. `cumpleanos`), o `null`/undefined. */
   destacar?: string | null;
+  /** Bloque de tickets de diseño (lo pasa el panel lateral; la página SSR no, 0028). */
+  tickets?: React.ReactNode;
 }) {
   const datos = datosParaContenido(jugador, hoyUy);
   const clubEnMeses = datos.aniosEnClub !== null && datos.aniosEnClub < 1;
@@ -65,6 +68,8 @@ export function FichaContenido({
           <span key={parte}>{parte}</span>
         ))}
       </div>
+
+      {tickets}
 
       {/* ── Datos para contenido ── (mismo markup que FichaJugador) */}
       <div className="bloque">
