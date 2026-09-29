@@ -96,3 +96,9 @@ test('textoCantidades', () => {
   assert.equal(textoCantidades(2, 0), '2 partidos');
   assert.equal(textoCantidades(0, 0), '0 partidos');
 });
+
+test('filtrarFechas: Match Day → ninguna; Contenido → todas', () => {
+  const fs = [fecha('cumpleanos', 0, 'a'), fecha('cumpleanos', 10, 'b')];
+  assert.deepEqual(filtrarFechas(fs, 'matchday', dia(0)), []);
+  assert.equal(filtrarFechas(fs, 'contenido', dia(0)).length, 2);
+});

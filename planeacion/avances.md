@@ -1365,6 +1365,15 @@ Orden: lucecita + calendario → filtros → pantalla Tickets → tickets desde 
   Pedro/Alexis nada; animación 1 s × 5; 390 px sin scroll. Ticket de QA 8b6c198c cancelado.
   Nota: el "Calendario general" no muestra tickets porque hoy todo ticket es de un partido
   (van en Match Day); aparecerán ahí con los tickets desde la ficha (punto 4).
+- **✅ 5 HECHO (2026-09-29, falta push):** filtros "Match Day" (partidos, sin fechas) y
+  "Contenido" (fechas + partidos de jugadores solo-Contenido). Vista nueva
+  `proximos_partidos_contenido` (0027, aplicada por Gerardo; `proximos_partidos` no cambia).
+  Tarjetas de Contenido sin panel, sin Dropbox, sin tickets y sin flecha. QA :3100: Todos 86+23,
+  Match Day 86, Contenido 7 (Aguirre) + 23; 390 px sin scroll.
+  Dato raro de SportMonks: la sede "Estadio Universitario" (id 343651, capacidad 700) figura
+  en Mexico City, y SportMonks la asigna a partidos de Tigres (su estadio es el Universitario
+  de Nuevo León, San Nicolás). Es dato de la fuente, no un bug nuestro; si molesta, se puede
+  corregir a mano la sede de esos partidos.
 
 **📝 Pedido de Gerardo (2026-09-29, mientras revisa en prod):**
 - En cada **tarjeta de partido** de /partidos (ej. "RB Bragantino vs Atlético Mineiro · Estadio… ·
@@ -2515,6 +2524,7 @@ F–H → I (con migración). Cada ítem cerrado se documenta en §4.
 | Detener `npx next start` con TaskStop (Sesión 12) | Mata el wrapper `npx` pero el `node … next start` hijo sigue vivo con el build VIEJO → el siguiente `next start` falla (puerto ocupado) y el QA ve chunks 400 | Después de TaskStop, cerrar el proceso hijo: `Get-CimInstance Win32_Process` filtrando `*next*start -p*3100*` → `Stop-Process` |
 | `npm run build` / `next start` de Claude mientras Gerardo tiene `npm run dev` abierto (Sesión 12) | Comparten `.next`: el build pisa la caché del dev → "Cannot find module './260.js'" en el navegador de Gerardo | Antes de compilar, preguntar si hay un `npm run dev` abierto; si lo hay, pedir que lo corte antes (o verificar con el dev de él en vez de compilar). Arreglo: Ctrl+C, borrar `.next`, `npm run dev` |
 | `npm run migracion …0022…` desde Claude (Sesión 12, con OK de Gerardo) | Bloqueado por el auto-mode ("Production Deploy"). Inconsistente: la `0024` pasó ese mismo día | Tratar toda migración como algo que puede bloquearse: dejarla verificada y pasarle a Gerardo el comando (o el SQL Editor); Claude verifica después con una consulta de solo lectura |
+| Verificar que una migración está aplicada con `select('*', { count: 'exact', head: true })` y mirar `r.error` (Sesión 13, 0027) | Falso positivo: con `head: true` la vista inexistente no devolvió `error` en ese campo y el script dijo "aplicada" | Pedir filas reales (`select('col').limit(1)`) y exigir `data` no nulo; el error real es `PGRST205` |
 | `git push` desde Claude (Sesión 12, 2026-09-28) | Bloqueado por el auto-mode ("Out-of-Place Publication": el push despliega a Vercel) | Dejar los commits hechos y verificados; Gerardo corre `git push` y Claude hace el QA en prod después |
 
 ## 11. Dudas abiertas (de `contexto.md` §12)

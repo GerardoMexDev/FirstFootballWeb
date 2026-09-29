@@ -34,11 +34,12 @@ export default async function PaginaPartidos() {
   const hoyUy = DateTime.now().setZone(ZONA_AGENCIA).toISODate() ?? '';
 
   const supabase = crearClienteServidor();
-  const partidos = await new RepositorioPartidosSupabase(supabase).listarProximos();
+  const repositorioPartidos = new RepositorioPartidosSupabase(supabase);
+  const partidos = await repositorioPartidos.listarProximos();
 
   const repositorioHitos = new RepositorioHitosSupabase(supabase);
   const repositorioAgenda = new RepositorioAgendaSupabase(supabase);
-  const [jugadores, totales, escalas, eventosAgenda, linksDropbox, fechasContenido, pendientes] = await Promise.all([
+  const [jugadores, totales, escalas, eventosAgenda, linksDropbox, fechasContenido, pendientes, partidosContenido] = await Promise.all([
     repositorioHitos.listarJugadoresActivos(),
     repositorioHitos.listarTotales(),
     repositorioHitos.listarEscalasActivas(),
@@ -48,6 +49,12 @@ export default async function PaginaPartidos() {
     repositorioAgenda.listarFechasContenido(hoyUy, hastaFechas(partidos, hoyUy)),
     // Lo que le toca al usuario (misma lectura que el contador de la barra, cacheada).
     pendientesDeSesion(),
+    // Partidos de jugadores solo-Contenido (filtro "Contenido"). Si falla, el filtro queda
+    // solo con las fechas y el resto de la página no se entera.
+    repositorioPartidos.listarProximosContenido().catch((e) => {
+      console.error('partidos de Contenido:', e);
+      return [];
+    }),
   ]);
   const totalesPorJugador = new Map(totales.map((t) => [t.jugadorId, t]));
   const hitos = ordenarHitos(
@@ -74,6 +81,7 @@ export default async function PaginaPartidos() {
       <NotasAgenda notas={notas} />
       <SeccionPartidos
         partidos={partidos}
+        partidosContenido={partidosContenido}
         partidosConHito={partidosConHito(hitos)}
         linksDropbox={linksDropbox}
         fechas={fechasContenido}

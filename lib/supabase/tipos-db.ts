@@ -230,6 +230,13 @@ export type Database = {
             referencedRelation: "proximos_partidos"
             referencedColumns: ["partido_id"]
           },
+          {
+            foreignKeyName: "convocatorias_partido_id_fkey"
+            columns: ["partido_id"]
+            isOneToOne: false
+            referencedRelation: "proximos_partidos_contenido"
+            referencedColumns: ["partido_id"]
+          },
         ]
       }
       escalas_hito: {
@@ -352,6 +359,13 @@ export type Database = {
             referencedRelation: "proximos_partidos"
             referencedColumns: ["partido_id"]
           },
+          {
+            foreignKeyName: "estadisticas_partido_partido_id_fkey"
+            columns: ["partido_id"]
+            isOneToOne: false
+            referencedRelation: "proximos_partidos_contenido"
+            referencedColumns: ["partido_id"]
+          },
         ]
       }
       hitos: {
@@ -432,6 +446,20 @@ export type Database = {
             columns: ["club_id"]
             isOneToOne: false
             referencedRelation: "proximos_partidos"
+            referencedColumns: ["rival_id"]
+          },
+          {
+            foreignKeyName: "hitos_club_id_fkey"
+            columns: ["club_id"]
+            isOneToOne: false
+            referencedRelation: "proximos_partidos_contenido"
+            referencedColumns: ["club_id"]
+          },
+          {
+            foreignKeyName: "hitos_club_id_fkey"
+            columns: ["club_id"]
+            isOneToOne: false
+            referencedRelation: "proximos_partidos_contenido"
             referencedColumns: ["rival_id"]
           },
           {
@@ -599,6 +627,20 @@ export type Database = {
             referencedColumns: ["rival_id"]
           },
           {
+            foreignKeyName: "jugadores_club_actual_id_fkey"
+            columns: ["club_actual_id"]
+            isOneToOne: false
+            referencedRelation: "proximos_partidos_contenido"
+            referencedColumns: ["club_id"]
+          },
+          {
+            foreignKeyName: "jugadores_club_actual_id_fkey"
+            columns: ["club_actual_id"]
+            isOneToOne: false
+            referencedRelation: "proximos_partidos_contenido"
+            referencedColumns: ["rival_id"]
+          },
+          {
             foreignKeyName: "jugadores_representante_id_fkey"
             columns: ["representante_id"]
             isOneToOne: false
@@ -710,6 +752,20 @@ export type Database = {
             referencedColumns: ["rival_id"]
           },
           {
+            foreignKeyName: "partidos_club_local_id_fkey"
+            columns: ["club_local_id"]
+            isOneToOne: false
+            referencedRelation: "proximos_partidos_contenido"
+            referencedColumns: ["club_id"]
+          },
+          {
+            foreignKeyName: "partidos_club_local_id_fkey"
+            columns: ["club_local_id"]
+            isOneToOne: false
+            referencedRelation: "proximos_partidos_contenido"
+            referencedColumns: ["rival_id"]
+          },
+          {
             foreignKeyName: "partidos_club_visitante_id_fkey"
             columns: ["club_visitante_id"]
             isOneToOne: false
@@ -731,6 +787,20 @@ export type Database = {
             referencedColumns: ["rival_id"]
           },
           {
+            foreignKeyName: "partidos_club_visitante_id_fkey"
+            columns: ["club_visitante_id"]
+            isOneToOne: false
+            referencedRelation: "proximos_partidos_contenido"
+            referencedColumns: ["club_id"]
+          },
+          {
+            foreignKeyName: "partidos_club_visitante_id_fkey"
+            columns: ["club_visitante_id"]
+            isOneToOne: false
+            referencedRelation: "proximos_partidos_contenido"
+            referencedColumns: ["rival_id"]
+          },
+          {
             foreignKeyName: "partidos_competencia_id_fkey"
             columns: ["competencia_id"]
             isOneToOne: false
@@ -742,6 +812,13 @@ export type Database = {
             columns: ["competencia_id"]
             isOneToOne: false
             referencedRelation: "proximos_partidos"
+            referencedColumns: ["competencia_id"]
+          },
+          {
+            foreignKeyName: "partidos_competencia_id_fkey"
+            columns: ["competencia_id"]
+            isOneToOne: false
+            referencedRelation: "proximos_partidos_contenido"
             referencedColumns: ["competencia_id"]
           },
         ]
@@ -798,6 +875,13 @@ export type Database = {
             columns: ["partido_id"]
             isOneToOne: false
             referencedRelation: "proximos_partidos"
+            referencedColumns: ["partido_id"]
+          },
+          {
+            foreignKeyName: "partidos_jugadores_partido_id_fkey"
+            columns: ["partido_id"]
+            isOneToOne: false
+            referencedRelation: "proximos_partidos_contenido"
             referencedColumns: ["partido_id"]
           },
         ]
@@ -1182,6 +1266,13 @@ export type Database = {
             referencedRelation: "proximos_partidos"
             referencedColumns: ["partido_id"]
           },
+          {
+            foreignKeyName: "tickets_partido_id_fkey"
+            columns: ["partido_id"]
+            isOneToOne: false
+            referencedRelation: "proximos_partidos_contenido"
+            referencedColumns: ["partido_id"]
+          },
         ]
       }
       tickets_historial: {
@@ -1302,6 +1393,63 @@ export type Database = {
         Relationships: []
       }
       proximos_partidos: {
+        Row: {
+          ciudad: string | null
+          club_escudo_url: string | null
+          club_id: string | null
+          club_nombre: string | null
+          competencia_cobertura: boolean | null
+          competencia_codigo: string | null
+          competencia_id: string | null
+          competencia_nombre: string | null
+          competencia_tipo:
+            | Database["public"]["Enums"]["tipo_competencia"]
+            | null
+          con_seleccion: boolean | null
+          convocado: boolean | null
+          dia_local_sede: string | null
+          dia_uy: string | null
+          es_internacional: boolean | null
+          es_local: boolean | null
+          estadio: string | null
+          estado: Database["public"]["Enums"]["estado_partido"] | null
+          inicio_local_sede: string | null
+          inicio_local_uy: string | null
+          inicio_utc: string | null
+          jugador_apodo: string | null
+          jugador_foto_url: string | null
+          jugador_id: string | null
+          jugador_nombre: string | null
+          jugador_seleccion: string | null
+          marcador_local: number | null
+          marcador_visitante: number | null
+          partido_id: string | null
+          rival_escudo_url: string | null
+          rival_id: string | null
+          rival_nombre: string | null
+          ronda: string | null
+          sincronizado_en: string | null
+          tentativo: boolean | null
+          zona_horaria_evento: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "partidos_jugadores_jugador_id_fkey"
+            columns: ["jugador_id"]
+            isOneToOne: false
+            referencedRelation: "jugadores"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "partidos_jugadores_jugador_id_fkey"
+            columns: ["jugador_id"]
+            isOneToOne: false
+            referencedRelation: "totales_jugador"
+            referencedColumns: ["jugador_id"]
+          },
+        ]
+      }
+      proximos_partidos_contenido: {
         Row: {
           ciudad: string | null
           club_escudo_url: string | null
@@ -1493,6 +1641,13 @@ export type Database = {
             columns: ["partido_id"]
             isOneToOne: false
             referencedRelation: "proximos_partidos"
+            referencedColumns: ["partido_id"]
+          },
+          {
+            foreignKeyName: "tickets_partido_id_fkey"
+            columns: ["partido_id"]
+            isOneToOne: false
+            referencedRelation: "proximos_partidos_contenido"
             referencedColumns: ["partido_id"]
           },
         ]

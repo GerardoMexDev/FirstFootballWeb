@@ -151,9 +151,12 @@ export function TarjetaPartido({
         </div>
       </div>
 
-      <div className="der">
-        <Ico nombre="chevron" />
-      </div>
+      {/* La flecha promete que la tarjeta abre algo: sin `onAbrir` no se muestra. */}
+      {onAbrir && (
+        <div className="der">
+          <Ico nombre="chevron" />
+        </div>
+      )}
     </article>
   );
 }

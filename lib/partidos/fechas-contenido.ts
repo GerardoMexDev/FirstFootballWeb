@@ -94,8 +94,10 @@ export function filtrarFechas(
       return fechas.filter((f) => diasEntre(hoyUy, f.dia) < 7);
     case 'int':
     case 'hito':
+    case 'matchday': // Match Day = solo partidos (2026-09-29)
       return [];
     case 'fechas':
+    case 'contenido': // Contenido = fechas + partidos de jugadores solo-Contenido (0027)
     case 'todos':
     default:
       return fechas;

@@ -76,14 +76,24 @@ export class RepositorioPartidosSupabase implements RepositorioPartidos {
   constructor(private readonly supabase: ClienteSupabase) {}
 
   async listarProximos(): Promise<PartidoProximo[]> {
+    return this.proximosDe('proximos_partidos');
+  }
+
+  /** Próximos de los jugadores solo-Contenido (vista 0027): filtro "Contenido" de /partidos. */
+  async listarProximosContenido(): Promise<PartidoProximo[]> {
+    return this.proximosDe('proximos_partidos_contenido');
+  }
+
+  /** Las dos vistas tienen las mismas columnas (0027 copia el cuerpo de 0017). */
+  private async proximosDe(vista: 'proximos_partidos' | 'proximos_partidos_contenido'): Promise<PartidoProximo[]> {
     const { data, error } = await this.supabase
-      .from('proximos_partidos')
+      .from(vista)
       .select('*')
       .neq('estado', 'finalizado')
       .or(`dia_uy.gte.${hoyEnUruguay()},dia_uy.is.null`)
       .order('inicio_utc', { ascending: true, nullsFirst: false });
 
-    if (error) throw new Error(`No se pudo leer proximos_partidos: ${error.message}`);
+    if (error) throw new Error(`No se pudo leer ${vista}: ${error.message}`);
 
     return (data ?? [])
       .map(aPartidoProximo)
