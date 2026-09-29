@@ -360,6 +360,109 @@ grant execute on function
   ticket_comentar(uuid, text)
   to authenticated;
 
--- (Task 3 agrega acá los triggers de avisos sobre partidos.)
+-- ─── 8. Avisos del sistema (triggers sobre partidos) ────────────────────────
+-- REGLA DURA: un aviso nunca rompe la sincronización. Estos triggers corren dentro de las
+-- Edge Functions que escriben `partidos`: todo el cuerpo va en un bloque con EXCEPTION que
+-- deja un WARNING y devuelve la fila. Días de la semana con array propio (no lc_time).
+
+create or replace function ticket__fecha_hora_uy(p timestamptz)
+returns text language sql stable set search_path = public as $$
+  select (array['dom','lun','mar','mié','jue','vie','sáb'])
+           [extract(dow from p at time zone 'America/Montevideo')::int + 1]
+         || ' ' || to_char(p at time zone 'America/Montevideo', 'FMDD/FMMM HH24:MI')
+$$;
+
+create or replace function ticket__fecha_uy(p date)
+returns text language sql immutable as $$
+  select (array['dom','lun','mar','mié','jue','vie','sáb'])[extract(dow from p)::int + 1]
+         || ' ' || to_char(p, 'FMDD/FMMM')
+$$;
+
+create or replace function tickets_aviso_partido_actualizado()
+returns trigger language plpgsql security definer set search_path = public as $$
+declare
+  v_texto  text;
+  v_limite date;
+begin
+  begin
+    if new.inicio_utc is distinct from old.inicio_utc and new.inicio_utc is not null then
+      v_limite := (new.inicio_utc at time zone 'America/Montevideo')::date - ticket_dias_anticipacion();
+      if old.inicio_utc is null then
+        v_texto := 'Hora confirmada: ' || ticket__fecha_hora_uy(new.inicio_utc)
+                   || ' (hora Uruguay). Fecha límite: ' || ticket__fecha_uy(v_limite) || '.';
+      elsif abs(extract(epoch from new.inicio_utc - old.inicio_utc)) >= 60 then
+        v_texto := 'El partido se reprogramó: antes ' || ticket__fecha_hora_uy(old.inicio_utc)
+                   || ', ahora ' || ticket__fecha_hora_uy(new.inicio_utc)
+                   || ' (hora Uruguay). Nueva fecha límite: ' || ticket__fecha_uy(v_limite) || '.';
+        if v_limite < (now() at time zone 'America/Montevideo')::date then
+          v_texto := v_texto || ' ⚠️ La nueva fecha límite ya pasó.';
+        end if;
+      end if;
+
+      update tickets set inicio_utc_conocido = new.inicio_utc where partido_id = new.id;
+
+      if v_texto is not null then
+        insert into tickets_historial (ticket_id, tipo, texto)
+        select t.id, 'sistema', v_texto
+        from tickets t
+        where t.partido_id = new.id and t.estado not in ('publicado', 'cancelado');
+      end if;
+    end if;
+
+    if new.estado is distinct from old.estado then
+      v_texto := null;
+      if new.estado = 'suspendido' then
+        v_texto := 'El partido figura como suspendido en la fuente.';
+      elsif old.estado = 'suspendido' and new.estado = 'programado' then
+        v_texto := 'El partido vuelve a figurar como programado'
+                   || coalesce(' para ' || ticket__fecha_hora_uy(new.inicio_utc) || ' (hora Uruguay)', '')
+                   || '.';
+      end if;
+      if v_texto is not null then
+        insert into tickets_historial (ticket_id, tipo, texto)
+        select t.id, 'sistema', v_texto
+        from tickets t
+        where t.partido_id = new.id and t.estado not in ('publicado', 'cancelado');
+      end if;
+    end if;
+  exception when others then
+    raise warning 'tickets: no se pudo registrar el aviso del partido % (%)', new.id, sqlerrm;
+  end;
+  return new;
+end;
+$$;
+
+create trigger tickets_aviso_partido_actualizado
+  after update of inicio_utc, estado on partidos
+  for each row
+  when (old.inicio_utc is distinct from new.inicio_utc or old.estado is distinct from new.estado)
+  execute function tickets_aviso_partido_actualizado();
+
+create or replace function tickets_aviso_partido_borrado()
+returns trigger language plpgsql security definer set search_path = public as $$
+begin
+  begin
+    update tickets
+       set inicio_utc_conocido = coalesce(old.inicio_utc, inicio_utc_conocido)
+     where partido_id = old.id;
+    insert into tickets_historial (ticket_id, tipo, texto)
+    select t.id, 'sistema', 'El partido ya no figura en la fuente de datos. El ticket se conserva.'
+    from tickets t
+    where t.partido_id = old.id and t.estado not in ('publicado', 'cancelado');
+  exception when others then
+    raise warning 'tickets: no se pudo registrar el borrado del partido % (%)', old.id, sqlerrm;
+  end;
+  return old;
+end;
+$$;
+
+create trigger tickets_aviso_partido_borrado
+  before delete on partidos
+  for each row execute function tickets_aviso_partido_borrado();
+
+revoke execute on function
+  ticket__fecha_hora_uy(timestamptz), ticket__fecha_uy(date),
+  tickets_aviso_partido_actualizado(), tickets_aviso_partido_borrado()
+  from public, anon, authenticated;
 
 commit;

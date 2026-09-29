@@ -542,4 +542,109 @@ test('Revisor: el CM aprueba y cancela sus propios tickets (rama creado_por = au
     assert.equal(await estadoDe(cl, t2), 'cancelado');
   }));
 
+// ═════════════ Task 3: avisos del sistema ═════════════
+
+const avisos = async (cl, t) => {
+  await comoDueno(cl);
+  return (await cl.query(`select texto from tickets_historial where ticket_id = $1 and tipo = 'sistema' order by id`, [t])).rows.map((r) => r.texto);
+};
+async function ticketEn(cl, p) {
+  await como(cl, ids.felipe);
+  return crear(cl, p);
+}
+
+test('Aviso: reprogramación ≥ 1 min → texto con antes/ahora y nueva fecha límite', () =>
+  enTransaccion(async (cl) => {
+    // 2030-06-01 23:00 UTC = sáb 1/6 20:00 UY
+    const p = await partidoDePrueba(cl, ids.jugadorMd, '2030-06-01T23:00:00Z');
+    const t = await ticketEn(cl, p);
+    await comoDueno(cl);
+    await cl.query(`update partidos set inicio_utc = '2030-06-02T21:00:00Z' where id = $1`, [p]);
+    assert.deepEqual(await avisos(cl, t), [
+      'El partido se reprogramó: antes sáb 1/6 20:00, ahora dom 2/6 18:00 (hora Uruguay). Nueva fecha límite: vie 31/5.',
+    ]);
+    const { rows } = await cl.query(`select inicio_utc_conocido from tickets where id = $1`, [t]);
+    assert.equal(rows[0].inicio_utc_conocido.toISOString(), '2030-06-02T21:00:00.000Z');
+  }));
+
+test('Aviso: cambio < 1 min → ningún aviso', () =>
+  enTransaccion(async (cl) => {
+    const p = await partidoDePrueba(cl, ids.jugadorMd, '2030-06-01T23:00:00Z');
+    const t = await ticketEn(cl, p);
+    await comoDueno(cl);
+    await cl.query(`update partidos set inicio_utc = '2030-06-01T23:00:30Z' where id = $1`, [p]);
+    assert.deepEqual(await avisos(cl, t), []);
+  }));
+
+test('Aviso: reprogramado a una fecha cuya fecha límite ya pasó → advertencia', () =>
+  enTransaccion(async (cl) => {
+    const p = await partidoDePrueba(cl, ids.jugadorMd, '2030-06-01T23:00:00Z');
+    const t = await ticketEn(cl, p);
+    await comoDueno(cl);
+    await cl.query(`update partidos set inicio_utc = now() + interval '1 day' where id = $1`, [p]);
+    const [texto] = await avisos(cl, t);
+    assert.match(texto, /⚠️ La nueva fecha límite ya pasó\.$/);
+  }));
+
+test('Aviso: hora confirmada (antes sin hora)', () =>
+  enTransaccion(async (cl) => {
+    const p = await partidoDePrueba(cl, ids.jugadorMd, null);
+    const t = await ticketEn(cl, p);
+    await comoDueno(cl);
+    await cl.query(`update partidos set inicio_utc = '2030-06-01T23:00:00Z' where id = $1`, [p]);
+    assert.deepEqual(await avisos(cl, t), ['Hora confirmada: sáb 1/6 20:00 (hora Uruguay). Fecha límite: jue 30/5.']);
+  }));
+
+test('Aviso: suspendido y vuelta a programado; finalizado no avisa', () =>
+  enTransaccion(async (cl) => {
+    const p = await partidoDePrueba(cl, ids.jugadorMd, '2030-06-01T23:00:00Z');
+    const t = await ticketEn(cl, p);
+    await comoDueno(cl);
+    await cl.query(`update partidos set estado = 'suspendido' where id = $1`, [p]);
+    await cl.query(`update partidos set estado = 'programado' where id = $1`, [p]);
+    await cl.query(`update partidos set estado = 'finalizado' where id = $1`, [p]);
+    assert.deepEqual(await avisos(cl, t), [
+      'El partido figura como suspendido en la fuente.',
+      'El partido vuelve a figurar como programado para sáb 1/6 20:00 (hora Uruguay).',
+    ]);
+  }));
+
+test('Aviso: tickets publicados o cancelados no reciben avisos', () =>
+  enTransaccion(async (cl) => {
+    const p = await partidoDePrueba(cl, ids.jugadorMd, '2030-06-01T23:00:00Z');
+    const t = await ticketEn(cl, p);
+    await cl.query(`select ticket_cancelar($1, 'no va')`, [t]);
+    await comoDueno(cl);
+    await cl.query(`update partidos set estado = 'suspendido' where id = $1`, [p]);
+    assert.deepEqual(await avisos(cl, t), []);
+  }));
+
+test('Partido borrado: el ticket vive, queda sin partido, conserva la fecha y avisa', () =>
+  enTransaccion(async (cl) => {
+    const p = await partidoDePrueba(cl, ids.jugadorMd, '2030-06-01T23:00:00Z');
+    const t = await ticketEn(cl, p);
+    await comoDueno(cl);
+    await cl.query(`delete from partidos where id = $1`, [p]);
+    const { rows } = await cl.query(`select partido_id, inicio_utc_conocido from tickets where id = $1`, [t]);
+    assert.equal(rows[0].partido_id, null);
+    assert.equal(rows[0].inicio_utc_conocido.toISOString(), '2030-06-01T23:00:00.000Z');
+    assert.deepEqual(await avisos(cl, t), ['El partido ya no figura en la fuente de datos. El ticket se conserva.']);
+    await como(cl, ids.maxi);
+    const v = await cl.query(`select partido_eliminado, to_char(fecha_limite,'YYYY-MM-DD') fl from tickets_vista where id = $1`, [t]);
+    assert.deepEqual(v.rows[0], { partido_eliminado: true, fl: '2030-05-30' });
+  }));
+
+test('Un error dentro del aviso NO frena el update del partido', () =>
+  enTransaccion(async (cl) => {
+    const p = await partidoDePrueba(cl, ids.jugadorMd, '2030-06-01T23:00:00Z');
+    const t = await ticketEn(cl, p);
+    await comoDueno(cl);
+    await cl.query(`create or replace function ticket__fecha_hora_uy(p timestamptz) returns text
+                    language plpgsql as $$ begin raise exception 'roto a propósito'; end $$`);
+    await cl.query(`update partidos set inicio_utc = '2030-06-05T23:00:00Z' where id = $1`, [p]);
+    const { rows } = await cl.query(`select inicio_utc from partidos where id = $1`, [p]);
+    assert.equal(rows[0].inicio_utc.toISOString(), '2030-06-05T23:00:00.000Z');
+    assert.deepEqual(await avisos(cl, t), []);
+  }));
+
 export { enTransaccion, como, comoAnon, comoServicio, comoDueno, debeFallar, partidoDePrueba };
