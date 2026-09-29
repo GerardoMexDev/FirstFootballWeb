@@ -304,6 +304,9 @@ personas) → se mantiene el login por nombre (`felipe`, `pedro`, `maxi`, `alexi
   deshabilitado hasta hidratar (sin botón habilitado, Enter tampoco envía). QA contra el dev de
   Gerardo bloqueando los chunks JS: botón deshabilitado, Enter no navega, URL limpia; con JS el
   login entra normal.
+- **QA en producción (deploy `ddd33c1`)**: login sin JS → botón deshabilitado, URL limpia; con
+  JS entra. /partidos: "86 partidos · 24 fechas", Peñarol con "(135 años)", filtros OK, clic en
+  cumpleaños abre el panel, mobile sin scroll horizontal, 0 errores. `test:seguridad` 23/23.
 - **Recuperar contraseña:** en espera — Gerardo averigua el correo de la agencia / hosting.
   Opciones y plan en §5 "Recuperar contraseña".
 - **Desplegado y verificado en prod** (push de Gerardo, deploy `98f82df`): headers nuevos
@@ -1348,7 +1351,7 @@ preguntas → enfoques → diseño → spec escrita (revisa Gerardo) → plan �
 Pedido del Diseñador: tener "Fotografías / Match Day" a mano sin ir hasta Jugadores. Ver
 detalle en §4 Sesión 12.
 
-### 🗓️ Página Partidos: eventos de Contenido — ✅ HECHO (2026-09-28, Sesión 12) — falta `git push`
+### 🗓️ Página Partidos: eventos de Contenido — ✅ HECHO y en producción (deploy `ddd33c1`, QA en prod OK, 2026-09-28)
 
 Detalle en §4 Sesión 12. **⚠️ Hallazgo: la migración `0022` (años en el título del aniversario
 de club) NO está aplicada en prod** — `agenda_anual` y `agenda_contenido` siguen con
