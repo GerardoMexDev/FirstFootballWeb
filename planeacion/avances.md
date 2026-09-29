@@ -1312,7 +1312,7 @@ Charla con Gerardo (no se codeó nada): tres preguntas de la agencia / de él.
 
 ## 5. Pendiente / próximos pasos
 
-### 🎫 Tickets de diseño (Admin/CM → Diseñador) — EN DISEÑO (brainstorming, 2026-09-28, Sesión 12)
+### 🎫 Tickets de diseño (Admin/CM → Diseñador) — SPEC ESCRITA, en revisión de Gerardo (`planeacion/specs/2026-09-28-tickets-diseno.md`)
 
 Nueva funcionalidad pedida por la agencia (vía Gerardo). Tratada como **arquitectónica**:
 preguntas → enfoques → diseño → spec escrita (revisa Gerardo) → plan → código. **No codeado.**
