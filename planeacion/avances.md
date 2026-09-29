@@ -1364,9 +1364,9 @@ contador del Admin y del CM que los creó.
   no da la temporada actual. Opciones a futuro: ESPN (tiene `uru.1`) o carga manual.
   Preguntar a la agencia si a Contenido le importan las estadísticas o solo las fechas.
 - **✅ Ciudad de la sede (Arena MRV / Estadio Universitario):** SportMonks manda `city_name`
-  null en esas sedes; ahora se pide `venue.city` y se usa de respaldo (commit 96a279d). Falta
-  deploy de `sync-partidos-sportmonks` (Gerardo).
-- **✅ (código listo, falta aplicar) Rodrigo Aguirre + doble conteo de totales — 0026:**
+  null en esas sedes; ahora se pide `venue.city` y se usa de respaldo (commit 96a279d).
+  Desplegado y verificado en prod (Arena MRV → Belo Horizonte).
+- **✅ HECHO (2026-09-29) Rodrigo Aguirre + doble conteo de totales — 0026:**
   causa: la sync de SportMonks tomaba solo jugadores Match Day y Tigres/Aguirre no tenían id
   de SportMonks (Tigres 609, Aguirre 129658). La sync ahora toma también Contenido y a
   Tigres. Al investigar apareció un bug previo: `totales_jugador` sumaba stats anteriores a
@@ -1375,7 +1375,9 @@ contador del Admin y del CM que los creó.
   transacción con ROLLBACK contra prod (totales exactos). Pasos: (1) Gerardo aplica 0026
   (SQL Editor), (2) Gerardo `npm run deploy:funcion -- sync-partidos-sportmonks`,
   (3) `node scripts/backfill-historico-sportmonks.mjs 2279` (solo Tigres) y verificar la
-  temporada de Aguirre. Nota: la vista da permisos de escritura a anon/authenticated desde
+  temporada de Aguirre. → Hecho: 0026 aplicada, función desplegada, backfill Tigres (54
+  fixtures) y Bragantino; ficha de Aguirre en prod: Apertura 2026 8 PJ, 675 min, 3 G, 1 A;
+  carrera 426 (sin cambio, correcto); Arena MRV → Belo Horizonte. Nota: la vista da permisos de escritura a anon/authenticated desde
   0003 (inofensivo: vista agregada, no actualizable) — revisar en una limpieza de grants.
 - **Rodrigo Aguirre — temporada 2026 vacía (reporte original):** la ficha dice "la temporada recién arranca /
   0 partidos registrados este año", pero la Liga MX ya va por la jornada 10–11 y **tenemos
