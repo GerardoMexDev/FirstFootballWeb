@@ -657,11 +657,11 @@ test('Concurrencia: aprobar y devolver a la vez → gana uno solo', async () => 
   if (!aplicada) return;
   const a = conexion();
   const b = conexion();
-  await a.connect();
-  await b.connect();
   let partido;
   let ticket;
   try {
+    await a.connect();
+    await b.connect();
     const r = await c.query(
       `insert into partidos (inicio_utc, estado, origen) values ('2000-01-01T20:00:00Z','programado','manual') returning id`,
     );
@@ -684,7 +684,11 @@ test('Concurrencia: aprobar y devolver a la vez → gana uno solo', async () => 
       () => null,
       (e) => e,
     );
-    await new Promise((res) => setTimeout(res, 500)); // b queda esperando el lock
+    // b debe quedar esperando el lock de a: si "devolver" resolviera antes del commit de a,
+    // el test de concurrencia real no estaría probando nada (no habría contención real).
+    const PENDIENTE = Symbol('pendiente');
+    const antesDelCommit = await Promise.race([devolver, new Promise((res) => setTimeout(() => res(PENDIENTE), 500))]);
+    assert.equal(antesDelCommit, PENDIENTE, 'b debería seguir esperando el lock de a en vez de resolver antes');
     await a.query('commit');
     const error = await devolver;
     await b.query('rollback');
@@ -693,21 +697,53 @@ test('Concurrencia: aprobar y devolver a la vez → gana uno solo', async () => 
     const { rows } = await c.query(`select estado from tickets where id = $1`, [ticket]);
     assert.equal(rows[0].estado, 'aprobado');
   } finally {
-    await c.query('rollback').catch(() => {});
-    await c.query('reset role');
-    await c.query('begin');
-    await c.query('alter table tickets_historial disable trigger tickets_historial_inmutable');
-    await c.query('alter table tickets disable trigger tickets_sin_borrado');
-    if (ticket) {
-      await c.query('delete from tickets_historial where ticket_id = $1', [ticket]);
-      await c.query('delete from tickets where id = $1', [ticket]);
+    try {
+      await c.query('rollback').catch(() => {});
+      await c.query('reset role').catch(() => {});
+      await c.query('begin');
+      try {
+        await c.query('alter table tickets_historial disable trigger tickets_historial_inmutable');
+        await c.query('alter table tickets disable trigger tickets_sin_borrado');
+        try {
+          if (ticket) {
+            await c.query('delete from tickets_historial where ticket_id = $1', [ticket]);
+            await c.query('delete from tickets where id = $1', [ticket]);
+          }
+          if (partido) await c.query('delete from partidos where id = $1', [partido]);
+        } finally {
+          // Los triggers se reactivan pase lo que pase con los deletes: si alguno falla, no
+          // queda una tabla de producción con la inmutabilidad deshabilitada dentro del commit.
+          await c.query('alter table tickets_historial enable trigger tickets_historial_inmutable');
+          await c.query('alter table tickets enable trigger tickets_sin_borrado');
+        }
+        await c.query('commit');
+      } catch (e) {
+        // Si algo de la limpieza falló, no commiteamos el DISABLE: mejor un rollback completo
+        // (los triggers vuelven a como estaban) y que el test falle fuerte para que se note.
+        await c.query('rollback').catch(() => {});
+        throw e;
+      }
+      // Verificación de solo lectura post-limpieza: no debe quedar basura ni triggers apagados.
+      const trig = await c.query(
+        `select tgname, tgenabled from pg_trigger where tgname in ('tickets_historial_inmutable','tickets_sin_borrado')`,
+      );
+      for (const fila of trig.rows) {
+        assert.equal(fila.tgenabled, 'O', `${fila.tgname} debería quedar habilitado ('O') después de la limpieza`);
+      }
+      if (ticket) {
+        const t = await c.query('select count(*)::int as n from tickets where id = $1', [ticket]);
+        assert.equal(t.rows[0].n, 0, 'quedó un ticket sin borrar');
+        const h = await c.query('select count(*)::int as n from tickets_historial where ticket_id = $1', [ticket]);
+        assert.equal(h.rows[0].n, 0, 'quedó historial sin borrar');
+      }
+      if (partido) {
+        const p = await c.query('select count(*)::int as n from partidos where id = $1', [partido]);
+        assert.equal(p.rows[0].n, 0, 'quedó el partido de prueba sin borrar');
+      }
+    } finally {
+      await a.end().catch(() => {});
+      await b.end().catch(() => {});
     }
-    if (partido) await c.query('delete from partidos where id = $1', [partido]);
-    await c.query('alter table tickets_historial enable trigger tickets_historial_inmutable');
-    await c.query('alter table tickets enable trigger tickets_sin_borrado');
-    await c.query('commit');
-    await a.end();
-    await b.end();
   }
 });
 
