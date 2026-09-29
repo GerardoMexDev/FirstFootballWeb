@@ -2568,7 +2568,7 @@ F–H → I (con migración). Cada ítem cerrado se documenta en §4.
 - Revisión final (subagente opus): "listo con arreglos"; se corrigieron contraste de los contadores (5.2:1), menús de arriba por encima de la barra inferior (z-index 85) y nav con desplazamiento en 961–1180 px. Menores pendientes: comentarios de app.css con "901", tope de 300 filas descarta los abiertos más viejos, mensaje vacío del CM con solo cerrados viejos, `diasHasta` duplicado, test del borde de 1 día.
 - **Siguiente:** Gerardo `git push` → QA en prod → probar en iPhone. Después: tickets desde la ficha del jugador (punto 4; Aguirre cumple el 1/10).
 
-### 🎫 Tickets desde la ficha del jugador (fecha, sin partido) — ✅ REVISADO E INTEGRADO a main (2026-09-29, Sesión 14) — falta `git push` + limpiar tickets de prueba antes de la agencia
+### 🎫 Tickets desde la ficha del jugador (fecha, sin partido) — ✅ EN PRODUCCIÓN (2026-09-29, Sesión 14) — base limpia (0 tickets), lista para que la agencia pruebe tickets
 - Spec/plan `2026-09-29-tickets-desde-ficha`. Migración 0028 (aplicada por Gerardo): `fecha_evento` + `motivo`, `ticket_crear_evento`, vista con `fecha_limite` por fecha y `partido_eliminado` corregido. 7 tests de base nuevos (40/40).
 - Ficha (las dos): bloque "Tickets de diseño" + "Crear ticket de diseño" (próximas fechas de Contenido u "Otra fecha"). Panel del ticket: evento + "Ver jugador". Calendario general: chip del ticket en el día.
 - QA :3100 con los 4 usuarios OK (Felipe crea cumpleaños de Aguirre con doble clic → 1 solo; Pedro "Otra fecha" selección; Maxi ve lucecita en ficha/pantalla/calendario y entrega; Felipe "Para revisar"; Alexis sin botón; 390 px sin scroll); tickets de QA cancelados.
