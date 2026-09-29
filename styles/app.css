@@ -439,3 +439,24 @@ html { overflow-x: clip; }
 /* Una tarjeta tentativa se atenúa entera (demo.css); con alerta de ticket no, para que la
    alerta se lea bien. Sigue marcada como tentativa por el rótulo "Tentativa". */
 .match--tent.match--tka { opacity: 1; }
+
+/* Pantalla Tickets (2026-09-29). Contadores = .kpi de la demo convertidos en botones que filtran. */
+.tkk { margin-bottom: 28px; }
+.tkk__k { width: 100%; text-align: left; cursor: pointer; border: 2px solid transparent; }
+.tkk__k--vencido b { color: var(--tk-rojo); }
+.tkk__k--por_vencer b { color: var(--tk-amarillo); }
+.tkk__k.on { border-color: var(--text); }
+.tkk__k:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.tkl { display: flex; flex-direction: column; gap: 8px; }
+.tkf { display: flex; flex-direction: column; gap: 8px; width: 100%; padding: 16px 18px; border-radius: var(--r-sm); background: var(--surface); box-shadow: var(--sh-1); text-align: left; cursor: pointer; transition: box-shadow .3s var(--ease); }
+.tkf:hover { box-shadow: var(--sh-2); }
+.tkf:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.tkf__1 { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.tkf__1 b { font-weight: 600; overflow-wrap: anywhere; }
+.tkf__2 { display: flex; align-items: center; gap: 6px 14px; flex-wrap: wrap; font-size: var(--t-sm); color: var(--text-2); }
+@media (max-width: 620px) {
+  .tkk { grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .tkk .kpi { padding: 16px 14px 14px; }
+  .tkk .kpi b { font-size: 32px; }
+  .tkk .kpi span { margin-top: 8px; }
+}
