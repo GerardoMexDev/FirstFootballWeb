@@ -757,4 +757,144 @@ test('Concurrencia: aprobar y devolver a la vez → gana uno solo', async () => 
   }
 });
 
+// ═════════════ 0028: tickets de fecha (sin partido), desde la ficha del jugador ═════════════
+
+const MIGRACION_0028 = readFileSync(new URL('../supabase/migrations/0028_tickets_evento.sql', import.meta.url), 'utf8')
+  .replace(/^\s*begin;\s*$/m, '')
+  .replace(/^\s*commit;\s*$/m, '');
+let aplicada0028 = false;
+before(async () => {
+  const { rows } = await c.query(`select to_regprocedure('public.ticket_crear_evento(uuid,date,text,text)') is not null as ok`);
+  aplicada0028 = rows[0].ok;
+  const j = await c.query(`select id from jugadores where activo and servicio_contenido order by nombre limit 1`);
+  ids.jugadorContenido = j.rows[0].id;
+});
+
+/** Como enTransaccion, aplicando 0028 adentro si todavía no está en la base. */
+async function enTransaccion0028(fn) {
+  await c.query('begin');
+  try {
+    if (!aplicada) await c.query(MIGRACION);
+    if (!aplicada0028) await c.query(MIGRACION_0028);
+    await fn(c);
+  } finally {
+    await c.query('rollback');
+  }
+}
+
+const HOY_UY = `(now() at time zone 'America/Montevideo')::date`;
+
+test('0028: Admin crea un ticket de fecha; título, fecha límite y no-huérfano', () =>
+  enTransaccion0028(async (cl) => {
+    await como(cl, ids.felipe);
+    const { rows } = await cl.query(
+      `select ticket_crear_evento($1, ${HOY_UY} + 10, 'Cumpleaños', 'Diseño del cumple') id`,
+      [ids.jugadorContenido],
+    );
+    const v = await cl.query(
+      `select titulo, fecha_evento, motivo, fecha_limite, partido_eliminado, partido_id, estado,
+              (fecha_evento - fecha_limite) as anticipacion, ${HOY_UY} + 10 as esperado
+       from tickets_vista where id = $1`,
+      [rows[0].id],
+    );
+    const t = v.rows[0];
+    assert.match(t.titulo, /^Contenido — .+ · Cumpleaños \(\d{1,2}\/\d{1,2}\)$/);
+    assert.equal(t.motivo, 'Cumpleaños');
+    assert.equal(t.anticipacion, 2);
+    assert.equal(t.partido_eliminado, false);
+    assert.equal(t.partido_id, null);
+    assert.equal(t.estado, 'pendiente');
+    assert.equal(t.fecha_evento.toISOString(), t.esperado.toISOString());
+    const h = await cl.query(`select tipo from tickets_historial_vista where ticket_id = $1`, [rows[0].id]);
+    assert.deepEqual(h.rows.map((x) => x.tipo), ['creado']);
+  }));
+
+test('0028: el CM también crea; Diseñador y Prueba no (42501)', () =>
+  enTransaccion0028(async (cl) => {
+    await como(cl, ids.pedro);
+    await cl.query(`select ticket_crear_evento($1, ${HOY_UY} + 3, 'Convocado a la selección', 'Pieza de convocatoria')`, [ids.jugadorContenido]);
+    for (const quien of [ids.maxi, ids.alexis]) {
+      await como(cl, quien);
+      const e = await debeFallar(
+        cl,
+        `select ticket_crear_evento($1, ${HOY_UY} + 3, 'Cumpleaños', 'x')`,
+        [ids.jugadorContenido],
+        /Solo el Administrador o el Community Manager pueden crear tickets\./,
+      );
+      assert.equal(e.code, '42501');
+    }
+  }));
+
+test('0028: fecha pasada, motivo vacío o largo, nota vacía → error', () =>
+  enTransaccion0028(async (cl) => {
+    await como(cl, ids.felipe);
+    await debeFallar(cl, `select ticket_crear_evento($1, ${HOY_UY} - 1, 'Cumpleaños', 'x')`, [ids.jugadorContenido], /La fecha del evento no puede ser anterior a hoy\./);
+    await debeFallar(cl, `select ticket_crear_evento($1, null, 'Cumpleaños', 'x')`, [ids.jugadorContenido], /La fecha del evento no puede ser anterior a hoy\./);
+    await debeFallar(cl, `select ticket_crear_evento($1, ${HOY_UY} + 1, '   ', 'x')`, [ids.jugadorContenido], /Escribí el motivo \(hasta 120 caracteres\)\./);
+    await debeFallar(cl, `select ticket_crear_evento($1, ${HOY_UY} + 1, repeat('a', 121), 'x')`, [ids.jugadorContenido], /Escribí el motivo \(hasta 120 caracteres\)\./);
+    await debeFallar(cl, `select ticket_crear_evento($1, ${HOY_UY} + 1, 'Cumpleaños', '  ')`, [ids.jugadorContenido], /Escribí qué hay que hacer\./);
+    // hoy mismo sí se puede
+    await cl.query(`select ticket_crear_evento($1, ${HOY_UY}, 'Cumpleaños', 'hoy')`, [ids.jugadorContenido]);
+  }));
+
+test('0028: jugador sin Contenido o inactivo → error', () =>
+  enTransaccion0028(async (cl) => {
+    await comoDueno(cl);
+    await cl.query(`update jugadores set servicio_contenido = false where id = $1`, [ids.jugadorContenido]);
+    await como(cl, ids.felipe);
+    await debeFallar(cl, `select ticket_crear_evento($1, ${HOY_UY} + 1, 'Cumpleaños', 'x')`, [ids.jugadorContenido], /Ese jugador no está en el servicio de Contenido\./);
+    await comoDueno(cl);
+    await cl.query(`update jugadores set servicio_contenido = true, activo = false where id = $1`, [ids.jugadorContenido]);
+    await como(cl, ids.felipe);
+    await debeFallar(cl, `select ticket_crear_evento($1, ${HOY_UY} + 1, 'Cumpleaños', 'x')`, [ids.jugadorContenido], /Ese jugador no está en el servicio de Contenido\./);
+  }));
+
+test('0028: un ticket no puede tener partido y fecha a la vez; fecha y motivo van juntos', () =>
+  enTransaccion0028(async (cl) => {
+    const p = await partidoDePrueba(cl, ids.jugadorMd);
+    await comoDueno(cl);
+    await debeFallar(
+      cl,
+      `insert into tickets (partido_id, jugador_id, titulo, nota, creado_por, fecha_evento, motivo)
+       values ($1, $2, 't', 'n', $3, current_date, 'Cumpleaños')`,
+      [p, ids.jugadorMd, ids.felipe],
+      /tickets_partido_o_fecha/,
+    );
+    await debeFallar(
+      cl,
+      `insert into tickets (jugador_id, titulo, nota, creado_por, fecha_evento) values ($1, 't', 'n', $2, current_date)`,
+      [ids.jugadorMd, ids.felipe],
+      /tickets_fecha_con_motivo/,
+    );
+  }));
+
+test('0028: ciclo completo sobre un ticket de fecha (entregar → aprobar → publicar)', () =>
+  enTransaccion0028(async (cl) => {
+    await como(cl, ids.felipe);
+    const { rows } = await cl.query(`select ticket_crear_evento($1, ${HOY_UY} + 5, 'Cumpleaños', 'cumple') id`, [ids.jugadorContenido]);
+    const id = rows[0].id;
+    await como(cl, ids.maxi);
+    await cl.query(`select ticket_entregar($1, 'https://www.dropbox.com/s/cumple')`, [id]);
+    await como(cl, ids.felipe);
+    await cl.query(`select ticket_aprobar($1)`, [id]);
+    await como(cl, ids.maxi);
+    await cl.query(`select ticket_publicar($1)`, [id]);
+    const v = await cl.query(`select estado from tickets_vista where id = $1`, [id]);
+    assert.equal(v.rows[0].estado, 'publicado');
+  }));
+
+test('0028: la vista sigue sin leerse sin sesión y la función no la ejecuta anon', () =>
+  enTransaccion0028(async (cl) => {
+    await comoAnon(cl);
+    await debeFallar(cl, `select ticket_crear_evento($1, current_date + 1, 'x', 'x')`, [ids.jugadorContenido], /permission denied/);
+    await cl.query('savepoint s');
+    try {
+      const { rows } = await cl.query(`select * from tickets_vista`);
+      assert.equal(rows.length, 0);
+    } catch (e) {
+      assert.match(e.message, /permission denied/);
+    }
+    await cl.query('rollback to savepoint s');
+  }));
+
 export { enTransaccion, como, comoAnon, comoServicio, comoDueno, debeFallar, partidoDePrueba };
