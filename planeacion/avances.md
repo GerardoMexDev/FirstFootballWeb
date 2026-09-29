@@ -1343,6 +1343,16 @@ tal cual mensajes con código P0001/42501; si falla la lectura de tickets en el 
 se oculta "Crear" (evita duplicados); tickets pendientes de un partido borrado aparecen en el
 contador del Admin y del CM que los creó.
 
+**📝 Pedido de Gerardo (2026-09-29, mientras revisa en prod) — NO empezar hasta que termine de revisar:**
+- En cada **tarjeta de partido** de /partidos (ej. "RB Bragantino vs Atlético Mineiro · Estadio… ·
+  Fotografías · Match Day") mostrar una alerta **"Ticket pendiente"** con una **lucecita roja que
+  parpadea**, para que Maxi la vea aunque no mire el globito de la barra superior.
+- En el **detalle del partido** (panel) ya se ve el ticket, pero que el pendiente también **parpadee**.
+- A definir al implementar (Regla 0): qué estados cuentan como "pendiente" para cada cargo
+  (¿solo `pendiente`/devuelto para Maxi, y `en_revision` para Admin/CM?). Accesibilidad WCAG
+  2.2: parpadeo suave (pulso, < 3 destellos por segundo), apagado con `prefers-reduced-motion`,
+  y el texto "Ticket pendiente" siempre visible (el color/movimiento no es la única señal).
+
 **Candidatos para una migración `0026` (menores, no bloquean):** `search_path = public, pg_temp`
 en las funciones security definer; límite de largo del link; `ticket_dias_anticipacion()` stable
 en vez de immutable; separar el update de `inicio_utc_conocido` del aviso (hoy si falla el texto
