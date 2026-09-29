@@ -313,4 +313,193 @@ test('RLS: nadie escribe a través de las vistas (perfiles_publicos, tickets_vis
     assert.equal(rows[0].nombre_completo, 'Felipe Merola');
   }));
 
+// ═════════════ Task 2: funciones de acción ═════════════
+
+const crear = (cl, p, nota = 'Diseño del Match Day') =>
+  cl.query(`select ticket_crear($1, $2, $3) as id`, [p, ids.jugadorMd, nota]).then((r) => r.rows[0].id);
+const estadoDe = async (cl, t) => {
+  await comoDueno(cl);
+  return (await cl.query(`select estado from tickets where id = $1`, [t])).rows[0].estado;
+};
+const historialDe = async (cl, t) => {
+  await comoDueno(cl);
+  return (await cl.query(`select tipo, autor_id, texto, link, estado_desde, estado_hasta from tickets_historial where ticket_id = $1 order by id`, [t])).rows;
+};
+
+test('Crear: Admin y CM crean; queda pendiente con título armado e historial "creado"', () =>
+  enTransaccion(async (cl) => {
+    const p = await partidoDePrueba(cl, ids.jugadorMd);
+    await como(cl, ids.felipe);
+    const t1 = await crear(cl, p, '  Previa del partido  ');
+    await como(cl, ids.pedro);
+    const t2 = await crear(cl, p);
+    assert.equal(await estadoDe(cl, t1), 'pendiente');
+    const { rows } = await cl.query(`select titulo, nota, creado_por from tickets where id = $1`, [t1]);
+    assert.match(rows[0].titulo, /^Match Day — .+ · \? vs \?$/);
+    assert.equal(rows[0].nota, 'Previa del partido');
+    assert.equal(rows[0].creado_por, ids.felipe);
+    const h = await historialDe(cl, t1);
+    assert.deepEqual(h.map((x) => [x.tipo, x.estado_hasta]), [['creado', 'pendiente']]);
+    assert.ok(t2);
+  }));
+
+test('Crear: Diseñador, Prueba e inactivo no pueden', () =>
+  enTransaccion(async (cl) => {
+    const p = await partidoDePrueba(cl, ids.jugadorMd);
+    await como(cl, ids.maxi);
+    await debeFallar(cl, `select ticket_crear($1,$2,'x')`, [p, ids.jugadorMd], /Solo el Administrador o el Community Manager/);
+    await como(cl, ids.alexis);
+    await debeFallar(cl, `select ticket_crear($1,$2,'x')`, [p, ids.jugadorMd], /Solo el Administrador o el Community Manager/);
+    await comoDueno(cl);
+    await cl.query(`update perfiles set activo = false where id = $1`, [ids.pedro]);
+    await como(cl, ids.pedro);
+    await debeFallar(cl, `select ticket_crear($1,$2,'x')`, [p, ids.jugadorMd], /sesión activa/);
+  }));
+
+test('Crear: nota vacía o de solo espacios, jugador que no está en el partido → rechazado', () =>
+  enTransaccion(async (cl) => {
+    const p = await partidoDePrueba(cl, ids.jugadorMd);
+    await comoDueno(cl);
+    const otro = (await cl.query(`select id from jugadores where id <> $1 and activo limit 1`, [ids.jugadorMd])).rows[0].id;
+    await como(cl, ids.felipe);
+    await debeFallar(cl, `select ticket_crear($1,$2,'   ')`, [p, ids.jugadorMd], /Escribí qué hay que hacer/);
+    await debeFallar(cl, `select ticket_crear($1,$2,repeat('a',2001))`, [p, ids.jugadorMd], /muy largo/);
+    await debeFallar(cl, `select ticket_crear($1,$2,'x')`, [p, otro], /no figura en ese partido/);
+  }));
+
+test('Ciclo completo: entregar → devolver → entregar → aprobar → publicar', () =>
+  enTransaccion(async (cl) => {
+    const p = await partidoDePrueba(cl, ids.jugadorMd);
+    await como(cl, ids.felipe);
+    const t = await crear(cl, p);
+    await como(cl, ids.maxi);
+    await cl.query(`select ticket_entregar($1, $2)`, [t, '  https://www.dropbox.com/s/abc?dl=0  ']);
+    assert.equal(await estadoDe(cl, t), 'en_revision');
+    await como(cl, ids.felipe);
+    await cl.query(`select ticket_devolver($1, 'Cambiá el fondo')`, [t]);
+    assert.equal(await estadoDe(cl, t), 'pendiente');
+    await como(cl, ids.maxi);
+    await cl.query(`select ticket_entregar($1, 'https://www.dropbox.com/s/v2')`, [t]);
+    await como(cl, ids.felipe);
+    await cl.query(`select ticket_aprobar($1)`, [t]);
+    await como(cl, ids.maxi);
+    await cl.query(`select ticket_publicar($1)`, [t]);
+    assert.equal(await estadoDe(cl, t), 'publicado');
+    const h = await historialDe(cl, t);
+    assert.deepEqual(h.map((x) => x.tipo), ['creado', 'entrega', 'devuelto', 'entrega', 'aprobado', 'publicado']);
+    assert.equal(h[1].link, 'https://www.dropbox.com/s/abc?dl=0');
+    assert.equal(h[2].texto, 'Cambiá el fondo');
+    const { rows } = await cl.query(`select link_entrega from tickets where id = $1`, [t]);
+    assert.equal(rows[0].link_entrega, 'https://www.dropbox.com/s/v2');
+  }));
+
+test('Entregar: solo Diseñador, solo desde pendiente, link https obligatorio', () =>
+  enTransaccion(async (cl) => {
+    const p = await partidoDePrueba(cl, ids.jugadorMd);
+    await como(cl, ids.felipe);
+    const t = await crear(cl, p);
+    await debeFallar(cl, `select ticket_entregar($1,'https://x.com/a')`, [t], /Solo el Diseñador/);
+    await como(cl, ids.maxi);
+    await debeFallar(cl, `select ticket_entregar($1,'http://x.com/a')`, [t], /https:\/\//);
+    await debeFallar(cl, `select ticket_entregar($1,'javascript:alert(1)')`, [t], /https:\/\//);
+    await debeFallar(cl, `select ticket_entregar($1, null)`, [t], /https:\/\//);
+    await cl.query(`select ticket_entregar($1,'https://x.com/a')`, [t]);
+    await debeFallar(cl, `select ticket_entregar($1,'https://x.com/b')`, [t], /cambió de estado/);
+  }));
+
+test('Revisar: CM no aprueba ni devuelve un ticket de Felipe; Admin sí aprueba uno del CM', () =>
+  enTransaccion(async (cl) => {
+    const p = await partidoDePrueba(cl, ids.jugadorMd);
+    await como(cl, ids.felipe);
+    const deFelipe = await crear(cl, p);
+    await como(cl, ids.pedro);
+    const dePedro = await crear(cl, p);
+    await como(cl, ids.maxi);
+    await cl.query(`select ticket_entregar($1,'https://x.com/a')`, [deFelipe]);
+    await cl.query(`select ticket_entregar($1,'https://x.com/b')`, [dePedro]);
+    await debeFallar(cl, `select ticket_aprobar($1)`, [deFelipe], /Solo quien creó el ticket o el Administrador/);
+    await como(cl, ids.pedro);
+    await debeFallar(cl, `select ticket_aprobar($1)`, [deFelipe], /Solo quien creó el ticket o el Administrador/);
+    await debeFallar(cl, `select ticket_devolver($1,'x')`, [deFelipe], /Solo quien creó el ticket o el Administrador/);
+    await como(cl, ids.felipe);
+    await cl.query(`select ticket_aprobar($1)`, [dePedro]);
+    assert.equal(await estadoDe(cl, dePedro), 'aprobado');
+  }));
+
+test('Saltos inválidos: pendiente → aprobado/publicado; aprobar dos veces', () =>
+  enTransaccion(async (cl) => {
+    const p = await partidoDePrueba(cl, ids.jugadorMd);
+    await como(cl, ids.felipe);
+    const t = await crear(cl, p);
+    await debeFallar(cl, `select ticket_aprobar($1)`, [t], /cambió de estado/);
+    await como(cl, ids.maxi);
+    await debeFallar(cl, `select ticket_publicar($1)`, [t], /cambió de estado/);
+    await cl.query(`select ticket_entregar($1,'https://x.com/a')`, [t]);
+    await como(cl, ids.felipe);
+    await cl.query(`select ticket_aprobar($1)`, [t]);
+    await debeFallar(cl, `select ticket_aprobar($1)`, [t], /cambió de estado/);
+  }));
+
+test('Devolver/cancelar exigen texto (no solo espacios)', () =>
+  enTransaccion(async (cl) => {
+    const p = await partidoDePrueba(cl, ids.jugadorMd);
+    await como(cl, ids.felipe);
+    const t = await crear(cl, p);
+    await debeFallar(cl, `select ticket_cancelar($1,'   ')`, [t], /por qué se cancela/);
+    await como(cl, ids.maxi);
+    await cl.query(`select ticket_entregar($1,'https://x.com/a')`, [t]);
+    await como(cl, ids.felipe);
+    await debeFallar(cl, `select ticket_devolver($1,'  ')`, [t], /qué hay que corregir/);
+  }));
+
+test('Cancelar: creador o Admin, solo desde pendiente; el Diseñador no', () =>
+  enTransaccion(async (cl) => {
+    const p = await partidoDePrueba(cl, ids.jugadorMd);
+    await como(cl, ids.pedro);
+    const t = await crear(cl, p);
+    await como(cl, ids.maxi);
+    await debeFallar(cl, `select ticket_cancelar($1,'error')`, [t], /Solo quien creó el ticket o el Administrador/);
+    await como(cl, ids.felipe);
+    await cl.query(`select ticket_cancelar($1,'Creado por error')`, [t]);
+    assert.equal(await estadoDe(cl, t), 'cancelado');
+    // estadoDe() usa comoDueno() internamente y resetea la sesión: hay que volver a loguearse
+    // como Felipe antes de la siguiente acción (mismo patrón que el test "Ciclo completo").
+    await como(cl, ids.felipe);
+    await debeFallar(cl, `select ticket_cancelar($1,'otra vez')`, [t], /cambió de estado/);
+  }));
+
+test('Comentar: los 3 cargos sí (en cualquier estado); Prueba no; texto vacío no', () =>
+  enTransaccion(async (cl) => {
+    const p = await partidoDePrueba(cl, ids.jugadorMd);
+    await como(cl, ids.felipe);
+    const t = await crear(cl, p);
+    for (const uid of [ids.felipe, ids.pedro, ids.maxi]) {
+      await como(cl, uid);
+      await cl.query(`select ticket_comentar($1,'hola')`, [t]);
+    }
+    await como(cl, ids.alexis);
+    await debeFallar(cl, `select ticket_comentar($1,'hola')`, [t], /No tenés permiso/);
+    await como(cl, ids.maxi);
+    await debeFallar(cl, `select ticket_comentar($1,'  ')`, [t], /Escribí un comentario/);
+    const h = await historialDe(cl, t);
+    assert.equal(h.filter((x) => x.tipo === 'comentario').length, 3);
+  }));
+
+test('Prueba (Alexis) no ejecuta ninguna acción', () =>
+  enTransaccion(async (cl) => {
+    const p = await partidoDePrueba(cl, ids.jugadorMd);
+    await como(cl, ids.felipe);
+    const t = await crear(cl, p);
+    await como(cl, ids.alexis);
+    await debeFallar(cl, `select ticket_entregar($1,'https://x.com/a')`, [t], /Solo el Diseñador/);
+    await debeFallar(cl, `select ticket_cancelar($1,'x')`, [t], /Solo quien creó el ticket o el Administrador/);
+  }));
+
+test('anon no puede ejecutar las funciones', () =>
+  enTransaccion(async (cl) => {
+    const p = await partidoDePrueba(cl, ids.jugadorMd);
+    await comoAnon(cl);
+    await debeFallar(cl, `select ticket_crear($1,$2,'x')`, [p, ids.jugadorMd], /permission denied/);
+  }));
+
 export { enTransaccion, como, comoAnon, comoServicio, comoDueno, debeFallar, partidoDePrueba };

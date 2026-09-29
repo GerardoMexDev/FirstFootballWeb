@@ -162,6 +162,198 @@ revoke all on tickets, tickets_historial, tickets_vista, tickets_historial_vista
 revoke all on tickets, tickets_historial, tickets_vista, tickets_historial_vista, perfiles_publicos from authenticated;
 grant select on tickets, tickets_historial, tickets_vista, tickets_historial_vista, perfiles_publicos to authenticated;
 
--- (Tasks 2 y 3 agregan acá las funciones de acción y los triggers sobre partidos.)
+-- ─── 7. Funciones de acción (única vía de escritura) ────────────────────────
+-- Helpers internos: no se exponen por RPC (se revoca EXECUTE a public/anon/authenticated).
+-- Corren dentro de las funciones security definer, o sea con los permisos del dueño.
+
+create or replace function ticket__cargo_actual()
+returns text language plpgsql stable security definer set search_path = public as $$
+declare
+  v_cargo text;
+begin
+  select p.cargo into v_cargo from perfiles p where p.id = auth.uid() and p.activo;
+  if auth.uid() is null or v_cargo is null then
+    raise exception 'Necesitás una sesión activa para hacer esto.' using errcode = '42501';
+  end if;
+  return v_cargo;
+end;
+$$;
+
+create or replace function ticket__texto(p_texto text, p_obligatorio boolean, p_mensaje text)
+returns text language plpgsql immutable as $$
+declare
+  v text := nullif(btrim(coalesce(p_texto, '')), '');
+begin
+  if v is null and p_obligatorio then
+    raise exception '%', p_mensaje;
+  end if;
+  if char_length(v) > 2000 then
+    raise exception 'El texto es muy largo (máximo 2000 caracteres).';
+  end if;
+  return v;
+end;
+$$;
+
+create or replace function ticket__bloquear(p_ticket uuid)
+returns tickets language plpgsql security definer set search_path = public as $$
+declare
+  t tickets;
+begin
+  select * into t from tickets where id = p_ticket for update;
+  if not found then
+    raise exception 'No encontramos ese ticket.';
+  end if;
+  return t;
+end;
+$$;
+
+-- p_quien: 'disenador' (solo Diseñador) | 'revisor' (creador del ticket o Administrador)
+create or replace function ticket__mover(
+  p_ticket uuid, p_desde estado_ticket, p_hasta estado_ticket, p_tipo tipo_evento_ticket,
+  p_quien text, p_texto text, p_link text default null
+) returns void language plpgsql security definer set search_path = public as $$
+declare
+  v_cargo text := ticket__cargo_actual();
+  t tickets;
+begin
+  -- 1) permiso por puesto (antes de bloquear: un rechazo no espera locks)
+  if p_quien = 'disenador' and v_cargo <> 'Diseñador' then
+    raise exception 'Solo el Diseñador puede hacer esto.' using errcode = '42501';
+  end if;
+  t := ticket__bloquear(p_ticket);
+  if p_quien = 'revisor' and not (
+    v_cargo = 'Administrador' or (v_cargo = 'Community Manager' and t.creado_por = auth.uid())
+  ) then
+    raise exception 'Solo quien creó el ticket o el Administrador puede hacer esto.' using errcode = '42501';
+  end if;
+  -- 2) estado (leído con el lock tomado: si otro lo cambió, se ve el cambio)
+  if t.estado <> p_desde then
+    raise exception 'El ticket cambió de estado (ahora está "%"). Recargá para ver lo último.', t.estado;
+  end if;
+  -- 3) cambio + historial, en la misma transacción
+  update tickets set estado = p_hasta, link_entrega = coalesce(p_link, link_entrega) where id = p_ticket;
+  insert into tickets_historial (ticket_id, tipo, autor_id, texto, link, estado_desde, estado_hasta)
+  values (p_ticket, p_tipo, auth.uid(), p_texto, p_link, p_desde, p_hasta);
+end;
+$$;
+
+create or replace function ticket_crear(p_partido uuid, p_jugador uuid, p_nota text)
+returns uuid language plpgsql security definer set search_path = public as $$
+declare
+  v_cargo  text := ticket__cargo_actual();
+  v_nota   text;
+  v_titulo text;
+  v_inicio timestamptz;
+  v_id     uuid;
+begin
+  if v_cargo not in ('Administrador', 'Community Manager') then
+    raise exception 'Solo el Administrador o el Community Manager pueden crear tickets.' using errcode = '42501';
+  end if;
+  v_nota := ticket__texto(p_nota, true, 'Escribí qué hay que hacer.');
+
+  select 'Match Day — ' || coalesce(j.apodo, j.nombre) || ' · '
+         || coalesce(cl.nombre, '?') || ' vs ' || coalesce(cv.nombre, '?'),
+         p.inicio_utc
+    into v_titulo, v_inicio
+  from partidos p
+  join partidos_jugadores pj on pj.partido_id = p.id and pj.jugador_id = p_jugador
+  join jugadores j on j.id = p_jugador and j.activo and j.servicio_match_day
+  left join clubes cl on cl.id = p.club_local_id
+  left join clubes cv on cv.id = p.club_visitante_id
+  where p.id = p_partido;
+
+  if v_titulo is null then
+    raise exception 'Ese jugador no figura en ese partido de Match Day.';
+  end if;
+
+  insert into tickets (partido_id, jugador_id, titulo, nota, inicio_utc_conocido, creado_por)
+  values (p_partido, p_jugador, v_titulo, v_nota, v_inicio, auth.uid())
+  returning id into v_id;
+
+  insert into tickets_historial (ticket_id, tipo, autor_id, texto, estado_hasta)
+  values (v_id, 'creado', auth.uid(), v_nota, 'pendiente');
+
+  return v_id;
+end;
+$$;
+
+create or replace function ticket_entregar(p_ticket uuid, p_link text, p_texto text default null)
+returns void language plpgsql security definer set search_path = public as $$
+declare
+  v_link text := btrim(coalesce(p_link, ''));
+begin
+  if v_link !~ '^https://[^[:space:]]+$' then
+    raise exception 'Pegá el link de Dropbox del diseño (tiene que empezar con https://).';
+  end if;
+  perform ticket__mover(p_ticket, 'pendiente', 'en_revision', 'entrega', 'disenador',
+                        ticket__texto(p_texto, false, null), v_link);
+end;
+$$;
+
+create or replace function ticket_aprobar(p_ticket uuid, p_texto text default null)
+returns void language plpgsql security definer set search_path = public as $$
+begin
+  perform ticket__mover(p_ticket, 'en_revision', 'aprobado', 'aprobado', 'revisor',
+                        ticket__texto(p_texto, false, null));
+end;
+$$;
+
+create or replace function ticket_devolver(p_ticket uuid, p_texto text)
+returns void language plpgsql security definer set search_path = public as $$
+begin
+  perform ticket__mover(p_ticket, 'en_revision', 'pendiente', 'devuelto', 'revisor',
+                        ticket__texto(p_texto, true, 'Escribí qué hay que corregir.'));
+end;
+$$;
+
+create or replace function ticket_publicar(p_ticket uuid, p_texto text default null)
+returns void language plpgsql security definer set search_path = public as $$
+begin
+  perform ticket__mover(p_ticket, 'aprobado', 'publicado', 'publicado', 'disenador',
+                        ticket__texto(p_texto, false, null));
+end;
+$$;
+
+create or replace function ticket_cancelar(p_ticket uuid, p_texto text)
+returns void language plpgsql security definer set search_path = public as $$
+begin
+  perform ticket__mover(p_ticket, 'pendiente', 'cancelado', 'cancelado', 'revisor',
+                        ticket__texto(p_texto, true, 'Escribí por qué se cancela.'));
+end;
+$$;
+
+create or replace function ticket_comentar(p_ticket uuid, p_texto text)
+returns void language plpgsql security definer set search_path = public as $$
+declare
+  v_cargo text := ticket__cargo_actual();
+  v_texto text;
+begin
+  if v_cargo not in ('Administrador', 'Community Manager', 'Diseñador') then
+    raise exception 'No tenés permiso para comentar tickets.' using errcode = '42501';
+  end if;
+  v_texto := ticket__texto(p_texto, true, 'Escribí un comentario.');
+  perform ticket__bloquear(p_ticket);
+  insert into tickets_historial (ticket_id, tipo, autor_id, texto)
+  values (p_ticket, 'comentario', auth.uid(), v_texto);
+end;
+$$;
+
+revoke execute on function
+  ticket__cargo_actual(), ticket__texto(text, boolean, text), ticket__bloquear(uuid),
+  ticket__mover(uuid, estado_ticket, estado_ticket, tipo_evento_ticket, text, text, text)
+  from public, anon, authenticated;
+
+revoke execute on function
+  ticket_crear(uuid, uuid, text), ticket_entregar(uuid, text, text), ticket_aprobar(uuid, text),
+  ticket_devolver(uuid, text), ticket_publicar(uuid, text), ticket_cancelar(uuid, text),
+  ticket_comentar(uuid, text)
+  from public, anon;
+grant execute on function
+  ticket_crear(uuid, uuid, text), ticket_entregar(uuid, text, text), ticket_aprobar(uuid, text),
+  ticket_devolver(uuid, text), ticket_publicar(uuid, text), ticket_cancelar(uuid, text),
+  ticket_comentar(uuid, text)
+  to authenticated;
+
+-- (Task 3 agrega acá los triggers de avisos sobre partidos.)
 
 commit;
