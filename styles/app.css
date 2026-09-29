@@ -333,7 +333,7 @@
 .tk--en_revision { background: var(--tk-amarillo-bg); color: var(--tk-amarillo); }
 .tk--aprobado { background: var(--tk-verde-bg); color: var(--tk-verde); }
 .tk--publicado { background: var(--tk-pub-bg); color: var(--tk-pub); }
-.tk--cancelado { background: var(--surface-3); color: var(--text-3); }
+.tk--cancelado { background: var(--surface); color: var(--text-2); box-shadow: inset 0 0 0 1px var(--line-2); }
 .tk__vence { font-size: var(--t-sm); color: var(--text-2); }
 .tk__vence--mal { color: var(--tk-rojo); font-weight: 600; }
 .tk__nota { font-size: var(--t-base); line-height: 1.6; white-space: pre-wrap; overflow-wrap: anywhere; }
@@ -352,8 +352,11 @@
 .tkh__i a { display: inline-block; margin-top: 6px; font-size: var(--t-sm); color: var(--accent); font-weight: 600; }
 .tkh__c { display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; font-size: var(--t-sm); }
 .tkh__c b { font-weight: 600; }
-.tkh__c time { color: var(--text-3); }
+.tkh__c time { color: var(--text-2); }
 .tkh__i--sistema { background: transparent; border: 1px dashed var(--line-2); }
 .tkh__i--devuelto { background: var(--tk-rojo-bg); }
 .tkh__i--aprobado, .tkh__i--publicado { background: var(--tk-verde-bg); }
 .tkh__i--entrega { background: var(--tk-amarillo-bg); }
+
+/* Texto solo para lector de pantalla (avisos de estado) */
+.solo-lector { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; border: 0; }

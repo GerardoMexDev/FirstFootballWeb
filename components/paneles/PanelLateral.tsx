@@ -61,13 +61,23 @@ export function PanelLateral() {
   const panelRef = useRef<HTMLElement>(null);
   const cerrarRef = useRef<HTMLButtonElement>(null);
   const focoPrevio = useRef<HTMLElement | null>(null);
+  // tipo+id del último contenido cargado: si solo cambia `version` (recarga tras una acción)
+  // se refresca en silencio, sin pasar por "cargando" (no desmonta el panel ni pierde el foco).
+  const claveCargada = useRef<string | null>(null);
 
   // Traer los datos al abrir / cambiar de entidad. Mientras no está abierto no se toca el
   // contenido (así queda visible durante la animación de salida).
   useEffect(() => {
-    if (!abierto || !tipo) return;
+    if (!abierto || !tipo) {
+      claveCargada.current = null;
+      return;
+    }
     let vivo = true;
-    setContenido({ fase: 'cargando' });
+    const clave = `${tipo}:${id ?? ''}`;
+    if (claveCargada.current !== clave) {
+      claveCargada.current = clave;
+      setContenido({ fase: 'cargando' });
+    }
 
     const url = tipo === 'perfil' ? '/api/paneles/perfil' : `/api/paneles/${tipo}?id=${encodeURIComponent(id!)}`;
     fetch(url)

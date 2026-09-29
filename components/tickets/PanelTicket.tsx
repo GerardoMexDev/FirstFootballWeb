@@ -10,7 +10,7 @@
  */
 'use client';
 
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Ico } from '@/components/comunes/Ico';
 import { PastillaEstado } from '@/components/tickets/PastillaEstado';
@@ -34,6 +34,16 @@ const BOTON: Record<Exclude<Accion, 'comentar'>, { texto: string; clase: string 
   devolver: { texto: 'Devolver', clase: 'btn btn--g' },
   publicar: { texto: 'Marcar publicado', clase: 'btn btn--a' },
   cancelar: { texto: 'Cancelar ticket', clase: 'btn btn--g' },
+};
+
+/** Aviso para lector de pantalla después de cada acción exitosa. */
+const AVISO_OK: Record<Accion, string> = {
+  entregar: 'Listo: diseño entregado para revisión.',
+  aprobar: 'Listo: ticket aprobado.',
+  devolver: 'Listo: ticket devuelto al Diseñador.',
+  publicar: 'Listo: ticket marcado como publicado.',
+  cancelar: 'Listo: ticket cancelado.',
+  comentar: 'Comentario agregado.',
 };
 
 const TITULO_EVENTO: Record<EventoHistorial['tipo'], string> = {
@@ -62,6 +72,8 @@ export function PanelTicket({ bundle, onActualizar }: { bundle: DetalleTicketBun
   const [comentario, setComentario] = useState('');
   const [enviando, setEnviando] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [aviso, setAviso] = useState('');
+  const tituloRef = useRef<HTMLHeadingElement>(null);
 
   async function correr(accion: Accion, datos: { texto?: string; link?: string }) {
     setEnviando(true);
@@ -75,6 +87,9 @@ export function PanelTicket({ bundle, onActualizar }: { bundle: DetalleTicketBun
     setAbierta(null);
     setCampo('');
     setComentario('');
+    setAviso(AVISO_OK[accion]);
+    // El botón que se apretó puede desaparecer al cambiar el estado: el foco va a un lugar estable.
+    tituloRef.current?.focus();
     onActualizar();
     router.refresh();
   }
@@ -93,6 +108,7 @@ export function PanelTicket({ bundle, onActualizar }: { bundle: DetalleTicketBun
 
   return (
     <>
+      <div role="status" className="solo-lector">{aviso}</div>
       <div className="linea" style={{ marginBottom: 14 }}>
         <PastillaEstado estado={ticket.estado} />
         {vence && (
@@ -102,7 +118,7 @@ export function PanelTicket({ bundle, onActualizar }: { bundle: DetalleTicketBun
           </span>
         )}
       </div>
-      <h2 className="d2" style={{ marginBottom: 10 }}>{ticket.titulo}</h2>
+      <h2 ref={tituloRef} tabIndex={-1} className="d2" style={{ marginBottom: 10, outline: 'none' }}>{ticket.titulo}</h2>
       <p className="meta" style={{ marginBottom: 24 }}>
         {ticket.partidoEliminado
           ? 'El partido ya no figura en la fuente de datos.'
