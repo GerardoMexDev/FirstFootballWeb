@@ -366,3 +366,18 @@
 .tkp__t { display: inline-flex; align-items: center; gap: 8px; font-size: var(--t-sm); color: var(--text-2); border-radius: 999px; }
 .tkp__t:hover span:last-child { text-decoration: underline; }
 .tkn { width: 100%; padding: 12px; border-radius: var(--r-sm); background: var(--surface); }
+
+/* Chip de partido con ticket (calendario de Match Day) */
+.ev.ev--t { border-left: 4px solid transparent; }
+.ev.ev--t-pendiente { background: var(--tk-rojo-bg); border-left-color: var(--tk-rojo-borde); }
+.ev.ev--t-en_revision { background: var(--tk-amarillo-bg); border-left-color: var(--tk-amarillo-borde); }
+.ev.ev--t-aprobado { background: var(--tk-verde-bg); border-left-color: var(--tk-verde-borde); }
+.ev.ev--t-publicado { background: var(--tk-pub-bg); border-left-color: var(--tk-pub-borde); }
+.ev__tk { display: block; font-size: 10.5px; font-weight: 700; margin-bottom: 2px; }
+.ev--t-pendiente .ev__tk { color: var(--tk-rojo); }
+.ev--t-en_revision .ev__tk { color: var(--tk-amarillo); }
+.ev--t-aprobado .ev__tk { color: var(--tk-verde); }
+.ev--t-publicado .ev__tk { color: var(--tk-pub); }
+/* Con ticket, el chip no se atenúa (tentativo) ni cambia de color (internacional): el texto debe seguir ≥ 4.5:1 sobre el fondo teñido. */
+.ev.ev--t { opacity: 1; color: var(--text-2); }
+.ev.ev--t b { color: var(--text); }

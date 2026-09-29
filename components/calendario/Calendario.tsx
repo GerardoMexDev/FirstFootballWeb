@@ -18,6 +18,7 @@
 import { useMemo, useState } from 'react';
 import { usePanel } from '@/lib/paneles/use-panel';
 import { horaCortaEnUruguay } from '@/lib/fechas/zonas';
+import { META_ESTADO, type ResumenPartido } from '@/lib/tickets/estados';
 import {
   agruparPorDia,
   celdasDelMes,
@@ -47,7 +48,7 @@ function chipEvento(e: EventoCalendario): { etiqueta: string; texto: string } {
   }
 }
 
-export function Calendario({ eventos, hoyUy }: { eventos: EventoCalendario[]; hoyUy: string }) {
+export function Calendario({ eventos, hoyUy, ticketsPorPartido = {} }: { eventos: EventoCalendario[]; hoyUy: string; ticketsPorPartido?: Record<string, ResumenPartido> }) {
   const { abrir } = usePanel();
   const [anio, setAnio] = useState(() => Number(hoyUy.slice(0, 4)));
   const [mes, setMes] = useState(() => Number(hoyUy.slice(5, 7)) - 1); // 0-11
@@ -125,8 +126,21 @@ export function Calendario({ eventos, hoyUy }: { eventos: EventoCalendario[]; ho
                 const clase = `ev ${e.tentativo ? 'ev--tent' : ''} ${e.esInternacional ? 'ev--int' : ''}`;
                 if (e.fuente === 'partido' && e.refId) {
                   const refId = e.refId;
+                  const tk = ticketsPorPartido[refId];
+                  const soloUno = tk && tk.ticketIds.length === 1 ? tk.ticketIds[0] : null;
                   return (
-                    <button key={clave} type="button" className={clase} onClick={() => abrir('partido', refId)}>
+                    <button
+                      key={clave}
+                      type="button"
+                      className={`${clase} ${tk ? `ev--t ev--t-${tk.estado}` : ''}`}
+                      onClick={() => (soloUno ? abrir('ticket', soloUno) : abrir('partido', refId))}
+                    >
+                      {tk && (
+                        <small className="ev__tk">
+                          <span aria-hidden="true">{META_ESTADO[tk.estado].simbolo}</span> {META_ESTADO[tk.estado].corta}
+                          {tk.ticketIds.length > 1 ? ` · ${tk.ticketIds.length}` : ''}
+                        </small>
+                      )}
                       <b>{etiqueta}</b>
                       {texto}
                     </button>

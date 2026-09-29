@@ -10,6 +10,8 @@ import { NotasAgenda } from '@/components/agenda/NotasAgenda';
 import { Calendario } from '@/components/calendario/Calendario';
 import { notasProximas } from '@/lib/agenda/notas-proximas';
 import { RepositorioAgendaSupabase } from '@/lib/repositorios/repositorio-agenda';
+import { RepositorioTicketsSupabase } from '@/lib/repositorios/repositorio-tickets';
+import { resumirPorPartido } from '@/lib/tickets/estados';
 import { crearClienteServidor } from '@/lib/supabase/cliente-servidor';
 import { ZONA_AGENCIA } from '@/lib/fechas/zonas';
 
@@ -17,11 +19,14 @@ export default async function PaginaCalendario() {
   const hoyUy = DateTime.now().setZone(ZONA_AGENCIA).toISODate() ?? '';
   const anio = Number(hoyUy.slice(0, 4));
 
-  const repo = new RepositorioAgendaSupabase(crearClienteServidor());
-  const [eventosNota, eventos] = await Promise.all([
+  const supabase = crearClienteServidor();
+  const repo = new RepositorioAgendaSupabase(supabase);
+  const [eventosNota, eventos, tickets] = await Promise.all([
     repo.listarEventosParaNotas(hoyUy),
     // Misma ventana que proyecta agenda_anual (cumpleaños/aniversarios): [-1, +2] años.
     repo.listarEventos(`${anio - 1}-01-01`, `${anio + 2}-12-31`),
+    // Degradación elegante: si la lectura de tickets falla, el calendario se ve como antes.
+    new RepositorioTicketsSupabase(supabase).listarResumen().catch(() => []),
   ]);
   const notas = notasProximas(eventosNota, hoyUy);
 
@@ -38,7 +43,7 @@ export default async function PaginaCalendario() {
 
       <NotasAgenda notas={notas} />
 
-      <Calendario eventos={eventos} hoyUy={hoyUy} />
+      <Calendario eventos={eventos} hoyUy={hoyUy} ticketsPorPartido={resumirPorPartido(tickets)} />
     </section>
   );
 }
