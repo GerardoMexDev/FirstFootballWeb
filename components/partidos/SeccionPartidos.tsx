@@ -11,13 +11,16 @@ import { ListaPartidos } from '@/components/partidos/ListaPartidos';
 import { usePanel } from '@/lib/paneles/use-panel';
 import { filtrarPartidos, type FiltroPartidos } from '@/lib/partidos/utilidades';
 import type { PartidoProximo } from '@/lib/repositorios/tipos';
+import type { LinksDropbox } from '@/lib/jugadores/links-dropbox';
 
 export function SeccionPartidos({
   partidos,
   partidosConHito,
+  linksDropbox,
 }: {
   partidos: PartidoProximo[];
   partidosConHito: Set<string>;
+  linksDropbox?: Record<string, LinksDropbox>;
 }) {
   const [filtro, setFiltro] = useState<FiltroPartidos>('todos');
   const { abrir } = usePanel();
@@ -34,6 +37,7 @@ export function SeccionPartidos({
           partidos={filtrados}
           partidosConHito={partidosConHito}
           onAbrirPartido={(partidoId) => abrir('partido', partidoId)}
+          linksDropbox={linksDropbox}
         />
       </div>
     </>

@@ -17,6 +17,8 @@
 import { Ico } from '@/components/comunes/Ico';
 import { Escudo } from '@/components/comunes/Escudo';
 import { CaraJugador } from '@/components/comunes/CaraJugador';
+import { BotonesDropbox } from '@/components/jugadores/BotonesDropbox';
+import { SIN_LINKS } from '@/lib/jugadores/links-dropbox';
 import { EstadoSinDatos } from '@/components/comunes/EstadoSinDatos';
 import { usePanel } from '@/lib/paneles/use-panel';
 import {
@@ -161,14 +163,21 @@ export function PanelPartido({ bundle }: { bundle: DetallePartidoBundle }) {
         <span className="label">{d.jugadores.length > 1 ? 'Jugadores a cubrir' : 'Jugador a cubrir'}</span>
         <div className="lst">
           {d.jugadores.map((j) => (
-            <button className="pm" type="button" key={j.jugadorId} onClick={() => abrir('jugador', j.jugadorId)}>
-              <CaraJugador nombre={j.nombre} fotoUrl={j.fotoUrl} clase="" />
-              <b>{j.nombre}</b>
-              <span>
-                {[j.clubNombre, j.conSeleccion ? 'con la selección' : null].filter(Boolean).join(' · ')}
-                <Ico nombre="chevron" clase="ico ico--sm" />
-              </span>
-            </button>
+            <div key={j.jugadorId}>
+              <button className="pm" type="button" onClick={() => abrir('jugador', j.jugadorId)}>
+                <CaraJugador nombre={j.nombre} fotoUrl={j.fotoUrl} clase="" />
+                <b>{j.nombre}</b>
+                <span>
+                  {[j.clubNombre, j.conSeleccion ? 'con la selección' : null].filter(Boolean).join(' · ')}
+                  <Ico nombre="chevron" clase="ico ico--sm" />
+                </span>
+              </button>
+              <BotonesDropbox
+                links={bundle.linksDropbox?.[j.jugadorId] ?? SIN_LINKS}
+                nombreJugador={j.nombre}
+                style={{ padding: '10px 16px 6px' }}
+              />
+            </div>
           ))}
         </div>
       </div>

@@ -19,6 +19,8 @@
 import { Ico } from '@/components/comunes/Ico';
 import { Escudo } from '@/components/comunes/Escudo';
 import { CaraJugador } from '@/components/comunes/CaraJugador';
+import { BotonesDropbox } from '@/components/jugadores/BotonesDropbox';
+import { SIN_LINKS, type LinksDropbox } from '@/lib/jugadores/links-dropbox';
 import { usePanel } from '@/lib/paneles/use-panel';
 import {
   diasDesdeHoyUy,
@@ -33,7 +35,16 @@ import { pesoPartido, diaDePartido } from '@/lib/partidos/utilidades';
 import type { Hito } from '@/lib/motor-hitos/tipos';
 import type { PartidoProximo } from '@/lib/repositorios/tipos';
 
-export function HeroPartidoDelDia({ partidos, hitos }: { partidos: PartidoProximo[]; hitos: Hito[] }) {
+export function HeroPartidoDelDia({
+  partidos,
+  hitos,
+  linksDropbox = {},
+}: {
+  partidos: PartidoProximo[];
+  hitos: Hito[];
+  /** Carpetas de Dropbox por jugadorId (botones junto a la cara del jugador). */
+  linksDropbox?: Record<string, LinksDropbox>;
+}) {
   const { abrir } = usePanel();
   const candidatos = partidos.filter((p) => {
     const dia = diaDePartido(p);
@@ -118,6 +129,10 @@ export function HeroPartidoDelDia({ partidos, hitos }: { partidos: PartidoProxim
               {p.jugadorApodo || p.jugadorNombre}
               {hitoDelPartido ? ` · ${hitoDelPartido.frase}` : ''}
             </small>
+            <BotonesDropbox
+              links={linksDropbox[p.jugadorId] ?? SIN_LINKS}
+              nombreJugador={p.jugadorApodo || p.jugadorNombre}
+            />
           </div>
         </div>
 

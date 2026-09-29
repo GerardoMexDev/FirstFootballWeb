@@ -5,6 +5,7 @@
  * `lib/repositorios/repositorio-*.ts`. Los proveedores externos (API-Football, ESPN, …)
  * viven en `lib/repositorios/externos/` y los usan las Edge Functions, no el navegador.
  */
+import type { LinksDropbox } from '@/lib/jugadores/links-dropbox';
 
 /** Un partido tal como lo consume la UI (fila de la vista `proximos_partidos`). */
 export interface PartidoProximo {
@@ -146,6 +147,8 @@ export interface RepositorioJugadores {
   obtener(jugadorId: string): Promise<JugadorFicha | null>;
   /** Números del año en curso, o `null` si el jugador no jugó ningún partido este año. */
   temporadaActual(jugadorId: string): Promise<TemporadaActual | null>;
+  /** Links de Dropbox (saneados) de todos los jugadores activos, por id. */
+  listarLinksDropbox(): Promise<Record<string, LinksDropbox>>;
 }
 
 // RepositorioHitos: la clase `RepositorioHitosSupabase` se usa directo (sin interfaz)

@@ -271,3 +271,9 @@
   color: var(--text-2);
 }
 .saludo b { font-weight: 600; color: var(--text); }
+
+/* Hero: reservar arriba el alto del rótulo "Partido del día" (.hero__top, absoluto). Sin esto,
+   cuando el contenido pasa el min-height (mobile) sube por debajo del rótulo y se superpone.
+   = padding de la demo + ~alto del rótulo + aire. En desktop no cambia nada (el contenido
+   queda abajo por justify-content:flex-end). */
+.hero { padding-top: calc(clamp(26px, 4vw, 44px) + 52px); }

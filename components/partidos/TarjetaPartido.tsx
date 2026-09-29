@@ -18,6 +18,8 @@
 import { Ico } from '@/components/comunes/Ico';
 import { Escudo } from '@/components/comunes/Escudo';
 import { CaraJugador } from '@/components/comunes/CaraJugador';
+import { BotonesDropbox } from '@/components/jugadores/BotonesDropbox';
+import type { LinksDropbox } from '@/lib/jugadores/links-dropbox';
 import { horaCortaEnUruguay, horaCortaEnSede, marcadorCambioDeDia } from '@/lib/fechas/zonas';
 import { mostrar } from '@/lib/formato/valores';
 import { esHoy, claseTarjeta } from '@/lib/partidos/utilidades';
@@ -27,10 +29,13 @@ export function TarjetaPartido({
   partido: p,
   tieneHito = false,
   onAbrir,
+  linksDropbox,
 }: {
   partido: PartidoProximo;
   tieneHito?: boolean;
   onAbrir?: () => void;
+  /** Si se pasa, muestra los botones de Dropbox junto a la cara del jugador. */
+  linksDropbox?: LinksDropbox;
 }) {
   const hoy = esHoy(p);
   const tieneHorario = p.inicioUtc !== null;
@@ -133,6 +138,9 @@ export function TarjetaPartido({
               <Ico nombre="medalla" clase="ico ico--sm" />
               Hito
             </span>
+          )}
+          {linksDropbox && (
+            <BotonesDropbox links={linksDropbox} nombreJugador={p.jugadorApodo || p.jugadorNombre} />
           )}
         </div>
       </div>

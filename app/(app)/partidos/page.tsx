@@ -16,6 +16,7 @@ import { agruparPorJugador } from '@/lib/partidos/utilidades';
 import { RepositorioHitosSupabase } from '@/lib/repositorios/repositorio-hitos';
 import { RepositorioPartidosSupabase } from '@/lib/repositorios/repositorio-partidos';
 import { RepositorioAgendaSupabase } from '@/lib/repositorios/repositorio-agenda';
+import { RepositorioJugadoresSupabase } from '@/lib/repositorios/repositorio-jugadores';
 import { crearClienteServidor } from '@/lib/supabase/cliente-servidor';
 import { ZONA_AGENCIA } from '@/lib/fechas/zonas';
 
@@ -33,11 +34,12 @@ export default async function PaginaPartidos() {
   const partidos = await new RepositorioPartidosSupabase(supabase).listarProximos();
 
   const repositorioHitos = new RepositorioHitosSupabase(supabase);
-  const [jugadores, totales, escalas, eventosAgenda] = await Promise.all([
+  const [jugadores, totales, escalas, eventosAgenda, linksDropbox] = await Promise.all([
     repositorioHitos.listarJugadoresActivos(),
     repositorioHitos.listarTotales(),
     repositorioHitos.listarEscalasActivas(),
     new RepositorioAgendaSupabase(supabase).listarEventosParaNotas(hoyUy),
+    new RepositorioJugadoresSupabase(supabase).listarLinksDropbox(),
   ]);
   const totalesPorJugador = new Map(totales.map((t) => [t.jugadorId, t]));
   const hitos = ordenarHitos(
@@ -58,11 +60,15 @@ export default async function PaginaPartidos() {
         </p>
       </div>
 
-      <HeroPartidoDelDia partidos={partidos} hitos={hitos} />
+      <HeroPartidoDelDia partidos={partidos} hitos={hitos} linksDropbox={linksDropbox} />
       <TarjetasKpi partidos={partidos} cantidadHitos={hitos.length} />
       <SeccionHitos hitos={hitos} />
       <NotasAgenda notas={notas} />
-      <SeccionPartidos partidos={partidos} partidosConHito={partidosConHito(hitos)} />
+      <SeccionPartidos
+        partidos={partidos}
+        partidosConHito={partidosConHito(hitos)}
+        linksDropbox={linksDropbox}
+      />
     </section>
   );
 }

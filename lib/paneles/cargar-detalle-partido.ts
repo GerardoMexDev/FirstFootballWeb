@@ -14,6 +14,8 @@ import { plegarDetallePartido, type DetallePartido } from '@/lib/paneles/detalle
 import type { crearClienteServidor } from '@/lib/supabase/cliente-servidor';
 import { RepositorioHitosSupabase } from '@/lib/repositorios/repositorio-hitos';
 import { RepositorioPartidosSupabase } from '@/lib/repositorios/repositorio-partidos';
+import { RepositorioJugadoresSupabase } from '@/lib/repositorios/repositorio-jugadores';
+import type { LinksDropbox } from '@/lib/jugadores/links-dropbox';
 import type { Hito } from '@/lib/motor-hitos/tipos';
 
 type ClienteSupabase = ReturnType<typeof crearClienteServidor>;
@@ -23,6 +25,8 @@ export interface DetallePartidoBundle {
   /** Hitos estimados PARA este partido (métrica pj + carrera, los únicos ubicables). */
   hitos: Hito[];
   hoyUy: string;
+  /** Carpetas de Dropbox por jugadorId (botones de "Jugador a cubrir"). */
+  linksDropbox: Record<string, LinksDropbox>;
 }
 
 /** Devuelve el bundle, o `null` si el partido no tiene filas en `proximos_partidos`. */
@@ -36,11 +40,12 @@ export async function cargarDetallePartido(
   if (!detalle) return null;
 
   const repositorioHitos = new RepositorioHitosSupabase(supabase);
-  const [proximos, jugadoresBasicos, totales, escalas] = await Promise.all([
+  const [proximos, jugadoresBasicos, totales, escalas, linksDropbox] = await Promise.all([
     repositorioPartidos.listarProximos(),
     repositorioHitos.listarJugadoresActivos(),
     repositorioHitos.listarTotales(),
     repositorioHitos.listarEscalasActivas(),
+    new RepositorioJugadoresSupabase(supabase).listarLinksDropbox(),
   ]);
 
   const totalesPorJugador = new Map(totales.map((t) => [t.jugadorId, t]));
@@ -52,5 +57,6 @@ export async function cargarDetallePartido(
     detalle,
     hitos,
     hoyUy: DateTime.now().setZone(ZONA_AGENCIA).toISODate() ?? '',
+    linksDropbox,
   };
 }

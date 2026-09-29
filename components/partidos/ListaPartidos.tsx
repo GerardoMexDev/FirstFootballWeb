@@ -9,14 +9,18 @@ import { TarjetaPartido } from '@/components/partidos/TarjetaPartido';
 import { diasDesdeHoyUy, etiquetaDiaUy } from '@/lib/fechas/zonas';
 import { agruparPorDia } from '@/lib/partidos/utilidades';
 import type { PartidoProximo } from '@/lib/repositorios/tipos';
+import { SIN_LINKS, type LinksDropbox } from '@/lib/jugadores/links-dropbox';
 
 export function ListaPartidos({
   partidos,
   partidosConHito = new Set<string>(),
   onAbrirPartido,
+  linksDropbox,
 }: {
   partidos: PartidoProximo[];
   partidosConHito?: Set<string>;
+  /** Carpetas de Dropbox por jugadorId. Si se pasa, cada tarjeta muestra sus botones. */
+  linksDropbox?: Record<string, LinksDropbox>;
   /** Abre el panel de detalle del partido. Si no se pasa, las tarjetas quedan no interactivas. */
   onAbrirPartido?: (partidoId: string) => void;
 }) {
@@ -47,6 +51,7 @@ export function ListaPartidos({
                   partido={p}
                   tieneHito={partidosConHito.has(p.partidoId)}
                   onAbrir={onAbrirPartido ? () => onAbrirPartido(p.partidoId) : undefined}
+                  linksDropbox={linksDropbox ? (linksDropbox[p.jugadorId] ?? SIN_LINKS) : undefined}
                 />
               ))}
             </div>

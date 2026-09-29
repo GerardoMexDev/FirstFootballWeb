@@ -259,6 +259,25 @@ personas) → se mantiene el login por nombre (`felipe`, `pedro`, `maxi`, `alexi
   revertido a `demo1234`; logout → `/login` y `/partidos` sin sesión redirige. Desktop 1280 y
   mobile 390 sin scroll horizontal, 0 errores de consola. (El `ERR_ABORTED` de `/logout` en el
   reporte es el navegador cortando un 204 al navegar: el servidor respondió 204.)
+- **Botones Dropbox en partidos** (pedido del Diseñador, aprobado en chat): componente
+  `components/jugadores/BotonesDropbox.tsx` (extraído de `FichaJugador`) en **4 lugares**: ficha
+  del jugador, panel del partido (debajo de cada "Jugador a cubrir"), tarjeta de la lista (junto
+  a la cara) y hero. Abren Dropbox en pestaña nueva y **cortan la propagación** (clic y Enter)
+  para no abrir el panel del partido. Datos: `RepositorioJugadores.listarLinksDropbox()` →
+  `Record<jugadorId, LinksDropbox>` (objeto plano: viaja como prop y como JSON del panel); sin
+  migración. **`lib/jugadores/links-dropbox.ts`** + 5 tests: `linkSeguro` solo deja pasar
+  `https://` (un `javascript:`/`data:`/`http:` mal cargado queda como botón deshabilitado).
+  Verificado que los 12 links actuales (6 de Match Day) son https. Nombre accesible por jugador
+  ("Fotografías de Nández en Dropbox (pestaña nueva)").
+- **Bug previo arreglado de paso:** en mobile, cuando el hero pasaba su `min-height`, el
+  contenido subía por debajo del rótulo "Partido del día" (absoluto) y se superponían (medido:
+  contenido en y=142, rótulo hasta y=174, **también sin los botones**). Fix en `app.css`:
+  `.hero { padding-top: calc(clamp(26px,4vw,44px) + 52px) }` — desktop sin cambios.
+- **QA navegador** (`next start` local, login real `maxi`): 86/86 tarjetas con sus 2 botones;
+  clic y Enter abren Dropbox sin abrir el panel; clic en el cuerpo sí abre el panel, con los
+  botones; ficha OK; hero verificado adelantando el reloj del navegador al 2/10 (hoy no hay
+  partido en 3 días y el hero no se muestra); desktop 1280 + mobile 390 sin scroll horizontal,
+  0 errores de consola. `npm test` 135/135, lint + build OK.
 - **Recuperar contraseña:** en espera — Gerardo averigua el correo de la agencia / hosting.
   Opciones y plan en §5 "Recuperar contraseña".
 - **Desplegado y verificado en prod** (push de Gerardo, deploy `98f82df`): headers nuevos
@@ -1298,12 +1317,10 @@ preguntas → enfoques → diseño → spec escrita (revisa Gerardo) → plan �
 - [ ] Días de anticipación de la fecha límite (hoy: 2; mínimo 1).
 - [ ] ¿Siempre un solo ticket/diseño por partido, o a veces más (previa, resultado, stats)?
 
-### 📁 Botones Dropbox también en partidos — PEDIDO (2026-09-28, Sesión 12, pedido del Diseñador)
+### 📁 Botones Dropbox también en partidos — ✅ HECHO (2026-09-28, Sesión 12) — falta `git push`
 
-Los botones **Fotografías / Match Day** (hoy solo en `components/jugadores/FichaJugador.tsx`,
-ver Sesión 9/"botones ficha") también en: (1) la **ficha de detalle del partido**
-(`PanelPartido`) y (2) la **tarjeta del partido junto a la foto del jugador**
-(`TarjetaPartido` / hero — a confirmar cuál). Sin diseño todavía.
+Pedido del Diseñador: tener "Fotografías / Match Day" a mano sin ir hasta Jugadores. Ver
+detalle en §4 Sesión 12.
 
 ### 🗓️ Página Partidos: sumar eventos de los jugadores de Contenido — PEDIDO (2026-09-28, Sesión 12)
 
@@ -2308,6 +2325,7 @@ F–H → I (con migración). Cada ítem cerrado se documenta en §4.
 | Transcribir el roster del Excel a mano en seeds (Sesión 8) | 3 jugadores mal cargados | Releer el Excel al momento de cargar y verificar en la base después del seed |
 | Test de RLS "sin sesión no lee X" aceptando cualquier error (Sesión 12) | Pasaba con una tabla inexistente (`notas_agenda`): no probaba nada | Aceptar solo error `42501` o lista vacía, y un test de control con service_role que confirme que la tabla tiene filas |
 | Confiar en que `contexto.md` refleja la config de Supabase Auth (Sesión 12) | Decía "registro deshabilitado" y en prod estaba encendido | Verificar en vivo: `GET /auth/v1/settings` (lo hace `npm run test:seguridad`) |
+| Detener `npx next start` con TaskStop (Sesión 12) | Mata el wrapper `npx` pero el `node … next start` hijo sigue vivo con el build VIEJO → el siguiente `next start` falla (puerto ocupado) y el QA ve chunks 400 | Después de TaskStop, cerrar el proceso hijo: `Get-CimInstance Win32_Process` filtrando `*next*start -p*3100*` → `Stop-Process` |
 | `git push` desde Claude (Sesión 12, 2026-09-28) | Bloqueado por el auto-mode ("Out-of-Place Publication": el push despliega a Vercel) | Dejar los commits hechos y verificados; Gerardo corre `git push` y Claude hace el QA en prod después |
 
 ## 11. Dudas abiertas (de `contexto.md` §12)

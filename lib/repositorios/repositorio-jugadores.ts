@@ -13,6 +13,7 @@
  */
 import type { crearClienteServidor } from '@/lib/supabase/cliente-servidor';
 import type { Database } from '@/lib/supabase/tipos-db';
+import { aMapaLinks, type FilaLinksDropbox, type LinksDropbox } from '@/lib/jugadores/links-dropbox';
 import type {
   JugadorFicha,
   JugadorPlantel,
@@ -153,6 +154,17 @@ export class RepositorioJugadoresSupabase implements RepositorioJugadores {
       seleccionPartidos: totales?.seleccion_partidos ?? null,
       seleccionGoles: totales?.seleccion_goles ?? null,
     };
+  }
+
+  async listarLinksDropbox(): Promise<Record<string, LinksDropbox>> {
+    const { data, error } = await this.supabase
+      .from('jugadores')
+      .select('id, dropbox_fotografias_url, dropbox_matchday_url')
+      .eq('activo', true)
+      .returns<FilaLinksDropbox[]>();
+
+    if (error) throw new Error(`No se pudo leer los links de Dropbox: ${error.message}`);
+    return aMapaLinks(data ?? []);
   }
 
   async temporadaActual(jugadorId: string): Promise<TemporadaActual | null> {

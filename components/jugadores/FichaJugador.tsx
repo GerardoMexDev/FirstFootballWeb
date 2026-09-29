@@ -29,6 +29,8 @@ import { diasDesdeHoyUy, etiquetaDiaUy } from '@/lib/fechas/zonas';
 import { mostrar } from '@/lib/formato/valores';
 import type { Hito } from '@/lib/motor-hitos/tipos';
 import type { JugadorFicha, PartidoProximo, TemporadaActual } from '@/lib/repositorios/tipos';
+import { BotonesDropbox } from '@/components/jugadores/BotonesDropbox';
+import { linkSeguro } from '@/lib/jugadores/links-dropbox';
 
 /**
  * Valor de una celda `.dato`: el número tal cual (0 es válido) o un guion largo si no hay
@@ -108,38 +110,14 @@ export function FichaJugador({
         ))}
       </div>
 
-      {/* ── Accesos del diseñador ── carpetas de Dropbox (0023, dato manual del Excel). Sin
-          link cargado el botón queda inerte (disabled), no se inventa ni se oculta. */}
-      <div className="linea" style={{ gap: 10, marginBottom: 32 }}>
-        {jugador.dropboxFotografiasUrl ? (
-          <a
-            href={jugador.dropboxFotografiasUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="btn btn--g btn--sm"
-          >
-            Fotografías
-          </a>
-        ) : (
-          <button type="button" className="btn btn--g btn--sm" disabled>
-            Fotografías
-          </button>
-        )}
-        {jugador.dropboxMatchdayUrl ? (
-          <a
-            href={jugador.dropboxMatchdayUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="btn btn--a btn--sm"
-          >
-            Match Day
-          </a>
-        ) : (
-          <button type="button" className="btn btn--a btn--sm" disabled>
-            Match Day
-          </button>
-        )}
-      </div>
+      {/* ── Accesos del diseñador ── carpetas de Dropbox (0023, dato manual del Excel). */}
+      <BotonesDropbox
+        links={{
+          fotografias: linkSeguro(jugador.dropboxFotografiasUrl),
+          matchday: linkSeguro(jugador.dropboxMatchdayUrl),
+        }}
+        style={{ marginBottom: 32 }}
+      />
 
       {/* ── Hitos por alcanzar ── */}
       <div className="bloque">
