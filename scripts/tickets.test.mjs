@@ -502,4 +502,44 @@ test('anon no puede ejecutar las funciones', () =>
     await debeFallar(cl, `select ticket_crear($1,$2,'x')`, [p, ids.jugadorMd], /permission denied/);
   }));
 
+// ═════════════ Task 2 — fix round 1: hallazgos de revisión ═════════════
+
+test('ticket__mover: helpers internos con EXECUTE revocado; p_quien inválido no pasa por alto los permisos', () =>
+  enTransaccion(async (cl) => {
+    const p = await partidoDePrueba(cl, ids.jugadorMd);
+    await como(cl, ids.felipe);
+    const t = await crear(cl, p);
+    // Los helpers ticket__* no se exponen por RPC: EXECUTE revocado a authenticated/anon.
+    // Esto ya debía cumplirse desde la migración original (revoke explícito en §7).
+    await debeFallar(cl, `select ticket__mover($1,'pendiente','publicado','publicado','x',null,null)`, [t], /permission denied/);
+    await debeFallar(cl, `select ticket__cargo_actual()`, [], /permission denied/);
+    await debeFallar(cl, `select ticket__bloquear($1)`, [t], /permission denied/);
+    // Como dueño (bypassea el revoke, como lo haría cualquier código que llamara al helper
+    // directo) pero con una sesión válida (jwt claims de Felipe, sin cambiar de role): un
+    // p_quien fuera de ('disenador','revisor') debe rechazarse explícitamente en vez de
+    // saltearse ambos chequeos de permiso y ejecutar el cambio de estado sin control.
+    await comoDueno(cl);
+    await cl.query(`select set_config('request.jwt.claims', $1, true)`, [
+      JSON.stringify({ sub: ids.felipe, role: 'authenticated' }),
+    ]);
+    await debeFallar(cl, `select ticket__mover($1,'pendiente','publicado','publicado','x',null,null)`, [t], /p_quien inválido/);
+  }));
+
+test('Revisor: el CM aprueba y cancela sus propios tickets (rama creado_por = auth.uid())', () =>
+  enTransaccion(async (cl) => {
+    const p = await partidoDePrueba(cl, ids.jugadorMd);
+    await como(cl, ids.pedro);
+    const t1 = await crear(cl, p);
+    await como(cl, ids.maxi);
+    await cl.query(`select ticket_entregar($1,'https://x.com/a')`, [t1]);
+    await como(cl, ids.pedro);
+    await cl.query(`select ticket_aprobar($1)`, [t1]);
+    assert.equal(await estadoDe(cl, t1), 'aprobado');
+
+    await como(cl, ids.pedro);
+    const t2 = await crear(cl, p);
+    await cl.query(`select ticket_cancelar($1, 'Ya no hace falta')`, [t2]);
+    assert.equal(await estadoDe(cl, t2), 'cancelado');
+  }));
+
 export { enTransaccion, como, comoAnon, comoServicio, comoDueno, debeFallar, partidoDePrueba };

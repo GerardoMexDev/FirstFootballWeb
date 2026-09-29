@@ -216,6 +216,12 @@ declare
   v_cargo text := ticket__cargo_actual();
   t tickets;
 begin
+  -- 0) p_quien es un parámetro interno fijado por cada ticket_* (nunca por el cliente): si
+  -- no es uno de los dos valores válidos, ambos chequeos de permiso de abajo se saltean y
+  -- la función queda "fail-open". Se corta acá, antes del lock, con un mensaje interno.
+  if p_quien not in ('disenador', 'revisor') then
+    raise exception 'ticket__mover: p_quien inválido (%)', p_quien;
+  end if;
   -- 1) permiso por puesto (antes de bloquear: un rechazo no espera locks)
   if p_quien = 'disenador' and v_cargo <> 'Diseñador' then
     raise exception 'Solo el Diseñador puede hacer esto.' using errcode = '42501';
