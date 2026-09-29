@@ -18,7 +18,7 @@ import { PastillaEstado } from '@/components/tickets/PastillaEstado';
 import { crearClienteNavegador } from '@/lib/supabase/cliente-navegador';
 import { ejecutarAccion } from '@/lib/tickets/acciones';
 import { accionesPermitidas } from '@/lib/tickets/permisos';
-import { fechaHoraCortaUy, textoVencimiento } from '@/lib/tickets/vencimiento';
+import { fechaHoraCortaUy, textoEvento, textoVencimiento } from '@/lib/tickets/vencimiento';
 import type { DetalleTicketBundle } from '@/lib/tickets/cargar-detalle-ticket';
 import type { Accion, EventoHistorial } from '@/lib/tickets/tipos';
 
@@ -128,11 +128,13 @@ export function PanelTicket({ bundle, onActualizar }: { bundle: DetalleTicketBun
       </div>
       <h2 ref={tituloRef} tabIndex={-1} className="d2" style={{ marginBottom: 10, outline: 'none' }}>{ticket.titulo}</h2>
       <p className="meta" style={{ marginBottom: 24 }}>
-        {ticket.partidoEliminado
-          ? 'El partido ya no figura en la fuente de datos.'
-          : ticket.inicioUtc
-            ? `Partido: ${fechaHoraCortaUy(ticket.inicioUtc)} (hora Uruguay)`
-            : 'Partido sin hora confirmada'}
+        {ticket.fechaEvento && ticket.motivo
+          ? textoEvento(ticket.motivo, ticket.fechaEvento)
+          : ticket.partidoEliminado
+            ? 'El partido ya no figura en la fuente de datos.'
+            : ticket.inicioUtc
+              ? `Partido: ${fechaHoraCortaUy(ticket.inicioUtc)} (hora Uruguay)`
+              : 'Partido sin hora confirmada'}
         {ticket.creadoPorNombre ? ` · Lo pidió ${ticket.creadoPorNombre}` : ''}
       </p>
 
@@ -141,7 +143,7 @@ export function PanelTicket({ bundle, onActualizar }: { bundle: DetalleTicketBun
         <p className="tk__nota">{ticket.nota}</p>
       </div>
 
-      {(ticket.linkEntrega || (ticket.partidoId && !ticket.partidoEliminado)) && (
+      {(ticket.linkEntrega || (ticket.partidoId && !ticket.partidoEliminado) || ticket.fechaEvento) && (
         <div className="linea" style={{ gap: 10, marginBottom: 24 }}>
           {ticket.linkEntrega && (
             <a href={ticket.linkEntrega} target="_blank" rel="noopener noreferrer" className="btn btn--g">
@@ -151,6 +153,15 @@ export function PanelTicket({ bundle, onActualizar }: { bundle: DetalleTicketBun
           {ticket.partidoId && !ticket.partidoEliminado && (
             <button type="button" className="btn btn--g" onClick={() => abrir('partido', ticket.partidoId!)}>
               Ver partido
+            </button>
+          )}
+          {ticket.fechaEvento && (
+            <button
+              type="button"
+              className="btn btn--g"
+              onClick={() => abrir(ticket.jugadorSoloContenido ? 'jugador-contenido' : 'jugador', ticket.jugadorId)}
+            >
+              Ver jugador
             </button>
           )}
         </div>

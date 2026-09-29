@@ -8,6 +8,9 @@
  * El server trae TODOS los eventos de la ventana de proyección ([-1, +2] años) y
  * `<Calendario>` (Client) navega meses sin volver a pedir nada.
  *
+ * Desde 2026-09-29 muestra además los tickets de diseño de fecha (0028) como chips en su día,
+ * con la lucecita si esperan algo de quien mira.
+ *
  * Football First (Fase 1). Creado 2026-09-10 (Sesión 7).
  */
 import { DateTime } from 'luxon';
@@ -17,15 +20,25 @@ import { notasProximas, FUENTES_CONTENIDO } from '@/lib/agenda/notas-proximas';
 import { RepositorioAgendaSupabase } from '@/lib/repositorios/repositorio-agenda';
 import { crearClienteServidor } from '@/lib/supabase/cliente-servidor';
 import { ZONA_AGENCIA } from '@/lib/fechas/zonas';
+import { RepositorioTicketsSupabase } from '@/lib/repositorios/repositorio-tickets';
+import { ticketsPorDia, alertasPorTicket } from '@/lib/tickets/estados';
+import { pendientesDeSesion } from '@/lib/tickets/pendientes-de-sesion';
 
 export default async function PaginaCalendarioGeneral() {
   const hoyUy = DateTime.now().setZone(ZONA_AGENCIA).toISODate() ?? '';
   const anio = Number(hoyUy.slice(0, 4));
 
-  const repo = new RepositorioAgendaSupabase(crearClienteServidor(), 'agenda_contenido');
-  const [eventosNota, eventos] = await Promise.all([
+  const supabase = crearClienteServidor();
+  const repo = new RepositorioAgendaSupabase(supabase, 'agenda_contenido');
+  const [eventosNota, eventos, ticketsFecha, pendientes] = await Promise.all([
     repo.listarEventosParaNotas(hoyUy),
     repo.listarEventos(`${anio - 1}-01-01`, `${anio + 2}-12-31`),
+    // Tickets de fecha (0028). Si la lectura falla, el calendario se ve como antes.
+    new RepositorioTicketsSupabase(supabase).listarEventosEntre(`${anio - 1}-01-01`, `${anio + 2}-12-31`).catch((e) => {
+      console.error('tickets (calendario general):', e);
+      return [];
+    }),
+    pendientesDeSesion(),
   ]);
   const notas = notasProximas(eventosNota, hoyUy, { fuentes: FUENTES_CONTENIDO });
 
@@ -45,7 +58,12 @@ export default async function PaginaCalendarioGeneral() {
 
       <NotasAgenda notas={notas} />
 
-      <Calendario eventos={eventos} hoyUy={hoyUy} />
+      <Calendario
+        eventos={eventos}
+        hoyUy={hoyUy}
+        ticketsPorDia={ticketsPorDia(ticketsFecha)}
+        alertasPorTicket={alertasPorTicket(pendientes)}
+      />
     </section>
   );
 }

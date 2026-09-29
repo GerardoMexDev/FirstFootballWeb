@@ -19,6 +19,7 @@ import { useMemo, useState } from 'react';
 import { usePanel } from '@/lib/paneles/use-panel';
 import { horaCortaEnUruguay } from '@/lib/fechas/zonas';
 import { META_ESTADO, type ResumenPartido } from '@/lib/tickets/estados';
+import type { ResumenTicket } from '@/lib/tickets/tipos';
 import {
   agruparPorDia,
   celdasDelMes,
@@ -53,12 +54,18 @@ export function Calendario({
   hoyUy,
   ticketsPorPartido = {},
   alertasPorPartido = {},
+  ticketsPorDia = {},
+  alertasPorTicket = {},
 }: {
   eventos: EventoCalendario[];
   hoyUy: string;
   ticketsPorPartido?: Record<string, ResumenPartido>;
   /** `{ partidoId: texto }` de los tickets que esperan algo de quien mira (lucecita). */
   alertasPorPartido?: Record<string, string>;
+  /** Tickets de fecha por día (Calendario general, 0028). */
+  ticketsPorDia?: Record<string, ResumenTicket[]>;
+  /** `{ ticketId: texto }` de la lucecita para esos tickets. */
+  alertasPorTicket?: Record<string, string>;
 }) {
   const { abrir } = usePanel();
   const [anio, setAnio] = useState(() => Number(hoyUy.slice(0, 4)));
@@ -123,10 +130,11 @@ export function Calendario({
       <div className="cal__grid">
         {celdas.map((c) => {
           const evs = porDia.get(c.fecha) ?? [];
+          const tks = ticketsPorDia[c.fecha] ?? [];
           return (
             <div
               key={c.fecha}
-              className={`celda ${evs.length ? 'celda--con' : ''} ${c.delMes ? '' : 'celda--fuera'} ${
+              className={`celda ${evs.length || tks.length ? 'celda--con' : ''} ${c.delMes ? '' : 'celda--fuera'} ${
                 c.esHoy ? 'celda--hoy' : ''
               }`}
             >
@@ -185,6 +193,25 @@ export function Calendario({
                   </div>
                 );
               })}
+              {tks.map((t) => (
+                <button
+                  key={`tk-${t.id}`}
+                  type="button"
+                  className={`ev ev--t ev--t-${t.estado}`}
+                  onClick={() => abrir('ticket', t.id)}
+                >
+                  <small className="ev__tk">
+                    {alertasPorTicket[t.id] ? (
+                      <span className="tka__luz" aria-hidden="true" />
+                    ) : (
+                      <span aria-hidden="true">{META_ESTADO[t.estado].simbolo}</span>
+                    )}{' '}
+                    <span className="ev__w">{alertasPorTicket[t.id] ?? META_ESTADO[t.estado].corta}</span>
+                  </small>
+                  <b>{t.jugadorNombre}</b>
+                  {t.motivo}
+                </button>
+              ))}
             </div>
           );
         })}
