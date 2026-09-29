@@ -47,6 +47,13 @@ export type Database = {
             referencedRelation: "perfiles"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "campanas_creado_por_fkey"
+            columns: ["creado_por"]
+            isOneToOne: false
+            referencedRelation: "perfiles_publicos"
+            referencedColumns: ["id"]
+          },
         ]
       }
       clubes: {
@@ -435,6 +442,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "hitos_creado_por_fkey"
+            columns: ["creado_por"]
+            isOneToOne: false
+            referencedRelation: "perfiles_publicos"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "hitos_jugador_id_fkey"
             columns: ["jugador_id"]
             isOneToOne: false
@@ -589,6 +603,13 @@ export type Database = {
             columns: ["representante_id"]
             isOneToOne: false
             referencedRelation: "perfiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "jugadores_representante_id_fkey"
+            columns: ["representante_id"]
+            isOneToOne: false
+            referencedRelation: "perfiles_publicos"
             referencedColumns: ["id"]
           },
         ]
@@ -864,6 +885,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "piezas_creado_por_fkey"
+            columns: ["creado_por"]
+            isOneToOne: false
+            referencedRelation: "perfiles_publicos"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "piezas_jugador_id_fkey"
             columns: ["jugador_id"]
             isOneToOne: false
@@ -913,6 +941,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "piezas_aprobaciones_aprobador_id_fkey"
+            columns: ["aprobador_id"]
+            isOneToOne: false
+            referencedRelation: "perfiles_publicos"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "piezas_aprobaciones_pieza_id_fkey"
             columns: ["pieza_id"]
             isOneToOne: false
@@ -949,6 +984,13 @@ export type Database = {
             columns: ["autor_id"]
             isOneToOne: false
             referencedRelation: "perfiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "piezas_comentarios_autor_id_fkey"
+            columns: ["autor_id"]
+            isOneToOne: false
+            referencedRelation: "perfiles_publicos"
             referencedColumns: ["id"]
           },
           {
@@ -1006,6 +1048,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "piezas_versiones_creado_por_fkey"
+            columns: ["creado_por"]
+            isOneToOne: false
+            referencedRelation: "perfiles_publicos"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "piezas_versiones_pieza_id_fkey"
             columns: ["pieza_id"]
             isOneToOne: false
@@ -1050,6 +1099,156 @@ export type Database = {
         }
         Relationships: []
       }
+      tickets: {
+        Row: {
+          actualizado_en: string
+          creado_en: string
+          creado_por: string
+          estado: Database["public"]["Enums"]["estado_ticket"]
+          id: string
+          inicio_utc_conocido: string | null
+          jugador_id: string
+          link_entrega: string | null
+          nota: string
+          partido_id: string | null
+          titulo: string
+        }
+        Insert: {
+          actualizado_en?: string
+          creado_en?: string
+          creado_por: string
+          estado?: Database["public"]["Enums"]["estado_ticket"]
+          id?: string
+          inicio_utc_conocido?: string | null
+          jugador_id: string
+          link_entrega?: string | null
+          nota: string
+          partido_id?: string | null
+          titulo: string
+        }
+        Update: {
+          actualizado_en?: string
+          creado_en?: string
+          creado_por?: string
+          estado?: Database["public"]["Enums"]["estado_ticket"]
+          id?: string
+          inicio_utc_conocido?: string | null
+          jugador_id?: string
+          link_entrega?: string | null
+          nota?: string
+          partido_id?: string | null
+          titulo?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tickets_creado_por_fkey"
+            columns: ["creado_por"]
+            isOneToOne: false
+            referencedRelation: "perfiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tickets_creado_por_fkey"
+            columns: ["creado_por"]
+            isOneToOne: false
+            referencedRelation: "perfiles_publicos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tickets_jugador_id_fkey"
+            columns: ["jugador_id"]
+            isOneToOne: false
+            referencedRelation: "jugadores"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tickets_jugador_id_fkey"
+            columns: ["jugador_id"]
+            isOneToOne: false
+            referencedRelation: "totales_jugador"
+            referencedColumns: ["jugador_id"]
+          },
+          {
+            foreignKeyName: "tickets_partido_id_fkey"
+            columns: ["partido_id"]
+            isOneToOne: false
+            referencedRelation: "partidos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tickets_partido_id_fkey"
+            columns: ["partido_id"]
+            isOneToOne: false
+            referencedRelation: "proximos_partidos"
+            referencedColumns: ["partido_id"]
+          },
+        ]
+      }
+      tickets_historial: {
+        Row: {
+          autor_id: string | null
+          creado_en: string
+          estado_desde: Database["public"]["Enums"]["estado_ticket"] | null
+          estado_hasta: Database["public"]["Enums"]["estado_ticket"] | null
+          id: number
+          link: string | null
+          texto: string | null
+          ticket_id: string
+          tipo: Database["public"]["Enums"]["tipo_evento_ticket"]
+        }
+        Insert: {
+          autor_id?: string | null
+          creado_en?: string
+          estado_desde?: Database["public"]["Enums"]["estado_ticket"] | null
+          estado_hasta?: Database["public"]["Enums"]["estado_ticket"] | null
+          id?: never
+          link?: string | null
+          texto?: string | null
+          ticket_id: string
+          tipo: Database["public"]["Enums"]["tipo_evento_ticket"]
+        }
+        Update: {
+          autor_id?: string | null
+          creado_en?: string
+          estado_desde?: Database["public"]["Enums"]["estado_ticket"] | null
+          estado_hasta?: Database["public"]["Enums"]["estado_ticket"] | null
+          id?: never
+          link?: string | null
+          texto?: string | null
+          ticket_id?: string
+          tipo?: Database["public"]["Enums"]["tipo_evento_ticket"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tickets_historial_autor_id_fkey"
+            columns: ["autor_id"]
+            isOneToOne: false
+            referencedRelation: "perfiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tickets_historial_autor_id_fkey"
+            columns: ["autor_id"]
+            isOneToOne: false
+            referencedRelation: "perfiles_publicos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tickets_historial_ticket_id_fkey"
+            columns: ["ticket_id"]
+            isOneToOne: false
+            referencedRelation: "tickets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tickets_historial_ticket_id_fkey"
+            columns: ["ticket_id"]
+            isOneToOne: false
+            referencedRelation: "tickets_vista"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       agenda_anual: {
@@ -1081,6 +1280,24 @@ export type Database = {
           ref_id: string | null
           tentativo: boolean | null
           titulo: string | null
+        }
+        Relationships: []
+      }
+      perfiles_publicos: {
+        Row: {
+          cargo: string | null
+          id: string | null
+          nombre_completo: string | null
+        }
+        Insert: {
+          cargo?: string | null
+          id?: string | null
+          nombre_completo?: string | null
+        }
+        Update: {
+          cargo?: string | null
+          id?: string | null
+          nombre_completo?: string | null
         }
         Relationships: []
       }
@@ -1172,6 +1389,114 @@ export type Database = {
           },
         ]
       }
+      tickets_historial_vista: {
+        Row: {
+          autor_id: string | null
+          autor_nombre: string | null
+          creado_en: string | null
+          estado_desde: Database["public"]["Enums"]["estado_ticket"] | null
+          estado_hasta: Database["public"]["Enums"]["estado_ticket"] | null
+          id: number | null
+          link: string | null
+          texto: string | null
+          ticket_id: string | null
+          tipo: Database["public"]["Enums"]["tipo_evento_ticket"] | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tickets_historial_autor_id_fkey"
+            columns: ["autor_id"]
+            isOneToOne: false
+            referencedRelation: "perfiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tickets_historial_autor_id_fkey"
+            columns: ["autor_id"]
+            isOneToOne: false
+            referencedRelation: "perfiles_publicos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tickets_historial_ticket_id_fkey"
+            columns: ["ticket_id"]
+            isOneToOne: false
+            referencedRelation: "tickets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tickets_historial_ticket_id_fkey"
+            columns: ["ticket_id"]
+            isOneToOne: false
+            referencedRelation: "tickets_vista"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tickets_vista: {
+        Row: {
+          actualizado_en: string | null
+          creado_en: string | null
+          creado_por: string | null
+          creado_por_nombre: string | null
+          estado: Database["public"]["Enums"]["estado_ticket"] | null
+          estado_partido: Database["public"]["Enums"]["estado_partido"] | null
+          fecha_limite: string | null
+          id: string | null
+          inicio_utc: string | null
+          jugador_id: string | null
+          jugador_nombre: string | null
+          link_entrega: string | null
+          nota: string | null
+          partido_eliminado: boolean | null
+          partido_id: string | null
+          titulo: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tickets_creado_por_fkey"
+            columns: ["creado_por"]
+            isOneToOne: false
+            referencedRelation: "perfiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tickets_creado_por_fkey"
+            columns: ["creado_por"]
+            isOneToOne: false
+            referencedRelation: "perfiles_publicos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tickets_jugador_id_fkey"
+            columns: ["jugador_id"]
+            isOneToOne: false
+            referencedRelation: "jugadores"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tickets_jugador_id_fkey"
+            columns: ["jugador_id"]
+            isOneToOne: false
+            referencedRelation: "totales_jugador"
+            referencedColumns: ["jugador_id"]
+          },
+          {
+            foreignKeyName: "tickets_partido_id_fkey"
+            columns: ["partido_id"]
+            isOneToOne: false
+            referencedRelation: "partidos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tickets_partido_id_fkey"
+            columns: ["partido_id"]
+            isOneToOne: false
+            referencedRelation: "proximos_partidos"
+            referencedColumns: ["partido_id"]
+          },
+        ]
+      }
       totales_jugador: {
         Row: {
           carrera_asistencias: number | null
@@ -1186,6 +1511,76 @@ export type Database = {
     }
     Functions: {
       es_usuario_activo: { Args: never; Returns: boolean }
+      ticket__bloquear: {
+        Args: { p_ticket: string }
+        Returns: {
+          actualizado_en: string
+          creado_en: string
+          creado_por: string
+          estado: Database["public"]["Enums"]["estado_ticket"]
+          id: string
+          inicio_utc_conocido: string | null
+          jugador_id: string
+          link_entrega: string | null
+          nota: string
+          partido_id: string | null
+          titulo: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "tickets"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      ticket__cargo_actual: { Args: never; Returns: string }
+      ticket__fecha_hora_uy: { Args: { p: string }; Returns: string }
+      ticket__fecha_uy: { Args: { p: string }; Returns: string }
+      ticket__mover: {
+        Args: {
+          p_desde: Database["public"]["Enums"]["estado_ticket"]
+          p_hasta: Database["public"]["Enums"]["estado_ticket"]
+          p_link?: string
+          p_quien: string
+          p_texto: string
+          p_ticket: string
+          p_tipo: Database["public"]["Enums"]["tipo_evento_ticket"]
+        }
+        Returns: undefined
+      }
+      ticket__texto: {
+        Args: { p_mensaje: string; p_obligatorio: boolean; p_texto: string }
+        Returns: string
+      }
+      ticket_aprobar: {
+        Args: { p_texto?: string; p_ticket: string }
+        Returns: undefined
+      }
+      ticket_cancelar: {
+        Args: { p_texto: string; p_ticket: string }
+        Returns: undefined
+      }
+      ticket_comentar: {
+        Args: { p_texto: string; p_ticket: string }
+        Returns: undefined
+      }
+      ticket_crear: {
+        Args: { p_jugador: string; p_nota: string; p_partido: string }
+        Returns: string
+      }
+      ticket_devolver: {
+        Args: { p_texto: string; p_ticket: string }
+        Returns: undefined
+      }
+      ticket_dias_anticipacion: { Args: never; Returns: number }
+      ticket_entregar: {
+        Args: { p_link: string; p_texto?: string; p_ticket: string }
+        Returns: undefined
+      }
+      ticket_publicar: {
+        Args: { p_texto?: string; p_ticket: string }
+        Returns: undefined
+      }
     }
     Enums: {
       base_hito: "carrera" | "seleccion"
@@ -1203,12 +1598,27 @@ export type Database = {
         | "publicada"
         | "archivada"
       estado_sync: "ok" | "error" | "parcial"
+      estado_ticket:
+        | "pendiente"
+        | "en_revision"
+        | "aprobado"
+        | "publicado"
+        | "cancelado"
       metrica_hito: "pj" | "g" | "a"
       origen_dato: "api" | "manual" | "derivado"
       recurso_sync: "partidos" | "estadisticas" | "agenda" | "roster"
       rol_usuario: "usuario"
       tipo_competencia: "liga" | "copa" | "continental" | "seleccion"
       tipo_convocatoria: "club" | "seleccion"
+      tipo_evento_ticket:
+        | "creado"
+        | "comentario"
+        | "entrega"
+        | "aprobado"
+        | "devuelto"
+        | "publicado"
+        | "cancelado"
+        | "sistema"
       tipo_hito:
         | "debut"
         | "gol_numero"
@@ -1365,12 +1775,29 @@ export const Constants = {
         "archivada",
       ],
       estado_sync: ["ok", "error", "parcial"],
+      estado_ticket: [
+        "pendiente",
+        "en_revision",
+        "aprobado",
+        "publicado",
+        "cancelado",
+      ],
       metrica_hito: ["pj", "g", "a"],
       origen_dato: ["api", "manual", "derivado"],
       recurso_sync: ["partidos", "estadisticas", "agenda", "roster"],
       rol_usuario: ["usuario"],
       tipo_competencia: ["liga", "copa", "continental", "seleccion"],
       tipo_convocatoria: ["club", "seleccion"],
+      tipo_evento_ticket: [
+        "creado",
+        "comentario",
+        "entrega",
+        "aprobado",
+        "devuelto",
+        "publicado",
+        "cancelado",
+        "sistema",
+      ],
       tipo_hito: [
         "debut",
         "gol_numero",
