@@ -1189,10 +1189,12 @@ export type Database = {
           creado_en: string
           creado_por: string
           estado: Database["public"]["Enums"]["estado_ticket"]
+          fecha_evento: string | null
           id: string
           inicio_utc_conocido: string | null
           jugador_id: string
           link_entrega: string | null
+          motivo: string | null
           nota: string
           partido_id: string | null
           titulo: string
@@ -1202,10 +1204,12 @@ export type Database = {
           creado_en?: string
           creado_por: string
           estado?: Database["public"]["Enums"]["estado_ticket"]
+          fecha_evento?: string | null
           id?: string
           inicio_utc_conocido?: string | null
           jugador_id: string
           link_entrega?: string | null
+          motivo?: string | null
           nota: string
           partido_id?: string | null
           titulo: string
@@ -1215,10 +1219,12 @@ export type Database = {
           creado_en?: string
           creado_por?: string
           estado?: Database["public"]["Enums"]["estado_ticket"]
+          fecha_evento?: string | null
           id?: string
           inicio_utc_conocido?: string | null
           jugador_id?: string
           link_entrega?: string | null
+          motivo?: string | null
           nota?: string
           partido_id?: string | null
           titulo?: string
@@ -1589,12 +1595,15 @@ export type Database = {
           creado_por_nombre: string | null
           estado: Database["public"]["Enums"]["estado_ticket"] | null
           estado_partido: Database["public"]["Enums"]["estado_partido"] | null
+          fecha_evento: string | null
           fecha_limite: string | null
           id: string | null
           inicio_utc: string | null
           jugador_id: string | null
           jugador_nombre: string | null
+          jugador_solo_contenido: boolean | null
           link_entrega: string | null
+          motivo: string | null
           nota: string | null
           partido_eliminado: boolean | null
           partido_id: string | null
@@ -1673,10 +1682,12 @@ export type Database = {
           creado_en: string
           creado_por: string
           estado: Database["public"]["Enums"]["estado_ticket"]
+          fecha_evento: string | null
           id: string
           inicio_utc_conocido: string | null
           jugador_id: string
           link_entrega: string | null
+          motivo: string | null
           nota: string
           partido_id: string | null
           titulo: string
@@ -1721,6 +1732,15 @@ export type Database = {
       }
       ticket_crear: {
         Args: { p_jugador: string; p_nota: string; p_partido: string }
+        Returns: string
+      }
+      ticket_crear_evento: {
+        Args: {
+          p_fecha: string
+          p_jugador: string
+          p_motivo: string
+          p_nota: string
+        }
         Returns: string
       }
       ticket_devolver: {

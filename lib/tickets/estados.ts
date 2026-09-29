@@ -66,3 +66,23 @@ export function resumirPorPartido(tickets: ResumenTicket[]): Record<string, Resu
   }
   return resumen;
 }
+
+/** `{ yyyy-mm-dd: tickets }` de los tickets de fecha no cancelados (Calendario general, 0028). */
+export function ticketsPorDia(tickets: ResumenTicket[]): Record<string, ResumenTicket[]> {
+  const porDia: Record<string, ResumenTicket[]> = {};
+  for (const t of tickets) {
+    if (!t.fechaEvento || t.estado === 'cancelado') continue;
+    (porDia[t.fechaEvento] ??= []).push(t);
+  }
+  return porDia;
+}
+
+/** `{ ticketId: texto }` de la lucecita para tickets de fecha que esperan algo de quien mira. */
+export function alertasPorTicket(pendientes: ResumenTicket[]): Record<string, string> {
+  const alertas: Record<string, string> = {};
+  for (const t of pendientes) {
+    const texto = TEXTO_ALERTA[t.estado];
+    if (t.fechaEvento && texto) alertas[t.id] = texto;
+  }
+  return alertas;
+}

@@ -43,3 +43,8 @@ export function textoVencimiento(
   const atraso = -dias;
   return { texto: `Vencido hace ${atraso} día${atraso === 1 ? '' : 's'} · ${fecha}`, vencido: true };
 }
+
+/** "Cumpleaños · jue 1/10": el evento de un ticket de fecha (0028). */
+export function textoEvento(motivo: string, fechaEvento: string): string {
+  return `${motivo} · ${fechaCortaUy(fechaEvento)}`;
+}

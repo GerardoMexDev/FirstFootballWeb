@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { datosParaContenido, proximoAniversario, textoFecha } from './datos-contenido.ts';
+import { datosParaContenido, proximasFechas, proximoAniversario, textoFecha } from './datos-contenido.ts';
 
 // hoy fijo para que los cálculos sean deterministas
 const HOY = '2026-09-06';
@@ -113,4 +113,22 @@ test('proximoAniversario: fecha vacía, null o inválida → null', () => {
   assert.equal(proximoAniversario(null, '2026-09-06'), null);
   assert.equal(proximoAniversario('', '2026-09-06'), null);
   assert.equal(proximoAniversario('no-es-fecha', '2026-09-06'), null);
+});
+
+test('proximasFechas: las 4 fechas de Contenido, próxima ocurrencia y ordenadas', () => {
+  const j = { fechaNacimiento: '1994-10-01', clubNombre: 'Tigres UANL', clubFechaFundacion: '1960-03-07', debutSeleccion: '2024-11-15', debut: '2011-09-04' };
+  assert.deepEqual(proximasFechas(j, '2026-09-29'), [
+    { etiqueta: 'Cumpleaños', proximaIso: '2026-10-01' },
+    { etiqueta: 'Debut en selección', proximaIso: '2026-11-15' },
+    { etiqueta: 'Aniversario de Tigres UANL', proximaIso: '2027-03-07' },
+    { etiqueta: 'Debut profesional', proximaIso: '2027-09-04' },
+  ]);
+});
+
+test('proximasFechas: sin fechas cargadas → lista vacía; club sin nombre → "Aniversario de club"', () => {
+  const vacio = { fechaNacimiento: null, clubNombre: null, clubFechaFundacion: null, debutSeleccion: null, debut: null };
+  assert.deepEqual(proximasFechas(vacio, '2026-09-29'), []);
+  assert.deepEqual(proximasFechas({ ...vacio, clubFechaFundacion: '1899-05-14' }, '2026-09-29'), [
+    { etiqueta: 'Aniversario de club', proximaIso: '2027-05-14' },
+  ]);
 });

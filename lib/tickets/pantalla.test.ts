@@ -6,7 +6,7 @@ import type { ResumenTicket } from './tipos.ts';
 const HOY = '2026-09-29';
 const tk = (id: string, estado: ResumenTicket['estado'], fechaLimite: string | null, creadoPor = 'felipe'): ResumenTicket => ({
   id, partidoId: 'p', jugadorId: 'j', jugadorNombre: 'Nacho', titulo: `T ${id}`, estado, creadoPor,
-  creadoPorNombre: 'Felipe', inicioUtc: null, fechaLimite, partidoEliminado: false, creadoEn: '2026-09-28T12:00:00Z',
+  creadoPorNombre: 'Felipe', inicioUtc: null, fechaLimite, partidoEliminado: false, creadoEn: '2026-09-28T12:00:00Z', fechaEvento: null, motivo: null,
 });
 
 test('esAbierto: pendiente, en revisión y aprobado; publicado y cancelado no', () => {

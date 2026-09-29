@@ -28,6 +28,21 @@ export async function crearTicket(
   return { ok: true, valor: data as string };
 }
 
+/** Ticket atado a una fecha (cumpleaños, aniversario, "Otra fecha") — 0028. `fecha` yyyy-mm-dd. */
+export async function crearTicketEvento(
+  supabase: Cliente,
+  datos: { jugadorId: string; fecha: string; motivo: string; nota: string },
+): Promise<Resultado<string>> {
+  const { data, error } = await supabase.rpc('ticket_crear_evento', {
+    p_jugador: datos.jugadorId,
+    p_fecha: datos.fecha,
+    p_motivo: datos.motivo,
+    p_nota: datos.nota,
+  });
+  if (error) return { ok: false, mensaje: mensajeError(error) };
+  return { ok: true, valor: data as string };
+}
+
 const FUNCION: Record<Accion, string> = {
   entregar: 'ticket_entregar',
   aprobar: 'ticket_aprobar',

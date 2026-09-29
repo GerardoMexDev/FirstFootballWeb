@@ -39,7 +39,7 @@ test('Prueba: ninguna acción', () => {
 
 const r = (id: string, estado: ResumenTicket['estado'], creadoPor: string, fechaLimite: string | null): ResumenTicket => ({
   id, partidoId: 'p', jugadorId: 'j', jugadorNombre: 'N', titulo: id, estado, creadoPor,
-  creadoPorNombre: null, inicioUtc: null, fechaLimite, partidoEliminado: false, creadoEn: '2026-09-28T12:00:00Z',
+  creadoPorNombre: null, inicioUtc: null, fechaLimite, partidoEliminado: false, creadoEn: '2026-09-28T12:00:00Z', fechaEvento: null, motivo: null,
 });
 
 test('pendientesDe: qué le toca a cada cargo, ordenado por fecha límite (sin fecha al final)', () => {
@@ -86,4 +86,10 @@ test('debeActuar: el CM revisa solo lo suyo; el Admin revisa todo; Prueba nunca'
 test('debeActuar: publicado y cancelado no le tocan a nadie', () => {
   assert.equal(debeActuar('Administrador', 'felipe', r('a', 'publicado', 'felipe', null)), false);
   assert.equal(debeActuar('Diseñador', 'maxi', r('a', 'cancelado', 'felipe', null)), false);
+});
+
+test('pendientesDe: un ticket de fecha (0028) no es huérfano — el CM no lo ve si está pendiente', () => {
+  const deFecha: ResumenTicket = { ...r('f', 'pendiente', 'pedro', '2026-10-01'), partidoId: null, partidoEliminado: false, fechaEvento: '2026-10-03', motivo: 'Cumpleaños' };
+  assert.deepEqual(pendientesDe('Community Manager', 'pedro', [deFecha]), []);
+  assert.deepEqual(pendientesDe('Diseñador', 'maxi', [deFecha]).map((x) => x.id), ['f']);
 });

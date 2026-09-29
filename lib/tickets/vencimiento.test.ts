@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { fechaCortaUy, fechaHoraCortaUy, textoVencimiento } from './vencimiento.ts';
+import { fechaCortaUy, fechaHoraCortaUy, textoEvento, textoVencimiento } from './vencimiento.ts';
 
 const HOY = '2026-09-28'; // lunes
 
@@ -23,4 +23,8 @@ test('fechas cortas en hora de Uruguay', () => {
   assert.equal(fechaCortaUy('2026-10-02'), 'vie 2/10');
   // 2026-10-03 23:15 UTC = sáb 3/10 20:15 en Montevideo
   assert.equal(fechaHoraCortaUy('2026-10-03T23:15:00Z'), 'sáb 3/10 20:15');
+});
+
+test('textoEvento: motivo · fecha corta', () => {
+  assert.equal(textoEvento('Cumpleaños', '2026-10-01'), 'Cumpleaños · jue 1/10');
 });

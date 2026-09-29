@@ -10,19 +10,15 @@
  */
 import { DateTime } from 'luxon';
 import { ZONA_AGENCIA } from '@/lib/fechas/zonas';
-import { proximoAniversario } from '@/lib/jugadores/datos-contenido';
+import { proximasFechas, type ProximaFecha } from '@/lib/jugadores/datos-contenido';
 import { RepositorioJugadoresSupabase } from '@/lib/repositorios/repositorio-jugadores';
 import type { crearClienteServidor } from '@/lib/supabase/cliente-servidor';
 import type { JugadorFicha } from '@/lib/repositorios/tipos';
 
 type ClienteSupabase = ReturnType<typeof crearClienteServidor>;
 
-export interface ProximaFecha {
-  /** "Cumpleaños", "Aniversario de <club>", "Debut en selección", "Debut profesional". */
-  etiqueta: string;
-  /** YYYY-MM-DD de la próxima ocurrencia (>= hoy). */
-  proximaIso: string;
-}
+// La definición vive en datos-contenido (la comparten el formulario de tickets de fecha, 0028).
+export type { ProximaFecha };
 
 export interface FichaContenidoBundle {
   jugador: JugadorFicha;
@@ -42,17 +38,7 @@ export async function cargarFichaContenido(
 
   const hoyUy = DateTime.now().setZone(ZONA_AGENCIA).toISODate() ?? '';
 
-  const crudas: Array<{ etiqueta: string; fecha: string | null }> = [
-    { etiqueta: 'Cumpleaños', fecha: jugador.fechaNacimiento },
-    { etiqueta: `Aniversario de ${jugador.clubNombre ?? 'club'}`, fecha: jugador.clubFechaFundacion },
-    { etiqueta: 'Debut en selección', fecha: jugador.debutSeleccion },
-    { etiqueta: 'Debut profesional', fecha: jugador.debut },
-  ];
-
-  const proximas: ProximaFecha[] = crudas
-    .map((c) => ({ etiqueta: c.etiqueta, proximaIso: proximoAniversario(c.fecha, hoyUy) }))
-    .filter((c): c is ProximaFecha => c.proximaIso !== null)
-    .sort((a, b) => a.proximaIso.localeCompare(b.proximaIso));
+  const proximas = proximasFechas(jugador, hoyUy);
 
   return { jugador, proximas, hoyUy };
 }

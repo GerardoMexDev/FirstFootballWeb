@@ -10,7 +10,7 @@ import type { DetalleTicket, EstadoTicket, EventoHistorial, ResumenTicket, TipoE
 
 type ClienteSupabase = ReturnType<typeof crearClienteServidor>;
 
-type FilaResumen = Omit<FilaTicket, 'nota' | 'link_entrega' | 'estado_partido'>;
+type FilaResumen = Omit<FilaTicket, 'nota' | 'link_entrega' | 'estado_partido' | 'jugador_solo_contenido'>;
 
 interface FilaTicket {
   id: string;
@@ -28,6 +28,9 @@ interface FilaTicket {
   partido_eliminado: boolean;
   fecha_limite: string | null;
   creado_en: string;
+  fecha_evento: string | null;
+  motivo: string | null;
+  jugador_solo_contenido: boolean;
 }
 
 interface FilaHistorial {
@@ -43,9 +46,9 @@ interface FilaHistorial {
 
 // Listas: sin `nota` (solo el detalle la necesita).
 const CAMPOS_RESUMEN =
-  'id, partido_id, jugador_id, jugador_nombre, titulo, estado, creado_por, creado_por_nombre, inicio_utc, fecha_limite, partido_eliminado, creado_en';
+  'id, partido_id, jugador_id, jugador_nombre, titulo, estado, creado_por, creado_por_nombre, inicio_utc, fecha_limite, partido_eliminado, creado_en, fecha_evento, motivo';
 const CAMPOS =
-  'id, partido_id, jugador_id, jugador_nombre, titulo, nota, estado, link_entrega, creado_por, creado_por_nombre, inicio_utc, estado_partido, partido_eliminado, fecha_limite, creado_en';
+  'id, partido_id, jugador_id, jugador_nombre, titulo, nota, estado, link_entrega, creado_por, creado_por_nombre, inicio_utc, estado_partido, partido_eliminado, fecha_limite, creado_en, fecha_evento, motivo, jugador_solo_contenido';
 
 function aResumen(f: FilaResumen): ResumenTicket {
   return {
@@ -61,6 +64,8 @@ function aResumen(f: FilaResumen): ResumenTicket {
     fechaLimite: f.fecha_limite,
     partidoEliminado: f.partido_eliminado,
     creadoEn: f.creado_en,
+    fechaEvento: f.fecha_evento,
+    motivo: f.motivo,
   };
 }
 
@@ -121,6 +126,34 @@ export class RepositorioTicketsSupabase {
     return (data ?? []).map(aResumen);
   }
 
+  /** Tickets no cancelados de un jugador (de partido y de fecha): bloque de la ficha (0028). */
+  async listarPorJugador(jugadorId: string): Promise<ResumenTicket[]> {
+    const { data, error } = await this.supabase
+      .from('tickets_vista')
+      .select(CAMPOS_RESUMEN)
+      .eq('jugador_id', jugadorId)
+      .neq('estado', 'cancelado')
+      .order('creado_en', { ascending: false })
+      .limit(50)
+      .returns<FilaResumen[]>();
+    if (error) throw new Error(`No se pudo leer los tickets del jugador: ${error.message}`);
+    return (data ?? []).map(aResumen);
+  }
+
+  /** Tickets de fecha no cancelados con el evento entre dos días (Calendario general, 0028). */
+  async listarEventosEntre(desdeIso: string, hastaIso: string): Promise<ResumenTicket[]> {
+    const { data, error } = await this.supabase
+      .from('tickets_vista')
+      .select(CAMPOS_RESUMEN)
+      .gte('fecha_evento', desdeIso)
+      .lte('fecha_evento', hastaIso)
+      .neq('estado', 'cancelado')
+      .order('fecha_evento', { ascending: true })
+      .returns<FilaResumen[]>();
+    if (error) throw new Error(`No se pudo leer los tickets de fecha: ${error.message}`);
+    return (data ?? []).map(aResumen);
+  }
+
   async obtenerDetalle(id: string): Promise<{ ticket: DetalleTicket; historial: EventoHistorial[] } | null> {
     if (!/^[0-9a-f-]{36}$/i.test(id)) return null;
     const [{ data: fila, error: e1 }, { data: filas, error: e2 }] = await Promise.all([
@@ -136,7 +169,7 @@ export class RepositorioTicketsSupabase {
     if (e2) throw new Error(`No se pudo leer el historial: ${e2.message}`);
     if (!fila) return null;
     return {
-      ticket: { ...aResumen(fila), nota: fila.nota, linkEntrega: fila.link_entrega, estadoPartido: fila.estado_partido },
+      ticket: { ...aResumen(fila), nota: fila.nota, linkEntrega: fila.link_entrega, estadoPartido: fila.estado_partido, jugadorSoloContenido: fila.jugador_solo_contenido },
       historial: (filas ?? []).map((h) => ({
         id: h.id,
         tipo: h.tipo,

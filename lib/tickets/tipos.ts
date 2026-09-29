@@ -32,6 +32,9 @@ export interface ResumenTicket {
   partidoEliminado: boolean;
   /** ISO UTC de creación: ordena la pantalla Tickets y arma "hace 2 días" (2026-09-29). */
   creadoEn: string;
+  /** Tickets de fecha (0028): yyyy-mm-dd del evento y qué se celebra. `null` en los de partido. */
+  fechaEvento: string | null;
+  motivo: string | null;
 }
 
 /** La tarjeta del ticket. */
@@ -39,6 +42,8 @@ export interface DetalleTicket extends ResumenTicket {
   nota: string;
   linkEntrega: string | null;
   estadoPartido: string | null;
+  /** Para "Ver jugador": abre la ficha de Contenido si el jugador no es de Match Day. */
+  jugadorSoloContenido: boolean;
 }
 
 export interface EventoHistorial {

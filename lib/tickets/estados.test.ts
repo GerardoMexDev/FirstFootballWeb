@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { estadoMasUrgente, resumirPorPartido, META_ESTADO, TEXTO_ALERTA, alertasPorPartido } from './estados.ts';
+import { estadoMasUrgente, resumirPorPartido, META_ESTADO, TEXTO_ALERTA, alertasPorPartido, ticketsPorDia, alertasPorTicket } from './estados.ts';
 import type { ResumenTicket } from './tipos.ts';
 
 const t = (id: string, partidoId: string | null, estado: ResumenTicket['estado']): ResumenTicket => ({
@@ -16,6 +16,8 @@ const t = (id: string, partidoId: string | null, estado: ResumenTicket['estado']
   fechaLimite: null,
   partidoEliminado: partidoId === null,
   creadoEn: '2026-09-28T12:00:00Z',
+  fechaEvento: null,
+  motivo: null,
 });
 
 test('estadoMasUrgente: pendiente > en_revision > aprobado > publicado; cancelado no cuenta', () => {
@@ -58,4 +60,21 @@ test('alertasPorPartido: con dos tickets en un partido manda el más urgente; si
 
 test('TEXTO_ALERTA: solo los estados en los que alguien tiene que actuar', () => {
   assert.deepEqual(Object.keys(TEXTO_ALERTA).sort(), ['aprobado', 'en_revision', 'pendiente']);
+});
+
+const ev = (id: string, fechaEvento: string | null, estado: ResumenTicket['estado']): ResumenTicket => ({
+  ...t(id, null, estado), partidoEliminado: false, fechaEvento, motivo: fechaEvento ? 'Cumpleaños' : null,
+});
+
+test('ticketsPorDia: agrupa por fecha del evento; sin fecha o cancelados no entran', () => {
+  const r = ticketsPorDia([ev('a', '2026-10-01', 'pendiente'), ev('b', '2026-10-01', 'aprobado'), ev('c', '2026-10-05', 'cancelado'), ev('d', null, 'pendiente')]);
+  assert.deepEqual(Object.keys(r), ['2026-10-01']);
+  assert.deepEqual(r['2026-10-01'].map((x) => x.id), ['a', 'b']);
+});
+
+test('alertasPorTicket: texto por id, solo tickets de fecha', () => {
+  assert.deepEqual(alertasPorTicket([ev('a', '2026-10-01', 'pendiente'), ev('b', '2026-10-02', 'en_revision'), t('c', 'p1', 'pendiente')]), {
+    a: 'Ticket pendiente',
+    b: 'Para revisar',
+  });
 });

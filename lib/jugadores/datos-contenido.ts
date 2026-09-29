@@ -118,3 +118,31 @@ export function proximoAniversario(
   if (candidata < hoy) candidata = base.set({ year: hoy.year + 1 });
   return candidata.toISODate();
 }
+
+/** Una fecha de Contenido con su próxima ocurrencia (>= hoy). */
+export interface ProximaFecha {
+  /** "Cumpleaños", "Aniversario de <club>", "Debut en selección", "Debut profesional". */
+  etiqueta: string;
+  /** YYYY-MM-DD de la próxima ocurrencia. */
+  proximaIso: string;
+}
+
+/**
+ * Próximas fechas de Contenido de un jugador, ordenadas. Las usan la ficha de Contenido y el
+ * formulario de tickets de fecha (0028); la etiqueta es también el motivo del ticket.
+ */
+export function proximasFechas(
+  j: { fechaNacimiento: string | null; clubNombre: string | null; clubFechaFundacion: string | null; debutSeleccion: string | null; debut: string | null },
+  hoyUy: string,
+): ProximaFecha[] {
+  const crudas: Array<{ etiqueta: string; fecha: string | null }> = [
+    { etiqueta: 'Cumpleaños', fecha: j.fechaNacimiento },
+    { etiqueta: `Aniversario de ${j.clubNombre ?? 'club'}`, fecha: j.clubFechaFundacion },
+    { etiqueta: 'Debut en selección', fecha: j.debutSeleccion },
+    { etiqueta: 'Debut profesional', fecha: j.debut },
+  ];
+  return crudas
+    .map((c) => ({ etiqueta: c.etiqueta, proximaIso: proximoAniversario(c.fecha, hoyUy) }))
+    .filter((c): c is ProximaFecha => c.proximaIso !== null)
+    .sort((a, b) => a.proximaIso.localeCompare(b.proximaIso));
+}
