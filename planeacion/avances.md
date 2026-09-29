@@ -1394,7 +1394,16 @@ contador del Admin y del CM que los creó.
   aniversarios) o ambos; verificar en la base cómo está marcado cada jugador (Match Day vs
   Contenido) antes de filtrar.
 
-**🐞 Bug reportado por Gerardo (2026-09-29) — PRIORIDAD ALTA: scroll horizontal en iPhone 14:**
+**🐞 Bug reportado por Gerardo (2026-09-29) — ✅ ARREGLADO (falta push + probar en el iPhone):**
+- Causa real (no era el globito): (1) la nav de 4 opciones quedaba apretada en ~40 px al lado
+  de la marca, con scroll lateral escondido ("Parti…"); (2) el panel lateral cerrado (fijo,
+  corrido a la derecha) puede ensanchar la página en Safari iOS. Arreglo solo en `app.css`:
+  en ≤ 620 px la nav pasa a una 2.ª fila a todo el ancho (texto más chico en ≤ 370 px);
+  `html { overflow-x: clip }`; panel cerrado con `visibility: hidden`. Verificado inyectando
+  el CSS en prod: 390/375/360 px sin scroll y nav completa; tablet y desktop sin cambios.
+  Ojo: si se agrega "Tickets" a la nav (pedido de más abajo) no entra una 5.ª opción en
+  celular → habrá que resolverlo en ese diseño (ícono, o menú).
+- Reporte original:
 - En el iPhone 14 (390 px de ancho) la web es más ancha que la pantalla: hay **scroll a los
   costados** y la **barra de navegación se corta** (se oculta la "F" del avatar de Felipe o el
   logo de Football First).

@@ -402,3 +402,24 @@
   .tkc { position: static; }
   .tkc .drop { left: 16px; right: 16px; width: auto; }
 }
+
+/* Scroll horizontal en iPhone (2026-09-29). Safari iOS no siempre respeta el overflow-x del
+   body: el panel lateral cerrado (fijo, corrido a la derecha) ensanchaba la página. Cerrado
+   queda además invisible (sale del orden de tabulación); la visibilidad cambia al terminar
+   la animación de cierre para no cortarla. */
+html { overflow-x: clip; }
+.panel { visibility: hidden; transition: transform .5s var(--ease), visibility 0s linear .5s; }
+.panel.on { visibility: visible; transition: transform .5s var(--ease), visibility 0s; }
+
+/* En celular la nav no entraba al lado de la marca (quedaba "Parti…" con scroll escondido):
+   pasa a una segunda fila a todo el ancho. */
+@media (max-width: 620px) {
+  .top__in { flex-wrap: wrap; height: auto; min-height: 64px; row-gap: 2px; padding-top: 12px; padding-bottom: 4px; }
+  .top__acc { margin-left: auto; }
+  .nav { order: 3; flex: 1 0 100%; margin-right: 0; justify-content: space-between; gap: 0; }
+  .nav button { padding: 9px 6px; font-size: var(--t-sm); white-space: nowrap; }
+  .nav button.on::after { left: 6px; right: 6px; }
+}
+@media (max-width: 370px) {
+  .nav button { font-size: var(--t-xs); }
+}
