@@ -39,7 +39,7 @@ test('Prueba: ninguna acción', () => {
 
 const r = (id: string, estado: ResumenTicket['estado'], creadoPor: string, fechaLimite: string | null): ResumenTicket => ({
   id, partidoId: 'p', jugadorId: 'j', jugadorNombre: 'N', titulo: id, estado, creadoPor,
-  creadoPorNombre: null, inicioUtc: null, fechaLimite, partidoEliminado: false,
+  creadoPorNombre: null, inicioUtc: null, fechaLimite, partidoEliminado: false, creadoEn: '2026-09-28T12:00:00Z',
 });
 
 test('pendientesDe: qué le toca a cada cargo, ordenado por fecha límite (sin fecha al final)', () => {

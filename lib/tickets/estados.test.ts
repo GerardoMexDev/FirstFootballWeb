@@ -15,6 +15,7 @@ const t = (id: string, partidoId: string | null, estado: ResumenTicket['estado']
   inicioUtc: null,
   fechaLimite: null,
   partidoEliminado: partidoId === null,
+  creadoEn: '2026-09-28T12:00:00Z',
 });
 
 test('estadoMasUrgente: pendiente > en_revision > aprobado > publicado; cancelado no cuenta', () => {

@@ -27,6 +27,7 @@ interface FilaTicket {
   estado_partido: string | null;
   partido_eliminado: boolean;
   fecha_limite: string | null;
+  creado_en: string;
 }
 
 interface FilaHistorial {
@@ -42,9 +43,9 @@ interface FilaHistorial {
 
 // Listas: sin `nota` (solo el detalle la necesita).
 const CAMPOS_RESUMEN =
-  'id, partido_id, jugador_id, jugador_nombre, titulo, estado, creado_por, creado_por_nombre, inicio_utc, fecha_limite, partido_eliminado';
+  'id, partido_id, jugador_id, jugador_nombre, titulo, estado, creado_por, creado_por_nombre, inicio_utc, fecha_limite, partido_eliminado, creado_en';
 const CAMPOS =
-  'id, partido_id, jugador_id, jugador_nombre, titulo, nota, estado, link_entrega, creado_por, creado_por_nombre, inicio_utc, estado_partido, partido_eliminado, fecha_limite';
+  'id, partido_id, jugador_id, jugador_nombre, titulo, nota, estado, link_entrega, creado_por, creado_por_nombre, inicio_utc, estado_partido, partido_eliminado, fecha_limite, creado_en';
 
 function aResumen(f: FilaResumen): ResumenTicket {
   return {
@@ -59,6 +60,7 @@ function aResumen(f: FilaResumen): ResumenTicket {
     inicioUtc: f.inicio_utc,
     fechaLimite: f.fecha_limite,
     partidoEliminado: f.partido_eliminado,
+    creadoEn: f.creado_en,
   };
 }
 
@@ -100,6 +102,22 @@ export class RepositorioTicketsSupabase {
       .order('creado_en', { ascending: true })
       .returns<FilaResumen[]>();
     if (error) throw new Error(`No se pudo leer tickets del partido: ${error.message}`);
+    return (data ?? []).map(aResumen);
+  }
+
+  /**
+   * Pantalla Tickets (2026-09-29): abiertos de cualquier fecha + cerrados (publicado,
+   * cancelado) creados desde `desdeIso` (yyyy-mm-dd). Del más nuevo al más viejo, tope 300.
+   */
+  async listarParaPantalla(desdeIso: string): Promise<ResumenTicket[]> {
+    const { data, error } = await this.supabase
+      .from('tickets_vista')
+      .select(CAMPOS_RESUMEN)
+      .or(`estado.in.(pendiente,en_revision,aprobado),creado_en.gte.${desdeIso}`)
+      .order('creado_en', { ascending: false })
+      .limit(300)
+      .returns<FilaResumen[]>();
+    if (error) throw new Error(`No se pudo leer la lista de tickets: ${error.message}`);
     return (data ?? []).map(aResumen);
   }
 

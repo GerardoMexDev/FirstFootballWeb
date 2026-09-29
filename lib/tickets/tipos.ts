@@ -30,6 +30,8 @@ export interface ResumenTicket {
   /** YYYY-MM-DD (hora de Uruguay). */
   fechaLimite: string | null;
   partidoEliminado: boolean;
+  /** ISO UTC de creación: ordena la pantalla Tickets y arma "hace 2 días" (2026-09-29). */
+  creadoEn: string;
 }
 
 /** La tarjeta del ticket. */
