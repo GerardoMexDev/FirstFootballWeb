@@ -22,10 +22,12 @@ import { PanelJugador } from '@/components/paneles/PanelJugador';
 import { PanelJugadorContenido } from '@/components/paneles/PanelJugadorContenido';
 import { PanelPartido } from '@/components/paneles/PanelPartido';
 import { PanelPerfil, type PerfilBundle } from '@/components/paneles/PanelPerfil';
+import { PanelTicket } from '@/components/tickets/PanelTicket';
 import { usePanel } from '@/lib/paneles/use-panel';
 import type { FichaJugadorBundle } from '@/lib/jugadores/cargar-ficha';
 import type { FichaContenidoBundle } from '@/lib/jugadores/cargar-ficha-contenido';
 import type { DetallePartidoBundle } from '@/lib/paneles/cargar-detalle-partido';
+import type { DetalleTicketBundle } from '@/lib/tickets/cargar-detalle-ticket';
 
 type PestanaPerfil = 'datos' | 'clave' | 'avisos';
 
@@ -35,7 +37,8 @@ type Contenido =
   | { fase: 'jugador'; datos: FichaJugadorBundle }
   | { fase: 'jugador-contenido'; datos: FichaContenidoBundle }
   | { fase: 'partido'; datos: DetallePartidoBundle }
-  | { fase: 'perfil'; datos: PerfilBundle };
+  | { fase: 'perfil'; datos: PerfilBundle }
+  | { fase: 'ticket'; datos: DetalleTicketBundle };
 
 const FOCOS = 'a[href], button:not([disabled]), input, select, textarea, [tabindex]:not([tabindex="-1"])';
 
@@ -45,6 +48,7 @@ const ETIQUETA_TIPO: Record<string, string> = {
   'jugador-contenido': 'jugador',
   partido: 'partido',
   perfil: 'perfil',
+  ticket: 'ticket',
 };
 
 export function PanelLateral() {
@@ -53,6 +57,7 @@ export function PanelLateral() {
   const abierto = tipo === 'perfil' || (tipo !== null && id !== null);
 
   const [contenido, setContenido] = useState<Contenido | null>(null);
+  const [version, setVersion] = useState(0);
   const panelRef = useRef<HTMLElement>(null);
   const cerrarRef = useRef<HTMLButtonElement>(null);
   const focoPrevio = useRef<HTMLElement | null>(null);
@@ -81,6 +86,7 @@ export function PanelLateral() {
         if (tipo === 'jugador') setContenido({ fase: 'jugador', datos });
         else if (tipo === 'partido') setContenido({ fase: 'partido', datos });
         else if (tipo === 'jugador-contenido') setContenido({ fase: 'jugador-contenido', datos });
+        else if (tipo === 'ticket') setContenido({ fase: 'ticket', datos });
         else setContenido({ fase: 'perfil', datos });
       })
       .catch(() => {
@@ -90,7 +96,7 @@ export function PanelLateral() {
     return () => {
       vivo = false;
     };
-  }, [abierto, tipo, id]);
+  }, [abierto, tipo, id, version]);
 
   // Foco: al abrir, guardar el actual y llevar al botón Cerrar; al cerrar, restaurar.
   useEffect(() => {
@@ -133,16 +139,18 @@ export function PanelLateral() {
       ? 'Ficha del jugador'
       : tipo === 'partido'
         ? 'Detalle del partido'
-        : tipo === 'perfil'
-          ? 'Mi cuenta'
-          : 'Detalle';
+        : tipo === 'ticket'
+          ? 'Ticket de diseño'
+          : tipo === 'perfil'
+            ? 'Mi cuenta'
+            : 'Detalle';
 
   return (
     <>
       <div className={`velo ${abierto ? 'on' : ''}`} onClick={cerrar} />
       <aside
         ref={panelRef}
-        className={`panel ${abierto ? 'on' : ''}`}
+        className={`panel ${abierto ? 'on' : ''} ${contenido?.fase === 'ticket' ? `panel--t-${contenido.datos.ticket.estado}` : ''}`}
         role="dialog"
         aria-modal="true"
         aria-labelledby="panel-t"
@@ -167,6 +175,9 @@ export function PanelLateral() {
             <PanelJugadorContenido bundle={contenido.datos} destacar={destacar} />
           )}
           {contenido?.fase === 'partido' && <PanelPartido bundle={contenido.datos} />}
+          {contenido?.fase === 'ticket' && (
+            <PanelTicket bundle={contenido.datos} onActualizar={() => setVersion((v) => v + 1)} />
+          )}
           {contenido?.fase === 'perfil' && (
             <PanelPerfil
               bundle={contenido.datos}

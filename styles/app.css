@@ -310,3 +310,50 @@
 .fechac__t small { font-size: var(--t-xs); font-weight: 600; color: var(--text-3); text-transform: uppercase; letter-spacing: .04em; }
 .fechac__t b { font-size: var(--t-md); font-weight: 600; overflow-wrap: anywhere; }
 .fechac__ir { color: var(--text-3); flex-shrink: 0; }
+
+/* ============================================================
+   Tickets de diseño (0025). Colores por estado con tokens propios (claro/oscuro).
+   El color nunca va solo: siempre con símbolo + palabra (META_ESTADO).
+   ============================================================ */
+:root {
+  --tk-rojo: #B42318;     --tk-rojo-bg: #FDECEA;     --tk-rojo-borde: #E64227;
+  --tk-amarillo: #7A5200; --tk-amarillo-bg: #FFF4D6; --tk-amarillo-borde: #E0A100;
+  --tk-verde: #1E6B35;    --tk-verde-bg: #E6F4EA;    --tk-verde-borde: #2E9E55;
+  --tk-pub: #14532D;      --tk-pub-bg: #D1F0DC;      --tk-pub-borde: #1E7B3A;
+}
+[data-theme="dark"] {
+  --tk-rojo: #FF8A75;     --tk-rojo-bg: #2A1411;     --tk-rojo-borde: #F55437;
+  --tk-amarillo: #F5C451; --tk-amarillo-bg: #2A220E; --tk-amarillo-borde: #E0A100;
+  --tk-verde: #6FD39A;    --tk-verde-bg: #0F2618;    --tk-verde-borde: #2E9E55;
+  --tk-pub: #9BE3B8;      --tk-pub-bg: #0C2215;      --tk-pub-borde: #3DBB6E;
+}
+
+.tk { display: inline-flex; align-items: center; gap: 6px; padding: 5px 11px; border-radius: 999px; font-size: var(--t-xs); font-weight: 700; white-space: nowrap; }
+.tk--pendiente { background: var(--tk-rojo-bg); color: var(--tk-rojo); }
+.tk--en_revision { background: var(--tk-amarillo-bg); color: var(--tk-amarillo); }
+.tk--aprobado { background: var(--tk-verde-bg); color: var(--tk-verde); }
+.tk--publicado { background: var(--tk-pub-bg); color: var(--tk-pub); }
+.tk--cancelado { background: var(--surface-3); color: var(--text-3); }
+.tk__vence { font-size: var(--t-sm); color: var(--text-2); }
+.tk__vence--mal { color: var(--tk-rojo); font-weight: 600; }
+.tk__nota { font-size: var(--t-base); line-height: 1.6; white-space: pre-wrap; overflow-wrap: anywhere; }
+
+/* Borde del panel lateral con el color del estado */
+.panel.panel--t-pendiente { border-left: 5px solid var(--tk-rojo-borde); }
+.panel.panel--t-en_revision { border-left: 5px solid var(--tk-amarillo-borde); }
+.panel.panel--t-aprobado { border-left: 5px solid var(--tk-verde-borde); }
+.panel.panel--t-publicado { border-left: 5px solid var(--tk-pub-borde); }
+.panel.panel--t-cancelado { border-left: 5px solid var(--surface-3); }
+
+/* Conversación */
+.tkh { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.tkh__i { padding: 12px 14px; border-radius: var(--r-sm); background: var(--surface); }
+.tkh__i p { margin-top: 6px; font-size: var(--t-md); line-height: 1.55; white-space: pre-wrap; overflow-wrap: anywhere; }
+.tkh__i a { display: inline-block; margin-top: 6px; font-size: var(--t-sm); color: var(--accent); font-weight: 600; }
+.tkh__c { display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; font-size: var(--t-sm); }
+.tkh__c b { font-weight: 600; }
+.tkh__c time { color: var(--text-3); }
+.tkh__i--sistema { background: transparent; border: 1px dashed var(--line-2); }
+.tkh__i--devuelto { background: var(--tk-rojo-bg); }
+.tkh__i--aprobado, .tkh__i--publicado { background: var(--tk-verde-bg); }
+.tkh__i--entrega { background: var(--tk-amarillo-bg); }
