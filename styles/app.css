@@ -397,3 +397,8 @@
 .tkc__t { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
 .tkc__t b { font-size: var(--t-sm); font-weight: 600; overflow-wrap: anywhere; }
 .tkc__t small { font-size: var(--t-xs); color: var(--text-2); }
+/* En pantallas angostas el contador queda a la izquierda del avatar: anclar el desplegable a la barra (ancho de pantalla) para que no se salga. */
+@media (max-width: 480px) {
+  .tkc { position: static; }
+  .tkc .drop { left: 16px; right: 16px; width: auto; }
+}
