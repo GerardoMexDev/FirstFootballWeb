@@ -14,6 +14,8 @@
  * cerraron. Paginado a 25 filas fijas (el plan ignora `per_page` más alto); se sigue
  * `pagination.next_page` hasta agotar o topar el límite de seguridad.
  */
+import type { EquipoDeJugadorSM } from './roster-sportmonks.ts';
+
 const BASE = 'https://api.sportmonks.com/v3/football';
 const ESPERA_ENTRE_LLAMADAS_MS = 300; // cortesía entre clubes; el plan da ~2000 req/hora, no hace falta más
 
@@ -104,4 +106,39 @@ export async function obtenerFixturesDeEquipo(
     url = j.pagination?.has_more && siguiente ? new URL(siguiente) : null;
   }
   return fixtures;
+}
+
+/**
+ * Contratos de un jugador (`GET /players/{id}?include=teams.team`) para detectar cambios de club
+ * (`_shared/roster-sportmonks.ts`, 2026-09-30). Funciona también para jugadores de ligas fuera
+ * del plan (verificado en vivo con Peñarol y Nacional).
+ */
+export async function obtenerEquiposDeJugador(apiKey: string, playerId: string): Promise<EquipoDeJugadorSM[]> {
+  const url = new URL(`${BASE}/players/${playerId}`);
+  url.searchParams.set('include', 'teams.team');
+  url.searchParams.set('api_token', apiKey);
+  const r = await fetch(url);
+  const j = await r.json().catch(() => null);
+  if (!r.ok || !j) {
+    const detalle = (j as { message?: string } | null)?.message ?? `HTTP ${r.status}`;
+    throw new Error(`SportMonks: ${detalle} — /players/${playerId}`);
+  }
+  return ((j as { data?: { teams?: EquipoDeJugadorSM[] } }).data?.teams ?? []) as EquipoDeJugadorSM[];
+}
+
+/**
+ * Ids de SportMonks de los jugadores del plantel actual de un equipo (`GET /squads/teams/{id}`).
+ * Respaldo de sync-roster: para algunos jugadores de ligas fuera del plan `players/{id}` no trae
+ * contratos, pero sí figuran en el plantel de su club (verificado 2026-09-30: Martirena, Franco Romero).
+ */
+export async function obtenerPlantel(apiKey: string, teamId: string): Promise<Set<string>> {
+  const url = new URL(`${BASE}/squads/teams/${teamId}`);
+  url.searchParams.set('api_token', apiKey);
+  const r = await fetch(url);
+  const j = await r.json().catch(() => null);
+  if (!r.ok || !j) {
+    const detalle = (j as { message?: string } | null)?.message ?? `HTTP ${r.status}`;
+    throw new Error(`SportMonks: ${detalle} — /squads/teams/${teamId}`);
+  }
+  return new Set(((j as { data?: Array<{ player_id: number }> }).data ?? []).map((x) => String(x.player_id)));
 }

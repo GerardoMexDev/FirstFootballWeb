@@ -28,7 +28,8 @@
     "vault:cron": "node scripts/configurar-vault-cron.mjs",
     "deploy:funcion": "node scripts/desplegar-funcion.mjs",
     "secrets:edge": "node scripts/configurar-secret-edge.mjs",
-    "backfill:sportmonks": "node scripts/backfill-historico-sportmonks.mjs"
+    "backfill:sportmonks": "node scripts/backfill-historico-sportmonks.mjs",
+    "test:avisos": "node --test scripts/avisos.test.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.5.2",

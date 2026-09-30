@@ -1,89 +1,87 @@
 /**
- * sync-roster — detecta cuándo un representado cambió de club y lo refleja solo:
- *   1. upsert del club nuevo en `clubes`
- *   2. `jugadores.club_actual_id` -> club nuevo  (NUNCA se pone en NULL)
- *   3. un `hito` tipo 'traspaso' (origen 'derivado'), fechado y tipado con `/transfers`
- * Como `proximos_partidos` resuelve el club desde el jugador, los fixtures lo siguen sin
- * tocar nada más.
+ * sync-roster — revisa todas las semanas si algún representado cambió de club y AVISA.
  *
- * Va aparte de `sync-partidos` (no dentro) porque los traspasos no necesitan revisarse a
- * diario (cron semanal, migración 0005) y así el run de partidos no se alarga.
+ * Desde 2026-09-30 la fuente es SportMonks (`GET /players/{id}?include=teams.team`): API-Football
+ * `/transfers` tenía el "último traspaso" viejo para 8 de 11 jugadores. Revisa a TODOS los
+ * jugadores activos con código de SportMonks (Match Day y Contenido) y compara su club vigente
+ * con el que tenemos (`clubes.id_externo_sportmonks`). La lógica pura vive en
+ * `_shared/roster-sportmonks.ts`.
  *
- * Fuente: SOLO `GET /transfers?player=` (plan free, verificado en scripts/consultar-traspasos.mjs).
- * `/players/squads` se descartó: en ventanas de partidos de estrellas devuelve equipos
- * representativos como si fueran el club. La decisión (y las guardas: destino representativo,
- * traspaso viejo) vive en `_shared/roster.ts`. Lo que no se puede confirmar se registra en
- * `parametros.sospechas` para que una persona lo mire — no se toca el dato.
+ * NO cambia datos (decisión de Gerardo, opción 1): un club nuevo casi siempre necesita cargar sus
+ * códigos para que sigan llegando los partidos, así que el cambio lo aplica Mazdesign. Lo
+ * detectado queda en `sincronizaciones.parametros.detectados` y la función `avisos_sistema()`
+ * (migración 0029) lo muestra en el cartel del Administrador.
  *
- * Disparo: `pg_cron` + `pg_net` o curl manual con el header `x-sync-secret`
- * (= SYNC_FUNCTIONS_SECRET), igual que sync-partidos. Deploy con `--no-verify-jwt`.
+ * Disparo: `pg_cron` + `pg_net` (lunes 04:00 UTC, migración 0005) o manual con el header
+ * `x-sync-secret` (= SYNC_FUNCTIONS_SECRET). Deploy con `--no-verify-jwt`.
  *
- * Football First (Fase 1). Creado 2026-09-05.
+ * Football First (Fase 1). Creado 2026-09-05; fuente SportMonks 2026-09-30.
  */
 import { createClient } from 'npm:@supabase/supabase-js@2';
-import { esperarEntreLlamadas, obtenerUltimoTraspaso } from '../_shared/api-football.ts';
-import { detectarCambioDeClub, tituloTraspaso, type ClubRef, type Traspaso } from '../_shared/roster.ts';
+import { esperarEntreLlamadasSportmonks, obtenerEquiposDeJugador, obtenerPlantel } from '../_shared/sportmonks.ts';
+import { clubActualSportmonks, detectarCambioSportmonks } from '../_shared/roster-sportmonks.ts';
 
-const PROVEEDOR = 'api-football';
+const PROVEEDOR = 'sportmonks';
 
 Deno.serve(async (req: Request) => {
   if (req.headers.get('x-sync-secret') !== Deno.env.get('SYNC_FUNCTIONS_SECRET')) {
     return new Response('No autorizado', { status: 401 });
   }
 
-  const supabase = createClient(
-    Deno.env.get('SUPABASE_URL')!,
-    Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
-  );
-  const apiKey = Deno.env.get('API_FOOTBALL_KEY')!;
+  const supabase = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!);
+  const apiKey = Deno.env.get('SPORTMONKS_APIKEY')!;
   const hoyIso = new Date().toISOString().slice(0, 10);
-
   const iniciadoEn = new Date().toISOString();
-  let registrosAfectados = 0;
+
+  /** Cambios de club detectados, para el cartel: "Nacho: RB Bragantino → Flamengo (01/08/2026)". */
+  const detectados: Array<{ jugador: string; desde: string | null; hacia: string; haciaSmId: string; fecha: string | null }> = [];
+  const sinCodigo: string[] = [];
+  const sinDato: string[] = [];
+  const errores: string[] = [];
+  let revisados = 0;
   let errorDetalle: string | null = null;
-  const cambios: string[] = [];
-  const sospechas: string[] = [];
 
   try {
-    const { data: jugadores, error: errJugadores } = await supabase
+    const { data: jugadores, error } = await supabase
       .from('jugadores')
-      .select('id, nombre, apodo, id_externo, club_actual_id, servicio_match_day, clubes(id_externo)')
+      .select('id, nombre, apodo, id_externo_sportmonks, clubes(nombre, id_externo_sportmonks)')
       .eq('activo', true)
-      .not('id_externo', 'is', null);
-    if (errJugadores) throw errJugadores;
+      .not('id_externo_sportmonks', 'is', null);
+    if (error) throw error;
 
     for (let i = 0; i < (jugadores ?? []).length; i++) {
       const j = jugadores![i];
-      if (i > 0) await esperarEntreLlamadas(); // 10 req/min del plan free
-
-      const ultimo = await obtenerUltimoTraspaso(apiKey, j.id_externo!);
-      const traspaso: Traspaso | null = ultimo
-        ? { fecha: ultimo.fecha, tipo: ultimo.tipo, desde: ultimo.desde, hasta: ultimo.hasta }
-        : null;
-      const clubGuardado = (j.clubes as { id_externo: string | null } | null)?.id_externo ?? null;
-
-      const resultado = detectarCambioDeClub(clubGuardado, traspaso, hoyIso);
+      if (i > 0) await esperarEntreLlamadasSportmonks();
       const quien = j.apodo ?? j.nombre;
-
-      if (resultado.revisar) {
-        sospechas.push(`${quien}: ${resultado.revisar.motivo}`);
-        continue;
+      const club = j.clubes as { nombre: string | null; id_externo_sportmonks: string | null } | null;
+      try {
+        const actual = clubActualSportmonks(await obtenerEquiposDeJugador(apiKey, j.id_externo_sportmonks!), hoyIso);
+        let r = detectarCambioSportmonks(club?.id_externo_sportmonks ?? null, actual);
+        // Respaldo: sin contratos visibles (límite del plan), si sigue en el plantel de su club, está igual.
+        if (r.estado === 'sin_dato' && club?.id_externo_sportmonks) {
+          await esperarEntreLlamadasSportmonks();
+          const plantel = await obtenerPlantel(apiKey, club.id_externo_sportmonks);
+          if (plantel.has(j.id_externo_sportmonks!)) r = { estado: 'igual' };
+        }
+        revisados += 1;
+        if (r.estado === 'cambio') {
+          detectados.push({ jugador: quien, desde: club?.nombre ?? null, hacia: r.hacia, haciaSmId: r.haciaSmId, fecha: r.desde });
+        } else if (r.estado === 'sin_codigo') {
+          sinCodigo.push(`${quien}: su club (${club?.nombre ?? '?'}) no tiene código de SportMonks; SportMonks dice ${r.actual}`);
+        } else if (r.estado === 'sin_dato') {
+          sinDato.push(`${quien}: SportMonks no muestra su contrato y ya no figura en el plantel de ${club?.nombre ?? 'su club'} — revisar`);
+        }
+      } catch (e) {
+        // Un jugador que falla no tira abajo al resto.
+        errores.push(`${quien}: ${e instanceof Error ? e.message : String(e)}`);
       }
-      if (!resultado.aplicar) continue;
-
-      registrosAfectados += await aplicarCambioDeClub(
-        supabase,
-        j,
-        resultado.aplicar.nuevoClub,
-        resultado.aplicar.traspaso,
-      );
-      cambios.push(`${quien} → ${resultado.aplicar.nuevoClub.nombre} (${resultado.aplicar.traspaso.fecha})`);
     }
+    if (errores.length && !revisados) errorDetalle = errores.join(' | ');
   } catch (e) {
     errorDetalle = e instanceof Error ? e.message : String(e);
   }
 
-  const estado = errorDetalle ? (registrosAfectados > 0 ? 'parcial' : 'error') : 'ok';
+  const estado = errorDetalle ? 'error' : errores.length ? 'parcial' : 'ok';
 
   await supabase.from('sincronizaciones').insert({
     proveedor: PROVEEDOR,
@@ -91,90 +89,13 @@ Deno.serve(async (req: Request) => {
     iniciado_en: iniciadoEn,
     finalizado_en: new Date().toISOString(),
     estado,
-    registros_afectados: registrosAfectados,
-    error_detalle: errorDetalle,
-    parametros: { cambios, sospechas },
+    registros_afectados: 0, // solo avisa, no cambia datos
+    error_detalle: errorDetalle ?? (errores.length ? errores.join(' | ') : null),
+    parametros: { revisados, detectados, sin_codigo: sinCodigo, sin_dato: sinDato },
   });
 
-  return new Response(JSON.stringify({ estado, registrosAfectados, cambios, sospechas, errorDetalle }), {
+  return new Response(JSON.stringify({ estado, revisados, detectados, sinCodigo, sinDato, errores }), {
     headers: { 'content-type': 'application/json' },
     status: 200,
   });
 });
-
-/** Upsert de un club por (proveedor_externo, id_externo). Devuelve el uuid interno. */
-async function asegurarClub(
-  // deno-lint-ignore no-explicit-any
-  supabase: any,
-  idExterno: string,
-  nombre: string,
-): Promise<string> {
-  const { data: existente, error: errBuscar } = await supabase
-    .from('clubes')
-    .select('id')
-    .eq('proveedor_externo', PROVEEDOR)
-    .eq('id_externo', idExterno)
-    .maybeSingle();
-  if (errBuscar) throw errBuscar;
-  if (existente) return existente.id;
-
-  const { data: creado, error: errCrear } = await supabase
-    .from('clubes')
-    .insert({ nombre, origen: 'api', proveedor_externo: PROVEEDOR, id_externo: idExterno })
-    .select('id')
-    .single();
-  if (errCrear) throw errCrear;
-  return creado.id;
-}
-
-/**
- * Aplica el cambio: club nuevo + FK del jugador + hito de traspaso. Devuelve cuántas filas tocó.
- * El hito es idempotente por (jugador_id, tipo, proveedor_externo, id_externo): si la función
- * corre dos veces con el mismo traspaso, no se duplica.
- * El club se actualiza para CUALQUIER jugador activo (Contenido también depende de tener el
- * club actual al día, para su aniversario de fundación). El hito de traspaso, en cambio, solo
- * se crea para Match Day: `agenda_anual` no filtra su bloque de hitos por servicio, así que un
- * hito de un jugador solo-Contenido se colaría en el calendario de Match Day.
- */
-async function aplicarCambioDeClub(
-  // deno-lint-ignore no-explicit-any
-  supabase: any,
-  // deno-lint-ignore no-explicit-any
-  jugador: any,
-  nuevoClub: ClubRef,
-  traspaso: Traspaso,
-): Promise<number> {
-  const clubId = await asegurarClub(supabase, nuevoClub.idExterno, nuevoClub.nombre);
-
-  const { error: errJugador } = await supabase
-    .from('jugadores')
-    .update({ club_actual_id: clubId })
-    .eq('id', jugador.id);
-  if (errJugador) throw errJugador;
-
-  if (!jugador.servicio_match_day) return 1; // jugador solo-Contenido: sin hito de traspaso
-
-  // id_externo del hito: estable para el mismo traspaso, así el upsert no duplica.
-  const idExternoHito = `traspaso:${jugador.id_externo}:${traspaso.fecha}:${nuevoClub.idExterno}`;
-
-  const { error: errHito } = await supabase.from('hitos').upsert(
-    {
-      jugador_id: jugador.id,
-      club_id: clubId,
-      tipo: 'traspaso',
-      titulo: tituloTraspaso(nuevoClub, traspaso),
-      descripcion: `Movimiento: ${traspaso.tipo || 'N/A'}`,
-      fecha: traspaso.fecha || null,
-      origen: 'derivado',
-      verificado: false,
-      destacado: false,
-      proveedor_externo: PROVEEDOR,
-      id_externo: idExternoHito,
-      metadatos: traspaso,
-    },
-    { onConflict: 'jugador_id,tipo,proveedor_externo,id_externo' },
-  );
-  if (errHito) throw errHito;
-
-  return 2; // jugador + hito
-}
