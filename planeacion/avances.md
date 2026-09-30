@@ -1314,6 +1314,125 @@ Charla con Gerardo (no se codeó nada): tres preguntas de la agencia / de él.
 
 ## 5. Pendiente / próximos pasos
 
+### 📋 Cambios pedidos por la agencia (reunión 2026-09-29, dictados por Gerardo 2026-09-30) — ronda final
+> Se anotan tal cual los dicta Gerardo; NO se codea hasta tener la lista completa y acordar cada punto (Regla 0).
+
+1. **Ticket de partido: casilla "Terminado" para el Diseñador.** En el ticket, un checkbox que
+   el Diseñador marca cuando el diseño está terminado. Motivo: el Administrador y el Community
+   Manager solo quieren estar pendientes de que los tickets estén abiertos, próximos a vencer o
+   vencidos sin entregar — no de revisar cada paso.
+   - A aclarar: ¿reemplaza al ciclo actual (Entregar → Aprobar/Devolver → Publicar) o se suma?
+     ¿sigue haciendo falta el link de Dropbox? ¿aplica también a los tickets de fecha (ficha)?
+2. **Match Day: todo partido es un ticket de entrada (automático).** Cada partido de Match Day
+   nace con su ticket ya iniciado: es un diseño que hay que hacer, sin que nadie lo cree. Entrega
+   mínima: 2 días antes (puede cambiar). El ticket de partido muestra **dos casillas**:
+   - **Pendiente** — marcada desde el inicio.
+   - **Completado** — vacía; la marca el Diseñador cuando termina (= punto 1).
+   Al subir el diseño, el Diseñador **cierra el ticket**. Así se maneja Match Day (sin el paso de
+   revisión/aprobación, según se entiende — confirmar).
+   - A aclarar: ¿uno por partido o uno por jugador del partido (Toluca vs Atlante tiene 2 jugadores)?
+     ¿"subir el diseño" = pegar el link de Dropbox? ¿desde cuándo se generan (todos los próximos
+     partidos o solo los de la ventana cercana)? ¿qué pasa con los tickets de partido que ya se
+     crean a mano hoy (se elimina el botón "Crear" del partido)? ¿partido tentativo (> 90 días)
+     también genera ticket? ¿partido cancelado/reprogramado?
+3. **Ticket de partido: botón "Copiar" los datos clave.** Copia al portapapeles SOLO el texto
+   crítico — horario local, horario de Uruguay, estadio y los equipos — para que el Diseñador lo
+   pegue directo en Photoshop sin tipear. Botón con el ícono estándar de copiar (dos hojas
+   superpuestas). **Ícono aprobado por Gerardo (2026-09-30):** dos hojas superpuestas (la de atrás
+   asomando arriba a la izquierda), SOLO el ícono — el círculo gris de fondo NO va (aclaró
+   Gerardo). Dibujarlo como SVG de línea en `Ico.tsx` (`copiar`), mismo estilo que el resto.
+   - A aclarar: formato exacto del texto (orden y renglones), ¿incluye fecha, competencia y
+     ciudad? ¿aviso "Copiado" al tocar? ¿también en el detalle del partido o solo en el ticket?
+4. **Filtro "Contenido": partidos de TODOS los jugadores solo-Contenido, con APIs gratis.** Hoy
+   solo aparecen los de Aguirre (Liga MX, SportMonks pago). Sumar los de los 4 uruguayos (Abel
+   Hernández y Franco Romero — Peñarol; Gastón Martirena y Maxi Silvera — Nacional) usando fuentes
+   gratuitas. La agencia sabe que esas fuentes no son de pago (menos datos/menos confiables).
+   - Nota: **Aguirre posiblemente sale del roster** — sin confirmar; Gerardo avisa con tiempo.
+   - A investigar (spike): ESPN tiene la liga uruguaya (`uru.1`) y ya hay `sync-fixtures-espn`;
+     ver si trae fixture y resultados de Peñarol/Nacional y si alcanza para estadísticas (goles,
+     minutos) o solo para el calendario de partidos. Ver también copas (Libertadores/Sudamericana).
+5. **Calendarios = panorama del mes con color por estado.** El Administrador y el Community
+   Manager quieren abrir el calendario y ver de un vistazo qué está **pendiente**, qué está
+   **terminado** y qué está **vencido**.
+   - **Calendario Match Day:** todos los partidos (cada uno es un ticket, punto 2), cada uno con
+     el color de su estado.
+   - **Calendario general (Contenido):** lo mismo con todas las fechas de los jugadores
+     (cumpleaños, aniversarios…), cada una con el color de si ya está hecha o no.
+   - Si después quieren pedir algo puntual (una aclaración, una pieza extra), crean un ticket como
+     ya se hace.
+   - Los colores de cada estado los define Gerardo en un punto siguiente.
+   - A aclarar: ¿cada fecha de Contenido también nace como ticket automático (como los partidos)?
+     Si no, ¿de dónde sale su estado "hecha / no hecha"? ¿Cuánto antes vence una fecha de Contenido?
+6. **Excel nuevo de la agencia con TODAS las fechas → reemplaza las fechas actuales.** La agencia
+   mandó `WebFirst/calendario first.xlsx` (12 hojas: `@first` + una por jugador, los 11 del roster).
+   **Alcance (aclarado por Gerardo 2026-09-30):** SOLO reemplaza las fechas de los jugadores (Match
+   Day y Contenido); todo lo demás de `Datos de jugadores y clubes.xlsx` queda como está. Las fechas
+   de First se agregan y alcanza con que aparezcan en el calendario (no es prioridad). Trae:
+   - **Una pestaña por jugador** con todas sus fechas (ej.: aniversario de un título/copa de
+     Nández, etc.). Reemplaza las fechas que teníamos cargadas: "en este archivo viene todo".
+   - **Una hoja de fechas de First (la agencia):** cumpleaños de empleados, días especiales a nivel
+     mundial (ej.: Día del Diseñador Gráfico), etc.
+   - **Aguirre no tiene nada** en el archivo (posiblemente sale): para él se dejan las fechas que
+     ya teníamos.
+   - Esto es el "paquete completo" que se esperaba para el importador del Excel (memoria: construir
+     una vez, no a pedazos). Releer el Excel al cargar y verificar en la base después (§10b).
+   - A aclarar al ver el archivo: tipos de fecha nuevos (títulos, etc.) y cómo se muestran; dónde
+     van las fechas de First (¿Calendario general, otra vista, /partidos?); si las fechas de First
+     también llevan ticket/estado (punto 5); si hay fechas que no se repiten cada año.
+7. **Traspasos (cambio de club): ¿automáticos? + temporadas de pases.** La agencia pregunta si los
+   traspasos de los jugadores Match Day son automáticos (y que cambie el club en todo), y cómo se
+   controla a los de solo Contenido en cada ventana de pases (grande: ~julio–septiembre; chica:
+   enero — investigar las fechas de las 6 ligas + Uruguay).
+   - **Respuesta verificada 2026-09-30:** `sync-roster` corre **todos los lunes 04:00 UTC** y revisa
+     a **los 11 jugadores activos** (Match Day Y Contenido) con `GET /transfers` de API-Football:
+     si cambió de club, actualiza el club solo (y a los de Match Day les agrega un hito "traspaso");
+     lo dudoso lo deja anotado para revisar, sin tocar el dato.
+   - **PERO está caído desde el 22/09** (ver 🐞 abajo): la última corrida OK fue el 21/09.
+   - Hueco a resolver: si un jugador de Match Day pasa a un club nuevo, `sync-partidos-sportmonks`
+     no sabe el id de SportMonks de ese club (lista fija `CLUBES_SPORTMONKS`) → dejaría de traer sus
+     partidos. Opciones: alerta automática "club sin id de SportMonks" + carga manual, o buscarlo solo.
+   - **Hallazgo 2026-09-30 (corrida manual de sync-roster):** para **8 de 11** jugadores, el
+     "último traspaso" de API-Football es viejo o no es el club actual (ej. Nacho: "Peñarol 2023" y hoy
+     está en Bragantino; Aguirre: "América 2024" y está en Tigres). La guarda de 200 días evitó
+     cambiarlos mal, pero significa que **la detección automática de traspasos casi no ve nada**: el
+     /transfers de API-Football free está desactualizado para estos jugadores. Hace falta otra fuente
+     (SportMonks para los de Match Day; ESPN/plantel del club para los demás) — ver propuesta.
+   - Propuesta a charlar: en ventana de pases, un control extra (script/aviso) que compare el club
+     de cada jugador contra 2 fuentes (API-Football + ESPN/SportMonks) y avise si difieren.
+
+**🐞 URGENTE (hallado 2026-09-30): la clave de API-Football no funciona desde el 22/09.** Todas las
+corridas de `api-football` (partidos de copas/selección, estadísticas de esos partidos y
+`sync-roster`) fallan con "Missing application key"; la última OK fue el 21/09. `GET /status` con
+la clave local da el mismo error → no es el secret de la Edge Function: la clave en sí dejó de
+valer (¿cuenta vencida/borrada, clave regenerada?). SportMonks (5 ligas) sigue OK. Gerardo tiene
+que revisar la cuenta en dashboard.api-football.com; si hay clave nueva: actualizar
+`.secretos/.env` y el secret (`npm run secrets:edge -- API_FOOTBALL_KEY`), y re-correr las syncs.
+**✅ RESUELTO 2026-09-30:** la clave guardada (dae1…b4) no era la de la cuenta activa (plan Free,
+activa hasta 2027-04-04, 0 requests usados). Gerardo puso la clave correcta (f8fc…aa) en
+`.secretos/.env` y en el secret. Claude disparó a mano `sync-partidos` (ok), `sync-estadisticas`
+(ok, 1 registro) y `sync-roster` (ok, sin cambios). Queda pendiente el aviso automático (punto 8).
+
+8. **Que la app no dependa de que alguien "renueve" claves + aviso automático si una fuente se cae.**
+   La agencia no va a saber actualizar claves. Pedido: saber la vigencia de cada clave y
+   automatizar lo posible.
+   - Lo que se sabe: la clave de API-Football (plan free) no tiene fecha de vencimiento propia;
+     deja de andar si la cuenta se borra/suspende o si se regenera la clave (confirmar en el
+     dashboard qué pasó el 22/09). SportMonks: el trial terminaba **hoy 2026-09-30 22:21**; desde
+     ahí cobra a la tarjeta de la agencia — **verificar mañana 01/10 que `sportmonks/partidos`
+     siga en `ok`**.
+   - Una clave no se puede renovar sola desde la app (la emite el proveedor). Lo automatizable:
+     **detectar y avisar** — p.ej. un aviso visible para el Administrador ("La fuente de copas no
+     responde desde el 22/09") y/o mail a Mazdesign cuando una sync falla 2 días seguidos.
+9. **Partidos de la selección uruguaya en el calendario.** Incluir los partidos de Uruguay
+   (Eliminatorias, Copa América, amistosos) con tiempo. Fuentes a investigar (spike): API-Football
+   (ya trae selecciones; depende del punto 🐞), ESPN (`fifa.worldq.conmebol`, amistosos), web de la
+   AUF. Definir: ¿en qué calendario (Match Day / general)? ¿generan ticket? ¿solo si convocan a un
+   representado o siempre?
+10. **Gerardo pasa 2 listas (pendiente de él):**
+    - **Torneos** que juegan los equipos de las 5 ligas además del local (copas sudamericanas,
+      Concachampions, copas nacionales, etc.).
+    - **Estadios** de todos los equipos (respaldo para cuando SportMonks no trae o trae mal la sede).
+
 ### 🎫 Tickets de diseño — ✅ EN PRODUCCIÓN (2026-09-29, Sesión 13)
 
 **Estado:** las 11 tareas del plan hechas con subagentes (implementador + revisor por tarea +
