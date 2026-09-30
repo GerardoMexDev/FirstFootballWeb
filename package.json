@@ -29,7 +29,8 @@
     "deploy:funcion": "node scripts/desplegar-funcion.mjs",
     "secrets:edge": "node scripts/configurar-secret-edge.mjs",
     "backfill:sportmonks": "node scripts/backfill-historico-sportmonks.mjs",
-    "test:avisos": "node --test scripts/avisos.test.mjs"
+    "test:avisos": "node --test scripts/avisos.test.mjs",
+    "test:espn-uruguay": "node --test scripts/espn-uruguay.test.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.5.2",
