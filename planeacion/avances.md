@@ -1347,6 +1347,12 @@ Charla con Gerardo (no se codeó nada): tres preguntas de la agencia / de él.
 >   partido pasa a Match Day con su cara ("Uruguay vs India · con la selección") y ticket automático para
 >   Maxi. En Todos se ve una sola vez. API-Football nunca trajo esos partidos (0 filas `con_seleccion`).
 > - Verificado: corrida local de la función (7 partidos, idempotente) y QA en dev con Felipe, Maxi y Pedro.
+> - ✅ **En producción (2026-09-30):** merge a main + push + deploy de `sync-espn-uruguay` (Gerardo). Disparo manual
+>   de la función deployada: ok, 7 partidos, 0 errores. QA en prod OK (Selección, Contenido, convocatoria de Nahitan
+>   por Pedro → Match Day con cara + ticket de Maxi, calendario, 390 px) y destildado al final.
+> - Pendientes chicos de la revisión final: orden local/visitante del chip de la selección ("India vs Uruguay") vs
+>   la tarjeta; casilla de convocatoria sin re-sincronizar si otro la cambia; etiquetas "Convocado: Nahitan" sin
+>   rival; div vacío sin convocables; competencia faltante sin aviso; Corea/Japón sin zona horaria.
 
 1. **Ticket de partido: casilla "Terminado" para el Diseñador.** En el ticket, un checkbox que
    el Diseñador marca cuando el diseño está terminado. Motivo: el Administrador y el Community
