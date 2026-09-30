@@ -87,6 +87,25 @@ el calendario de Felipe; un partido que llegó a su fecha límite sin tildar se 
 - **Tickets manuales:** el panel muestra "Completar" (Diseñador), "Reabrir", "Cancelar" y comentarios.
 - **Colores:** tokens `--tk-rojo`, `--tk-verde`, `--tk-amarillo` existentes (AA en claro y oscuro).
 
+## 5b. Un solo calendario con filtros (pedido de Gerardo, 2026-09-30)
+
+Los jefes quieren ver todo en **un solo calendario**. `Match Day` (/calendario) y `Calendario general`
+(/calendario-general) pasan a ser una sola vista **"Calendario"** (/calendario) con chips de filtro, como
+en /partidos:
+
+| Filtro | Qué muestra |
+|---|---|
+| **Todos** (por defecto) | Todo junto |
+| **Match Day** | Partidos de Match Day (con su color de estado) y los tickets manuales de esos partidos |
+| **Contenido** | Fechas de los jugadores (cumpleaños, aniversarios…), fechas de First (cuando se carguen, punto 6), partidos de los jugadores solo-Contenido (`proximos_partidos_contenido`) y tickets manuales de fecha |
+
+- Un evento repetido en dos fuentes (p.ej. el cumpleaños de un jugador de Match Day, que hoy está en
+  `agenda_anual` y en `agenda_contenido`) se muestra una sola vez.
+- **Navegación:** queda `Partidos · Calendario · Jugadores · Tickets` (arriba y en la barra inferior del
+  celular, 4 pestañas). `/calendario-general` redirige a `/calendario?f=contenido`.
+- El filtro elegido queda en la dirección (`?f=`) para poder compartir el enlace.
+- Las "Fechas señaladas" (notas de agenda) de arriba siguen el filtro elegido.
+
 ## 6. Pruebas
 Unitarias (lógica pura), base (ROLLBACK), navegador con los 4 usuarios en 390/1280 px (marcar/desmarcar,
 colores en calendarios, Copiar, globito), revisión final independiente. Nada se da por terminado sin QA.
