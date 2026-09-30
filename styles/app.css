@@ -535,3 +535,9 @@ html { overflow-x: clip; }
 .bcp { display: inline-flex; align-items: center; gap: 8px; }
 .bcp__b { display: inline-flex; align-items: center; gap: 6px; }
 .bcp__a { font-size: var(--t-xs); color: var(--tk-verde); font-weight: 600; min-width: 1px; }
+/* Calendario unificado (2026-09-30): el chip del partido lleva el color de su estado de diseño. */
+.ev.ev--sem-pendiente { border-left: 3px solid var(--tk-rojo-borde); background: var(--tk-rojo-bg); }
+.ev.ev--sem-completado { border-left: 3px solid var(--tk-verde-borde); background: var(--tk-verde-bg); }
+.ev.ev--sem-vencido { border-left: 3px solid var(--tk-amarillo-borde); background: var(--tk-amarillo-bg); }
+.ev.ev--sem-pendiente, .ev.ev--sem-completado, .ev.ev--sem-vencido { opacity: 1; }
+#filtros-calendario { margin-bottom: 18px; }

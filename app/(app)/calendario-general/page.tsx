@@ -1,69 +1,11 @@
 /**
- * Vista `calendario-general` — servicio "Contenido" de la agencia. Mismo layout que
- * Match Day (Fechas señaladas + franja de densidad + grilla del mes), pero alimentada por
- * la vista `agenda_contenido`: cumpleaños, aniversario de fundación de club, aniversario del
- * debut en selección y aniversario del debut profesional, para el roster `servicio_contenido`
- * (12 jugadores). Sin partidos.
+ * El "Calendario general" se unió al calendario de Match Day en una sola vista con filtros
+ * (2026-09-30). Esta dirección queda por enlaces viejos: lleva al filtro Contenido.
  *
- * El server trae TODOS los eventos de la ventana de proyección ([-1, +2] años) y
- * `<Calendario>` (Client) navega meses sin volver a pedir nada.
- *
- * Desde 2026-09-29 muestra además los tickets de diseño de fecha (0028) como chips en su día,
- * con la lucecita si esperan algo de quien mira.
- *
- * Football First (Fase 1). Creado 2026-09-10 (Sesión 7).
+ * Football First (Fase 1). Creado 2026-09-10 (Sesión 7); redirección 2026-09-30.
  */
-import { DateTime } from 'luxon';
-import { NotasAgenda } from '@/components/agenda/NotasAgenda';
-import { Calendario } from '@/components/calendario/Calendario';
-import { notasProximas, FUENTES_CONTENIDO } from '@/lib/agenda/notas-proximas';
-import { RepositorioAgendaSupabase } from '@/lib/repositorios/repositorio-agenda';
-import { crearClienteServidor } from '@/lib/supabase/cliente-servidor';
-import { ZONA_AGENCIA } from '@/lib/fechas/zonas';
-import { RepositorioTicketsSupabase } from '@/lib/repositorios/repositorio-tickets';
-import { ticketsPorDia, alertasPorTicket } from '@/lib/tickets/estados';
-import { pendientesDeSesion } from '@/lib/tickets/pendientes-de-sesion';
+import { redirect } from 'next/navigation';
 
-export default async function PaginaCalendarioGeneral() {
-  const hoyUy = DateTime.now().setZone(ZONA_AGENCIA).toISODate() ?? '';
-  const anio = Number(hoyUy.slice(0, 4));
-
-  const supabase = crearClienteServidor();
-  const repo = new RepositorioAgendaSupabase(supabase, 'agenda_contenido');
-  const [eventosNota, eventos, ticketsFecha, pendientes] = await Promise.all([
-    repo.listarEventosParaNotas(hoyUy),
-    repo.listarEventos(`${anio - 1}-01-01`, `${anio + 2}-12-31`),
-    // Tickets de fecha (0028). Si la lectura falla, el calendario se ve como antes.
-    new RepositorioTicketsSupabase(supabase).listarEventosEntre(`${anio - 1}-01-01`, `${anio + 2}-12-31`).catch((e) => {
-      console.error('tickets (calendario general):', e);
-      return [];
-    }),
-    pendientesDeSesion(),
-  ]);
-  const notas = notasProximas(eventosNota, hoyUy, { fuentes: FUENTES_CONTENIDO });
-
-  return (
-    <section className="vista on" id="v-calendario-general" tabIndex={-1}>
-      <div className="head">
-        <h1 className="d1">
-          Calendario
-          <br />
-          <em>general</em>
-        </h1>
-        <p className="sub">
-          Cumpleaños y aniversarios de club, de debut en selección y de debut profesional de
-          todos los representados con servicio de contenido. Las fechas se repiten cada año.
-        </p>
-      </div>
-
-      <NotasAgenda notas={notas} />
-
-      <Calendario
-        eventos={eventos}
-        hoyUy={hoyUy}
-        ticketsPorDia={ticketsPorDia(ticketsFecha)}
-        alertasPorTicket={alertasPorTicket(pendientes, hoyUy)}
-      />
-    </section>
-  );
+export default function PaginaCalendarioGeneral() {
+  redirect('/calendario?f=contenido');
 }

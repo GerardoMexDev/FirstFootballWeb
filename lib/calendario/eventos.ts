@@ -30,7 +30,12 @@ export interface EventoCalendario {
   competenciaCodigo: string | null;
   esInternacional: boolean;
   tentativo: boolean;
+  /** De qué parte viene (calendario unificado, 2026-09-30). Sin dato = Match Day. */
+  grupo?: GrupoCalendario;
 }
+
+export type GrupoCalendario = 'matchday' | 'contenido';
+export type FiltroCalendario = 'todos' | GrupoCalendario;
 
 export const MESES = [
   'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
@@ -122,4 +127,30 @@ export function celdasDelMes(anio: number, mes: number, hoyUy: string): CeldaCal
     celdas.push({ fecha, dia: d.day, delMes: d.month === mes + 1, esHoy: fecha === hoyUy });
   }
   return celdas;
+}
+
+/** Fuentes de Match Day que van al calendario unificado (las fechas fijas vienen de Contenido). */
+const FUENTES_MATCH_DAY = new Set<FuenteAgenda>(['partido', 'convocatoria', 'hito']);
+
+/**
+ * Calendario unificado (2026-09-30): de `agenda_anual` (Match Day) toma partidos, convocatorias
+ * e hitos; las fechas fijas (cumpleaños, aniversarios) vienen de Contenido, que ya incluye a los
+ * jugadores de Match Day. Lo que se repite (misma fuente, ref y día) queda una sola vez.
+ */
+export function unirEventos(matchday: EventoCalendario[], contenido: EventoCalendario[]): EventoCalendario[] {
+  const vistos = new Set<string>();
+  const salida: EventoCalendario[] = [];
+  for (const e of [...matchday.filter((x) => FUENTES_MATCH_DAY.has(x.fuente)), ...contenido]) {
+    const clave = `${e.fuente}|${e.refId ?? e.titulo}|${e.diaUy}`;
+    if (vistos.has(clave)) continue;
+    vistos.add(clave);
+    salida.push(e);
+  }
+  return salida;
+}
+
+/** Filtro del calendario: Todos, solo Match Day, solo Contenido. */
+export function filtrarCalendario(eventos: EventoCalendario[], filtro: FiltroCalendario): EventoCalendario[] {
+  if (filtro === 'todos') return eventos;
+  return eventos.filter((e) => (e.grupo ?? 'matchday') === filtro);
 }

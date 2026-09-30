@@ -16,7 +16,11 @@
 'use client';
 
 import { useMemo, useState } from 'react';
+import { usePathname, useRouter } from 'next/navigation';
 import { usePanel } from '@/lib/paneles/use-panel';
+import { META_VISUAL } from '@/lib/tickets/semaforo';
+import type { EstadoVisual } from '@/lib/tickets/tipos';
+import type { FiltroCalendario } from '@/lib/calendario/eventos';
 import { horaCortaEnUruguay } from '@/lib/fechas/zonas';
 import { META_ESTADO, type ResumenPartido } from '@/lib/tickets/estados';
 import type { ResumenTicket } from '@/lib/tickets/tipos';
@@ -30,6 +34,13 @@ import {
 } from '@/lib/calendario/eventos';
 
 /** Texto de cada chip de evento: una etiqueta corta (arriba, en negrita) + el título. */
+/** Chips de filtro del calendario unificado (2026-09-30). */
+const FILTROS: { f: FiltroCalendario; etiqueta: string }[] = [
+  { f: 'todos', etiqueta: 'Todos' },
+  { f: 'matchday', etiqueta: 'Match Day' },
+  { f: 'contenido', etiqueta: 'Contenido' },
+];
+
 function chipEvento(e: EventoCalendario): { etiqueta: string; texto: string } {
   switch (e.fuente) {
     case 'partido':
@@ -56,7 +67,13 @@ export function Calendario({
   alertasPorPartido = {},
   ticketsPorDia = {},
   alertasPorTicket = {},
+  filtro = 'todos',
+  estadoPorPartido = {},
 }: {
+  /** Filtro activo (vive en la dirección, `?f=`; 2026-09-30). */
+  filtro?: FiltroCalendario;
+  /** Semáforo de diseño por partido de Match Day (0030): el peor estado entre sus jugadores. */
+  estadoPorPartido?: Record<string, EstadoVisual>;
   eventos: EventoCalendario[];
   hoyUy: string;
   ticketsPorPartido?: Record<string, ResumenPartido>;
@@ -68,6 +85,8 @@ export function Calendario({
   alertasPorTicket?: Record<string, string>;
 }) {
   const { abrir } = usePanel();
+  const router = useRouter();
+  const pathname = usePathname();
   const [anio, setAnio] = useState(() => Number(hoyUy.slice(0, 4)));
   const [mes, setMes] = useState(() => Number(hoyUy.slice(5, 7)) - 1); // 0-11
 
@@ -84,6 +103,20 @@ export function Calendario({
 
   return (
     <>
+      <div className="barra" id="filtros-calendario">
+        {FILTROS.map(({ f, etiqueta }) => (
+          <button
+            key={f}
+            type="button"
+            className={filtro === f ? 'chip on' : 'chip'}
+            aria-pressed={filtro === f}
+            onClick={() => router.replace(f === 'todos' ? pathname : `${pathname}?f=${f}`, { scroll: false })}
+          >
+            {etiqueta}
+          </button>
+        ))}
+      </div>
+
       <div className="anio">
         {MESES_CORTOS.map((m, i) => (
           <button
@@ -143,16 +176,18 @@ export function Calendario({
                 const { etiqueta, texto } = chipEvento(e);
                 const clave = `${e.fuente}-${e.refId ?? j}`;
                 const clase = `ev ${e.tentativo ? 'ev--tent' : ''} ${e.esInternacional ? 'ev--int' : ''}`;
-                if (e.fuente === 'partido' && e.refId) {
+                // Partidos de jugadores solo-Contenido: no tienen panel de partido → chip sin clic (abajo).
+                if (e.fuente === 'partido' && e.refId && e.grupo !== 'contenido') {
                   const refId = e.refId;
                   const tk = ticketsPorPartido[refId];
-                  const soloUno = tk && tk.ticketIds.length === 1 ? tk.ticketIds[0] : null;
+                  const sem = estadoPorPartido[refId];
                   return (
                     <button
                       key={clave}
                       type="button"
-                      className={`${clase} ${tk ? `ev--t ev--t-${tk.estado}` : ''}`}
-                      onClick={() => (soloUno ? abrir('ticket', soloUno) : abrir('partido', refId))}
+                      className={`${clase} ${tk ? `ev--t ev--t-${tk.estado}` : ''} ${sem ? `ev--sem-${sem}` : ''}`}
+                      // 0030: siempre al partido (ahí están las casillas; el ticket manual se abre desde ahí).
+                      onClick={() => abrir('partido', refId)}
                     >
                       {tk && (
                         <small className="ev__tk">
@@ -170,6 +205,7 @@ export function Calendario({
                       )}
                       <b>{etiqueta}</b>
                       {texto}
+                      {sem && <span className="solo-lector"> — diseño {META_VISUAL[sem].etiqueta.toLowerCase()}</span>}
                     </button>
                   );
                 }

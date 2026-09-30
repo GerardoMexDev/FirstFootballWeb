@@ -122,6 +122,47 @@ export class RepositorioAgendaSupabase {
         competenciaCodigo: r.competencia_codigo,
         esInternacional: r.es_internacional ?? false,
         tentativo: r.tentativo ?? false,
+        grupo: this.vista === 'agenda_contenido' ? ('contenido' as const) : ('matchday' as const),
+      }));
+  }
+
+  /**
+   * Partidos de los jugadores solo-Contenido (`proximos_partidos_contenido`, 0027) entre dos días,
+   * como eventos del calendario unificado (grupo Contenido, 2026-09-30).
+   */
+  async listarPartidosContenido(desdeIso: string, hastaIso: string): Promise<EventoCalendario[]> {
+    const { data, error } = await this.supabase
+      .from('proximos_partidos_contenido')
+      .select('partido_id, club_nombre, rival_nombre, inicio_utc, dia_uy, dia_local_sede, competencia_codigo, es_internacional, tentativo')
+      .gte('dia_uy', desdeIso)
+      .lte('dia_uy', hastaIso)
+      .returns<
+        Array<{
+          partido_id: string | null;
+          club_nombre: string | null;
+          rival_nombre: string | null;
+          inicio_utc: string | null;
+          dia_uy: string | null;
+          dia_local_sede: string | null;
+          competencia_codigo: string | null;
+          es_internacional: boolean | null;
+          tentativo: boolean | null;
+        }>
+      >();
+    if (error) throw new Error(`No se pudo leer proximos_partidos_contenido: ${error.message}`);
+    return (data ?? [])
+      .filter((r) => r.partido_id && r.dia_uy)
+      .map((r) => ({
+        fuente: 'partido' as const,
+        refId: r.partido_id,
+        titulo: `${r.club_nombre ?? '?'} vs ${r.rival_nombre ?? '?'}`,
+        diaUy: r.dia_uy!,
+        diaLocalSede: r.dia_local_sede ?? r.dia_uy!,
+        cuandoUtc: r.inicio_utc,
+        competenciaCodigo: r.competencia_codigo,
+        esInternacional: r.es_internacional ?? false,
+        tentativo: r.tentativo ?? false,
+        grupo: 'contenido' as const,
       }));
   }
 }

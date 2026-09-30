@@ -8,7 +8,7 @@
 import type { NombreIcono } from '@/components/comunes/Ico';
 
 export interface Seccion {
-  v: 'partidos' | 'calendario' | 'calendario-general' | 'jugadores' | 'tickets';
+  v: 'partidos' | 'calendario' | 'jugadores' | 'tickets';
   /** Texto de la nav de arriba. */
   etiqueta: string;
   /** Texto corto de la barra inferior. */
@@ -18,8 +18,8 @@ export interface Seccion {
 
 export const SECCIONES: Seccion[] = [
   { v: 'partidos', etiqueta: 'Partidos', corta: 'Partidos', icono: 'reloj' },
-  { v: 'calendario', etiqueta: 'Match Day', corta: 'Match Day', icono: 'calendario' },
-  { v: 'calendario-general', etiqueta: 'Calendario general', corta: 'General', icono: 'torta' },
+  // 2026-09-30: un solo calendario con filtros (antes "Match Day" y "Calendario general").
+  { v: 'calendario', etiqueta: 'Calendario', corta: 'Calendario', icono: 'calendario' },
   { v: 'jugadores', etiqueta: 'Jugadores', corta: 'Jugadores', icono: 'persona' },
   { v: 'tickets', etiqueta: 'Tickets', corta: 'Tickets', icono: 'lista' },
 ];

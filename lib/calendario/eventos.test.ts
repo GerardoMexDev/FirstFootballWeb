@@ -4,7 +4,7 @@
  */
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { agruparPorDia, partidosPorMes, celdasDelMes, type EventoCalendario } from './eventos.ts';
+import { agruparPorDia, partidosPorMes, celdasDelMes, filtrarCalendario, unirEventos, type EventoCalendario } from './eventos.ts';
 
 function ev(p: Partial<EventoCalendario>): EventoCalendario {
   const base = {
@@ -79,4 +79,20 @@ test('celdasDelMes: 42 celdas, empieza el lunes, marca delMes y esHoy', () => {
   const hoy = celdas.find((c) => c.fecha === '2026-09-09');
   assert.equal(hoy?.esHoy, true);
   assert.equal(hoy?.dia, 9);
+});
+
+test('unirEventos + filtrarCalendario: sin duplicados; Match Day solo partidos MD; Contenido fechas y partidos de Contenido', () => {
+  const md = [
+    ev({ fuente: 'partido', refId: 'p1', diaUy: '2026-10-03', grupo: 'matchday' }),
+    ev({ fuente: 'cumpleanos', refId: 'j1', diaUy: '2026-10-01', grupo: 'matchday' }), // ya está en Contenido
+  ];
+  const co = [
+    ev({ fuente: 'cumpleanos', refId: 'j1', diaUy: '2026-10-01', grupo: 'contenido' }),
+    ev({ fuente: 'partido', refId: 'p9', diaUy: '2026-10-10', grupo: 'contenido' }),
+  ];
+  const todos = unirEventos(md, co);
+  assert.deepEqual(todos.map((e) => `${e.fuente}:${e.refId}`), ['partido:p1', 'cumpleanos:j1', 'partido:p9']);
+  assert.deepEqual(filtrarCalendario(todos, 'matchday').map((e) => e.refId), ['p1']);
+  assert.deepEqual(filtrarCalendario(todos, 'contenido').map((e) => e.refId).sort(), ['j1', 'p9']);
+  assert.equal(filtrarCalendario(todos, 'todos').length, 3);
 });

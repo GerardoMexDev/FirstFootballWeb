@@ -1,49 +1,82 @@
 /**
- * Vista `calendario` — "Fechas señaladas" (notas de 7-10 días) + franja de densidad anual +
- * grilla del mes con los eventos de `agenda_anual`.
+ * Vista `calendario` — un solo calendario con filtros Todos / Match Day / Contenido (pedido de
+ * Gerardo 2026-09-30; antes eran "Match Day" y "Calendario general"). "Fechas señaladas" + franja
+ * de densidad anual + grilla del mes.
  *
- * El server trae TODOS los eventos de la ventana de proyección de la vista ([-1, +2] años)
- * de una sola vez y `<Calendario>` (Client) navega meses/años sin volver a pedir nada.
+ * El filtro vive en la dirección (`?f=matchday|contenido`, por defecto todos): el server filtra
+ * eventos y notas, y el enlace se puede compartir. Match Day = partidos/convocatorias/hitos de
+ * `agenda_anual`, con el semáforo de diseño (0030); Contenido = fechas de `agenda_contenido`,
+ * partidos de los jugadores solo-Contenido (0027) y tickets de fecha (0028).
+ *
+ * El server trae la ventana de proyección ([-1, +2] años) de una sola vez y `<Calendario>`
+ * (Client) navega meses/años sin volver a pedir nada.
  */
 import { DateTime } from 'luxon';
 import { NotasAgenda } from '@/components/agenda/NotasAgenda';
 import { Calendario } from '@/components/calendario/Calendario';
-import { notasProximas } from '@/lib/agenda/notas-proximas';
+import { FUENTES_CONTENIDO, notasProximas } from '@/lib/agenda/notas-proximas';
+import { filtrarCalendario, unirEventos, type FiltroCalendario } from '@/lib/calendario/eventos';
 import { RepositorioAgendaSupabase } from '@/lib/repositorios/repositorio-agenda';
 import { RepositorioTicketsSupabase } from '@/lib/repositorios/repositorio-tickets';
-import { alertasPorPartido, resumirPorPartido } from '@/lib/tickets/estados';
+import { alertasPorPartido, alertasPorTicket, resumirPorPartido, ticketsPorDia } from '@/lib/tickets/estados';
+import { estadoVisual, peorEstado } from '@/lib/tickets/semaforo';
 import { pendientesDeSesion } from '@/lib/tickets/pendientes-de-sesion';
 import { crearClienteServidor } from '@/lib/supabase/cliente-servidor';
 import { ZONA_AGENCIA } from '@/lib/fechas/zonas';
+import type { EstadoVisual, ResumenTicket } from '@/lib/tickets/tipos';
 
-export default async function PaginaCalendario() {
+const FILTROS: FiltroCalendario[] = ['todos', 'matchday', 'contenido'];
+
+export default async function PaginaCalendario({ searchParams }: { searchParams: { f?: string } }) {
+  const filtro: FiltroCalendario = FILTROS.includes(searchParams.f as FiltroCalendario) ? (searchParams.f as FiltroCalendario) : 'todos';
   const hoyUy = DateTime.now().setZone(ZONA_AGENCIA).toISODate() ?? '';
   const anio = Number(hoyUy.slice(0, 4));
+  const desde = `${anio - 1}-01-01`;
+  const hasta = `${anio + 2}-12-31`;
 
   const supabase = crearClienteServidor();
-  const repo = new RepositorioAgendaSupabase(supabase);
-  const [eventosNota, eventos, tickets, pendientes] = await Promise.all([
-    repo.listarEventosParaNotas(hoyUy),
-    // Misma ventana que proyecta agenda_anual (cumpleaños/aniversarios): [-1, +2] años.
-    repo.listarEventos(`${anio - 1}-01-01`, `${anio + 2}-12-31`),
-    // Degradación elegante: si la lectura de tickets falla, el calendario se ve como antes.
-    new RepositorioTicketsSupabase(supabase).listarParaCalendario(`${anio - 1}-01-01`).catch((e) => {
-      console.error('tickets (calendario):', e);
-      return [];
-    }),
-    // Lo que le toca a quien mira (lucecita en el chip); misma lectura cacheada que la barra.
+  const repoMd = new RepositorioAgendaSupabase(supabase);
+  const repoCo = new RepositorioAgendaSupabase(supabase, 'agenda_contenido');
+  const repoTk = new RepositorioTicketsSupabase(supabase);
+  // Degradación elegante: lo que falle (tickets, partidos de Contenido) se ve como vacío.
+  const vacio = (que: string) => (e: unknown) => {
+    console.error(`${que} (calendario):`, e);
+    return [];
+  };
+  const [notasMd, notasCo, eventosMd, eventosCo, partidosCo, tickets, ticketsFecha, matchDay, pendientes] = await Promise.all([
+    repoMd.listarEventosParaNotas(hoyUy),
+    repoCo.listarEventosParaNotas(hoyUy),
+    repoMd.listarEventos(desde, hasta),
+    repoCo.listarEventos(desde, hasta),
+    repoCo.listarPartidosContenido(desde, hasta).catch(vacio('partidos de Contenido')),
+    repoTk.listarParaCalendario(desde).catch(vacio('tickets')),
+    repoTk.listarEventosEntre(desde, hasta).catch(vacio('tickets de fecha')),
+    repoTk.listarMatchDay(desde, hasta).catch(vacio('match day')),
     pendientesDeSesion(),
   ]);
-  const notas = notasProximas(eventosNota, hoyUy);
+
+  const eventos = filtrarCalendario(unirEventos(eventosMd, [...eventosCo, ...partidosCo]), filtro);
+  const notas =
+    filtro === 'matchday'
+      ? notasProximas(notasMd, hoyUy)
+      : notasProximas(notasCo, hoyUy, { fuentes: FUENTES_CONTENIDO });
+
+  // Semáforo por partido: el peor estado entre sus jugadores (vencido > pendiente > completado).
+  const porPartido: Record<string, (EstadoVisual | null)[]> = {};
+  for (const t of matchDay as ResumenTicket[]) if (t.partidoId) (porPartido[t.partidoId] ??= []).push(estadoVisual(t, hoyUy));
+  const estadoPorPartido: Record<string, EstadoVisual> = {};
+  for (const [id, estados] of Object.entries(porPartido)) {
+    const e = peorEstado(estados);
+    if (e) estadoPorPartido[id] = e;
+  }
 
   return (
     <section className="vista on" id="v-calendario" tabIndex={-1}>
       <div className="head">
-        <h1 className="d1">Match Day</h1>
+        <h1 className="d1">Calendario</h1>
         <p className="sub">
-          Partidos de los representados, agrupados por el día en la sede. Las fechas a más de
-          90 días son tentativas: el fixture se confirma por semestre y los horarios los mueve
-          la TV.
+          Partidos de Match Day con su estado de diseño (rojo pendiente, verde completado, amarillo
+          vencido) y las fechas de Contenido. Las fechas a más de 90 días son tentativas.
         </p>
       </div>
 
@@ -52,8 +85,12 @@ export default async function PaginaCalendario() {
       <Calendario
         eventos={eventos}
         hoyUy={hoyUy}
-        ticketsPorPartido={resumirPorPartido(tickets)}
-        alertasPorPartido={alertasPorPartido(pendientes, hoyUy)}
+        filtro={filtro}
+        estadoPorPartido={filtro === 'contenido' ? {} : estadoPorPartido}
+        ticketsPorPartido={filtro === 'contenido' ? {} : resumirPorPartido(tickets as ResumenTicket[])}
+        alertasPorPartido={filtro === 'contenido' ? {} : alertasPorPartido(pendientes, hoyUy)}
+        ticketsPorDia={filtro === 'matchday' ? {} : ticketsPorDia(ticketsFecha as ResumenTicket[])}
+        alertasPorTicket={alertasPorTicket(pendientes, hoyUy)}
       />
     </section>
   );
