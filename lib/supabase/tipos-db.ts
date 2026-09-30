@@ -1674,6 +1674,14 @@ export type Database = {
       }
     }
     Functions: {
+      avisos_sistema: {
+        Args: never
+        Returns: {
+          clave: string
+          desde: string
+          texto: string
+        }[]
+      }
       es_usuario_activo: { Args: never; Returns: boolean }
       ticket__bloquear: {
         Args: { p_ticket: string }

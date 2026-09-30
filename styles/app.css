@@ -510,3 +510,7 @@ html { overflow-x: clip; }
 .tke__o input { width: 18px; height: 18px; accent-color: var(--accent); }
 .tke__otra { display: grid; grid-template-columns: 180px 1fr; gap: 12px; }
 @media (max-width: 620px) { .tke__otra { grid-template-columns: 1fr; } }
+
+/* Cartel de avisos del sistema (solo Administrador, 0029, 2026-09-30): arriba de cada vista. */
+.avs { display: flex; flex-direction: column; gap: 8px; margin-bottom: 18px; }
+.avs .aviso { color: var(--text); }

@@ -24,6 +24,9 @@ import { sesionActual } from '@/lib/sesion/sesion-actual';
 import { saludoPorHora, primerNombre } from '@/lib/sesion/saludo';
 import { ZONA_AGENCIA } from '@/lib/fechas/zonas';
 import { pendientesDeSesion } from '@/lib/tickets/pendientes-de-sesion';
+import { AvisosSistema } from '@/components/layout/AvisosSistema';
+import { leerAvisosSistema } from '@/lib/sistema/avisos-sistema';
+import { crearClienteServidor } from '@/lib/supabase/cliente-servidor';
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const sesion = await sesionActual();
@@ -34,6 +37,8 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   const hoyUy = DateTime.now().setZone(ZONA_AGENCIA).toISODate() ?? '';
   // Si la lectura de tickets falla, la barra se ve sin contador (ver pendientesDeSesion).
   const pendientes = await pendientesDeSesion();
+  // Cartel de fuentes caídas y traspasos detectados (0029): solo el Administrador lo ve.
+  const avisos = sesion.cargo === 'Administrador' ? await leerAvisosSistema(crearClienteServidor()) : [];
 
   return (
     <>
@@ -53,6 +58,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           hoyUy={hoyUy}
         />
         <main className="wrap">
+          <AvisosSistema avisos={avisos} />
           <p className="saludo" id="saludo">
             {nombre ? (
               <>
