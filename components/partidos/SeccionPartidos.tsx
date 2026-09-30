@@ -18,6 +18,7 @@ import { ListaPartidos } from '@/components/partidos/ListaPartidos';
 import { usePanel } from '@/lib/paneles/use-panel';
 import { filtrarPartidos, type FiltroPartidos } from '@/lib/partidos/utilidades';
 import { listaSegunFiltro } from '@/lib/partidos/seleccion';
+import type { DatosConvocatoria } from '@/components/partidos/CasillasConvocatoria';
 import type { PartidoProximo } from '@/lib/repositorios/tipos';
 import type { EstadoVisual } from '@/lib/tickets/tipos';
 import type { LinksDropbox } from '@/lib/jugadores/links-dropbox';
@@ -27,6 +28,7 @@ export function SeccionPartidos({
   partidos,
   partidosContenido = [],
   partidosSeleccion = [],
+  convocatoria,
   partidosConHito,
   linksDropbox,
   fechas = [],
@@ -39,6 +41,8 @@ export function SeccionPartidos({
   partidosContenido?: PartidoProximo[];
   /** Partidos de la selección uruguaya (0031): filtros Selección y Todos. */
   partidosSeleccion?: PartidoProximo[];
+  /** Convocatoria a la selección (0032). */
+  convocatoria?: DatosConvocatoria;
   partidosConHito: Set<string>;
   linksDropbox?: Record<string, LinksDropbox>;
   /** Fechas de Contenido de la ventana de la lista (ya normalizadas). */
@@ -74,6 +78,7 @@ export function SeccionPartidos({
           fechas={fechasFiltradas}
           alertasTicket={esContenido ? {} : alertasTicket}
           estadosDiseno={esContenido ? {} : estadosDiseno}
+          convocatoria={convocatoria}
         />
       </div>
     </>

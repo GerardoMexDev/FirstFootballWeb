@@ -2733,6 +2733,7 @@ F–H → I (con migración). Cada ítem cerrado se documenta en §4.
 | `git push` desde Claude (Sesión 12, 2026-09-28) | Bloqueado por el auto-mode ("Out-of-Place Publication": el push despliega a Vercel) | Dejar los commits hechos y verificados; Gerardo corre `git push` y Claude hace el QA en prod después |
 | Meter `git stash` en un comando de diagnóstico (Sesión 15, 2026-09-30) | Guardó en el stash un cambio sin commitear; se recuperó con `git stash pop` | Nunca `git stash` en comandos de QA/diagnóstico; si hace falta comparar con HEAD, usar `git diff` o `git worktree` |
 | `npx prettier --write` sobre un componente (Sesión 15, 2026-09-30) | El proyecto no tiene config de Prettier: lo reformateó entero con los defaults (comillas dobles, 80 columnas) → diff de 110 líneas | No correr Prettier; indentar a mano (script `.cjs` que agregue espacios) y verificar con `git diff -w --stat` |
+| Insertar texto con `s.replace(a, textoNuevo)` de JS cuando el texto trae SQL con `$$` (Sesión 15, 2026-09-30) | En el reemplazo de `String.replace`, `$$` significa "un $": la función plpgsql quedó con `as $` → syntax error 42601 | Reemplazar con `s.split(a).join(b)` (no interpreta $), o pasar una función: `s.replace(a, () => b)` |
 
 ## 11. Dudas abiertas (de `contexto.md` §12)
 

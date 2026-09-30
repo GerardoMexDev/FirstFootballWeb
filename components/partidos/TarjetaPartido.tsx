@@ -36,6 +36,7 @@ export function TarjetaPartido({
   linksDropbox,
   alertaTicket,
   estadoDiseno,
+  convocatoria,
 }: {
   partido: PartidoProximo;
   tieneHito?: boolean;
@@ -43,6 +44,8 @@ export function TarjetaPartido({
   alertaTicket?: string;
   /** Semáforo de diseño de este jugador en este partido (0030). */
   estadoDiseno?: EstadoVisual;
+  /** Tarjeta de la selección (0032): casillas "Convocado: …" en lugar de la cara. */
+  convocatoria?: React.ReactNode;
   onAbrir?: () => void;
   /** Si se pasa, muestra los botones de Dropbox junto a la cara del jugador. */
   linksDropbox?: LinksDropbox;
@@ -135,7 +138,9 @@ export function TarjetaPartido({
             {p.estadio || p.ciudad ? `${mostrar(p.estadio)}, ${mostrar(p.ciudad)}` : 'Sin datos'}
           </span>
         </div>
-        {/* La selección (0031) no tiene representado: sin cara, hito, semáforo ni Dropbox. */}
+        {/* La selección (0031) no tiene representado: sin cara, hito, semáforo ni Dropbox;
+            en su lugar, la convocatoria (0032). */}
+        {p.esSeleccion && convocatoria && <div className="caras">{convocatoria}</div>}
         {!p.esSeleccion && (
           <div className="caras">
             <div className="caras__pila">

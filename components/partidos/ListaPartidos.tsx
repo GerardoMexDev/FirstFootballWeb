@@ -9,6 +9,7 @@
  */
 import { EstadoSinDatos } from '@/components/comunes/EstadoSinDatos';
 import { TarjetaPartido } from '@/components/partidos/TarjetaPartido';
+import { CasillasConvocatoria, type DatosConvocatoria } from '@/components/partidos/CasillasConvocatoria';
 import { TarjetaFecha } from '@/components/partidos/TarjetaFecha';
 import { diasDesdeHoyUy, etiquetaDiaUy } from '@/lib/fechas/zonas';
 import { mezclarPorDia, textoCantidades, type FechaContenido } from '@/lib/partidos/fechas-contenido';
@@ -24,8 +25,11 @@ export function ListaPartidos({
   fechas = [],
   alertasTicket = {},
   estadosDiseno = {},
+  convocatoria,
 }: {
   partidos: PartidoProximo[];
+  /** Convocatoria a la selección (0032): casillas en las tarjetas de Uruguay. */
+  convocatoria?: DatosConvocatoria;
   /** `{ 'partidoId:jugadorId': texto }` de la lucecita de ticket (`alertasPorTarjeta`). */
   alertasTicket?: Record<string, string>;
   /** `{ '<partido>:<jugador>': estado }` del semáforo de diseño (0030). */
@@ -63,6 +67,16 @@ export function ListaPartidos({
                   partido={p}
                   tieneHito={partidosConHito.has(p.partidoId)}
                   // La selección (0031) no tiene panel ni carpetas de Dropbox.
+                  convocatoria={
+                    p.esSeleccion && convocatoria ? (
+                      <CasillasConvocatoria
+                        partidoId={p.partidoId}
+                        convocables={convocatoria.convocables}
+                        convocados={convocatoria.convocados[p.partidoId] ?? []}
+                        puedeMarcar={convocatoria.puedeMarcar}
+                      />
+                    ) : undefined
+                  }
                   onAbrir={onAbrirPartido && !p.esSeleccion ? () => onAbrirPartido(p.partidoId) : undefined}
                   linksDropbox={linksDropbox && !p.esSeleccion ? (linksDropbox[p.jugadorId] ?? SIN_LINKS) : undefined}
                   alertaTicket={alertasTicket[`${p.partidoId}:${p.jugadorId}`]}

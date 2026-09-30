@@ -1210,7 +1210,7 @@ end
 
 ```sql
 create or replace function seleccion_convocar(p_partido uuid, p_jugador uuid, p_convocado boolean)
-returns void language plpgsql security definer set search_path = public as $
+returns void language plpgsql security definer set search_path = public as $$
 declare
   v_cargo text := ticket__cargo_actual(); -- sin sesión → 42501
 begin
@@ -1235,7 +1235,7 @@ begin
     where partido_id = p_partido and jugador_id = p_jugador and con_seleccion;
   end if;
 end;
-$;
+$$;
 
 revoke all on function seleccion_convocar(uuid, uuid, boolean) from public, anon;
 grant execute on function seleccion_convocar(uuid, uuid, boolean) to authenticated;

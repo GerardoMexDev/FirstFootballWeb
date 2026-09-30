@@ -21,6 +21,7 @@ import { crearClienteServidor } from '@/lib/supabase/cliente-servidor';
 import { ZONA_AGENCIA } from '@/lib/fechas/zonas';
 import { hastaFechas } from '@/lib/partidos/fechas-contenido';
 import { pendientesDeSesion } from '@/lib/tickets/pendientes-de-sesion';
+import { sesionActual } from '@/lib/sesion/sesion-actual';
 import { RepositorioTicketsSupabase, type TicketAutomatico } from '@/lib/repositorios/repositorio-tickets';
 import { estadosPorPartidoJugador } from '@/lib/tickets/semaforo';
 import { alertasPorTarjeta } from '@/lib/tickets/estados';
@@ -41,7 +42,7 @@ export default async function PaginaPartidos() {
 
   const repositorioHitos = new RepositorioHitosSupabase(supabase);
   const repositorioAgenda = new RepositorioAgendaSupabase(supabase);
-  const [jugadores, totales, escalas, eventosAgenda, linksDropbox, fechasContenido, pendientes, matchDay, partidosContenido, partidosSeleccion] = await Promise.all([
+  const [jugadores, totales, escalas, eventosAgenda, linksDropbox, fechasContenido, pendientes, matchDay, partidosContenido, partidosSeleccion, convocatoria, sesion] = await Promise.all([
     repositorioHitos.listarJugadoresActivos(),
     repositorioHitos.listarTotales(),
     repositorioHitos.listarEscalasActivas(),
@@ -67,6 +68,12 @@ export default async function PaginaPartidos() {
       console.error('partidos de la selección:', e);
       return [];
     }),
+    // Convocatoria a la selección (0032). Si falla, las tarjetas de Uruguay van sin casillas.
+    repositorioPartidos.listarConvocatoria().catch((e) => {
+      console.error('convocatoria (partidos):', e);
+      return { convocables: [], convocados: {} };
+    }),
+    sesionActual(),
   ]);
   const totalesPorJugador = new Map(totales.map((t) => [t.jugadorId, t]));
   const hitos = ordenarHitos(
@@ -95,6 +102,10 @@ export default async function PaginaPartidos() {
         partidos={partidos}
         partidosContenido={partidosContenido}
         partidosSeleccion={partidosSeleccion}
+        convocatoria={{
+          ...convocatoria,
+          puedeMarcar: sesion?.cargo === 'Administrador' || sesion?.cargo === 'Community Manager',
+        }}
         partidosConHito={partidosConHito(hitos)}
         linksDropbox={linksDropbox}
         fechas={fechasContenido}

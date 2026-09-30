@@ -19,15 +19,20 @@ const MIGRACION = readFileSync(new URL('../supabase/migrations/0031_espn_uruguay
   .replace(/^\s*begin;\s*$/m, '')
   .replace(/^\s*commit;\s*$/m, '');
 let aplicada = false;
+const MIGRACION_32 = readFileSync(new URL('../supabase/migrations/0032_convocatoria_seleccion.sql', import.meta.url), 'utf8')
+  .replace(/^\s*begin;\s*$/m, '')
+  .replace(/^\s*commit;\s*$/m, '');
+let aplicada32 = false;
 const ids = {};
 
 before(async () => {
   await c.connect();
   const r = await c.query(`select to_regclass('public.partidos_seleccion') is not null as ok`);
   aplicada = r.rows[0].ok;
-  const u = await c.query(`select email, id from auth.users where email in ('felipe@footballfirst.uy','maxi@footballfirst.uy')`);
+  aplicada32 = (await c.query("select to_regprocedure('public.seleccion_convocar(uuid,uuid,boolean)') is not null as ok")).rows[0].ok;
+  const u = await c.query(`select email, id from auth.users where email in ('felipe@footballfirst.uy','maxi@footballfirst.uy','pedro@footballfirst.uy')`);
   for (const x of u.rows) ids[x.email.split('@')[0]] = x.id;
-  assert.ok(ids.felipe && ids.maxi, 'faltan usuarios');
+  assert.ok(ids.felipe && ids.maxi && ids.pedro, 'faltan usuarios');
 });
 after(async () => c.end());
 
@@ -35,6 +40,7 @@ async function enTransaccion(fn) {
   await c.query('begin');
   try {
     if (!aplicada) await c.query(MIGRACION);
+    if (!aplicada32) await c.query(MIGRACION_32);
     await fn(c);
   } finally {
     await c.query('rollback');
@@ -120,4 +126,53 @@ test('cron diario agendado', () =>
     await comoDueno();
     const r = await c.query(`select schedule from cron.job where jobname = 'sync-espn-uruguay-diario'`);
     assert.equal(r.rows[0]?.schedule, '0 7 * * *');
+  }));
+
+async function partidoUruguay() {
+  await comoDueno();
+  const uy = (await uno("select id from clubes where proveedor_externo = 'espn' and id_externo = '212'")).id;
+  const ind = (await uno("insert into clubes (nombre, origen, proveedor_externo, id_externo) values ('India QA', 'api', 'espn', 'qa-ind') returning id")).id;
+  const ami = (await uno("select id from competencias where proveedor_externo = 'espn' and id_externo = 'fifa.friendly'")).id;
+  const nandez = (await uno("select id from jugadores where seleccion = 'Uruguay' and servicio_match_day and activo limit 1")).id;
+  const p = await partido(ind, uy, ami, 'qa-conv-1'); // India local, Uruguay visitante (2030-06-10)
+  return { p, nandez };
+}
+
+test('convocar: el CM tilda → Match Day con club = Uruguay y ticket pendiente; destildar lo saca', () =>
+  enTransaccion(async () => {
+    const { p, nandez } = await partidoUruguay();
+    await como(ids.pedro);
+    await c.query('select seleccion_convocar($1, $2, true)', [p, nandez]);
+    const pp = await uno('select club_nombre, rival_nombre, con_seleccion from proximos_partidos where partido_id = $1 and jugador_id = $2', [p, nandez]);
+    assert.deepEqual(pp, { club_nombre: 'Uruguay', rival_nombre: 'India QA', con_seleccion: true });
+    const tk = await uno('select estado, titulo from tickets_match_day where partido_id = $1 and jugador_id = $2', [p, nandez]);
+    assert.equal(tk.estado, 'pendiente');
+    assert.match(tk.titulo, /Uruguay vs India QA/);
+    await c.query('select seleccion_convocar($1, $2, false)', [p, nandez]);
+    const r = await c.query('select 1 from proximos_partidos where partido_id = $1', [p]);
+    assert.equal(r.rows.length, 0);
+  }));
+
+test('convocar: el Diseñador no puede (42501); un partido de liga no se puede (22023)', () =>
+  enTransaccion(async () => {
+    const { p, nandez } = await partidoUruguay();
+    await como(ids.maxi);
+    // El error aborta la transacción: se aísla en un savepoint para seguir usándola.
+    await c.query('savepoint antes');
+    await assert.rejects(c.query('select seleccion_convocar($1, $2, true)', [p, nandez]), (e) => e.code === '42501');
+    await c.query('rollback to savepoint antes');
+    await comoDueno();
+    const pen = (await uno("select id from clubes where id_externo = '2348'")).id;
+    const nac = (await uno("select id from clubes where id_externo = '2356'")).id;
+    const uru1 = (await uno("select id from competencias where proveedor_externo = 'espn' and id_externo = 'uru.1'")).id;
+    const liga = await partido(pen, nac, uru1, 'qa-conv-liga');
+    await como(ids.felipe);
+    await assert.rejects(c.query('select seleccion_convocar($1, $2, true)', [liga, nandez]), (e) => e.code === '22023');
+  }));
+
+test('proximos_partidos: los partidos de club siguen con su club (ninguno queda sin club_nombre)', () =>
+  enTransaccion(async () => {
+    await como(ids.felipe);
+    const r = await c.query('select count(*)::int as n from proximos_partidos where not con_seleccion and club_nombre is null');
+    assert.equal(r.rows[0].n, 0);
   }));

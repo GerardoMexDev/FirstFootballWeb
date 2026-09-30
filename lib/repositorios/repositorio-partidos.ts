@@ -89,6 +89,27 @@ export class RepositorioPartidosSupabase implements RepositorioPartidos {
     return (await this.proximosDe('partidos_seleccion')).map((p) => ({ ...p, esSeleccion: true }));
   }
 
+  /**
+   * Convocatoria a la selección (0032): quiénes se pueden convocar (representados de Match Day
+   * de Uruguay, activos) y a qué partidos ya están convocados (`partidos_jugadores.con_seleccion`).
+   */
+  async listarConvocatoria(): Promise<{ convocables: { id: string; nombre: string }[]; convocados: Record<string, string[]> }> {
+    const [jug, pj] = await Promise.all([
+      this.supabase.from('jugadores').select('id, nombre, apodo').eq('activo', true).eq('servicio_match_day', true).eq('seleccion', 'Uruguay')
+        .returns<Array<{ id: string; nombre: string; apodo: string | null }>>(),
+      this.supabase.from('partidos_jugadores').select('partido_id, jugador_id').eq('con_seleccion', true)
+        .returns<Array<{ partido_id: string; jugador_id: string }>>(),
+    ]);
+    if (jug.error) throw new Error(`No se pudo leer convocables: ${jug.error.message}`);
+    if (pj.error) throw new Error(`No se pudo leer convocados: ${pj.error.message}`);
+    const convocados: Record<string, string[]> = {};
+    for (const f of pj.data ?? []) (convocados[f.partido_id] ??= []).push(f.jugador_id);
+    return {
+      convocables: (jug.data ?? []).map((j) => ({ id: j.id, nombre: j.apodo || j.nombre })),
+      convocados,
+    };
+  }
+
   /** Las tres vistas tienen las mismas columnas (0027 copia el cuerpo de 0017; 0031 las repite). */
   private async proximosDe(
     vista: 'proximos_partidos' | 'proximos_partidos_contenido' | 'partidos_seleccion',
