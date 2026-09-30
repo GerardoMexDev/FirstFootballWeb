@@ -37,15 +37,17 @@ export function CasillasDiseno({
   const [error, setError] = useState<string | null>(null);
 
   async function cambiar(nuevo: boolean) {
+    // Optimista: la casilla cambia al instante y vuelve atrás si el servidor la rechaza.
+    setValor(nuevo);
     setEnviando(true);
     setError(null);
     const r = await marcarDiseno(crearClienteNavegador(), partidoId, jugadorId, nuevo);
     if (!r.ok) {
+      setValor(!nuevo);
       setEnviando(false);
       setError(r.mensaje);
       return;
     }
-    setValor(nuevo);
     router.refresh();
     try {
       await onCambio?.();

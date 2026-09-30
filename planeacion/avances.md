@@ -1317,6 +1317,17 @@ Charla con Gerardo (no se codeó nada): tres preguntas de la agencia / de él.
 ### 📋 Cambios pedidos por la agencia (reunión 2026-09-29, dictados por Gerardo 2026-09-30) — ronda final
 > Se anotan tal cual los dicta Gerardo; NO se codea hasta tener la lista completa y acordar cada punto (Regla 0).
 
+> **Estado 2026-09-30 (rama `match-day-auto`, migración `0030` aplicada):** ✅ puntos **1, 2, 3 y 5**
+> hechos y probados en dev (QA con Felipe y Maxi: tildar/destildar Completado se guarda en
+> `disenos_partido` y el chip del calendario pasa rojo → verde → rojo; Admin ve la casilla
+> deshabilitada; Copiar deja en el portapapeles equipos + fecha + hora UY/local + estadio;
+> filtros Todos/Match Day/Contenido; `/calendario-general` redirige a `?f=contenido`; 390 px sin
+> scroll lateral). Tickets automáticos = solo partidos de Match Day, uno por jugador, desde
+> `match_day_desde()` = **2026-09-30**, vencen 2 días antes. Las fechas de Contenido y de First van
+> al calendario sin ticket ni color. Nav: Partidos · Calendario · Jugadores · Tickets.
+> Falta: revisión final de la rama, merge a `main`, push (Gerardo) y QA en producción.
+> Pendientes: 4 y 9 (uruguayos y selección por ESPN), 6 (Excel de fechas), 10 (listas de Gerardo).
+
 1. **Ticket de partido: casilla "Terminado" para el Diseñador.** En el ticket, un checkbox que
    el Diseñador marca cuando el diseño está terminado. Motivo: el Administrador y el Community
    Manager solo quieren estar pendientes de que los tickets estén abiertos, próximos a vencer o

@@ -360,6 +360,8 @@
 
 /* Texto solo para lector de pantalla (avisos de estado) */
 .solo-lector { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; border: 0; }
+/* En los chips del calendario el texto largo lo empujaba fuera de la pantalla (scroll lateral a 390 px). */
+.cal__grid .solo-lector { top: 0; left: 0; }
 
 /* Tickets en el panel del partido */
 .tkp { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 4px 16px 10px; }

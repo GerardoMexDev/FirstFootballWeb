@@ -211,7 +211,7 @@ export function PanelLateral() {
           {contenido?.fase === 'jugador-contenido' && (
             <PanelJugadorContenido bundle={contenido.datos} destacar={destacar} />
           )}
-          {contenido?.fase === 'partido' && <PanelPartido bundle={contenido.datos} />}
+          {contenido?.fase === 'partido' && <PanelPartido bundle={contenido.datos} onActualizar={recargar} />}
           {contenido?.fase === 'ticket' && (
             <PanelTicket bundle={contenido.datos} onActualizar={recargar} />
           )}

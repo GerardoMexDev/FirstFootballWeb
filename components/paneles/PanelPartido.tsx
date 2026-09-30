@@ -42,7 +42,14 @@ import {
 import { mostrar } from '@/lib/formato/valores';
 import type { DetallePartidoBundle } from '@/lib/paneles/cargar-detalle-partido';
 
-export function PanelPartido({ bundle }: { bundle: DetallePartidoBundle }) {
+export function PanelPartido({
+  bundle,
+  onActualizar,
+}: {
+  bundle: DetallePartidoBundle;
+  /** Recarga silenciosa del panel (tras tildar Completado, el semáforo se actualiza). */
+  onActualizar?: () => Promise<void>;
+}) {
   const { abrir } = usePanel();
   const { detalle: d, hitos } = bundle;
 
@@ -222,6 +229,7 @@ export function PanelPartido({ bundle }: { bundle: DetallePartidoBundle }) {
                       jugadorNombre={j.nombre}
                       completado={md.estado === 'publicado'}
                       puedeMarcar={bundle.usuario?.cargo === 'Diseñador'}
+                      onCambio={onActualizar}
                     />
                     {md.estado === 'publicado' && md.completadoPorNombre && <small className="mdj__q">Completado por {md.completadoPorNombre}</small>}
                   </div>
