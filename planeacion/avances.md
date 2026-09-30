@@ -1447,6 +1447,9 @@ Charla con Gerardo (no se codeó nada): tres preguntas de la agencia / de él.
      Claude: el Excel manda y se carga todo; las 4 fechas automáticas de hoy (cumpleaños, club
      actual, debut, debut selección) quedan SOLO donde el Excel no tiene esa fecha; si chocan, gana el
      Excel. Para Aguirre se deja lo actual.
+   - **✅ Decidido por Gerardo (2026-09-30):** se combinan. Si el Excel NO trae un dato que nosotros sí
+     tenemos, queda el nuestro junto con los del Excel; si se repite, gana el del Excel de la agencia.
+     Consultas (a)–(f) enviadas a la agencia por Gerardo (texto armado 2026-09-30); falta su respuesta.
 7. **Traspasos (cambio de club): ¿automáticos? + temporadas de pases.** La agencia pregunta si los
    traspasos de los jugadores Match Day son automáticos (y que cambie el club en todo), y cómo se
    controla a los de solo Contenido en cada ventana de pases (grande: ~julio–septiembre; chica:
