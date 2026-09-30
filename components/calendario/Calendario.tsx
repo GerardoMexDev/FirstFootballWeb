@@ -39,6 +39,7 @@ const FILTROS: { f: FiltroCalendario; etiqueta: string }[] = [
   { f: 'todos', etiqueta: 'Todos' },
   { f: 'matchday', etiqueta: 'Match Day' },
   { f: 'contenido', etiqueta: 'Contenido' },
+  { f: 'seleccion', etiqueta: 'Selección' },
 ];
 
 function chipEvento(e: EventoCalendario): { etiqueta: string; texto: string } {
@@ -176,8 +177,8 @@ export function Calendario({
                 const { etiqueta, texto } = chipEvento(e);
                 const clave = `${e.fuente}-${e.refId ?? j}`;
                 const clase = `ev ${e.tentativo ? 'ev--tent' : ''} ${e.esInternacional ? 'ev--int' : ''}`;
-                // Partidos de jugadores solo-Contenido: no tienen panel de partido → chip sin clic (abajo).
-                if (e.fuente === 'partido' && e.refId && e.grupo !== 'contenido') {
+                // Partidos de Contenido y de la selección (0031): no tienen panel → chip sin clic (abajo).
+                if (e.fuente === 'partido' && e.refId && (e.grupo ?? 'matchday') === 'matchday') {
                   const refId = e.refId;
                   const tk = ticketsPorPartido[refId];
                   const sem = estadoPorPartido[refId];

@@ -15,7 +15,7 @@ import { DateTime } from 'luxon';
 import { NotasAgenda } from '@/components/agenda/NotasAgenda';
 import { Calendario } from '@/components/calendario/Calendario';
 import { FUENTES_CONTENIDO, notasProximas, unirNotas } from '@/lib/agenda/notas-proximas';
-import { filtrarCalendario, unirEventos, type FiltroCalendario } from '@/lib/calendario/eventos';
+import { filtrarCalendario, quitarSeleccionDuplicada, unirEventos, type FiltroCalendario } from '@/lib/calendario/eventos';
 import { RepositorioAgendaSupabase } from '@/lib/repositorios/repositorio-agenda';
 import { RepositorioTicketsSupabase } from '@/lib/repositorios/repositorio-tickets';
 import { alertasPorPartido, alertasPorTicket, resumirPorPartido, ticketsPorDia } from '@/lib/tickets/estados';
@@ -25,7 +25,7 @@ import { crearClienteServidor } from '@/lib/supabase/cliente-servidor';
 import { ZONA_AGENCIA } from '@/lib/fechas/zonas';
 import type { EstadoVisual, ResumenTicket } from '@/lib/tickets/tipos';
 
-const FILTROS: FiltroCalendario[] = ['todos', 'matchday', 'contenido'];
+const FILTROS: FiltroCalendario[] = ['todos', 'matchday', 'contenido', 'seleccion'];
 
 export default async function PaginaCalendario({ searchParams }: { searchParams: { f?: string } }) {
   const filtro: FiltroCalendario = FILTROS.includes(searchParams.f as FiltroCalendario) ? (searchParams.f as FiltroCalendario) : 'todos';
@@ -43,23 +43,29 @@ export default async function PaginaCalendario({ searchParams }: { searchParams:
     console.error(`${que} (calendario):`, e);
     return [];
   };
-  const [notasMd, notasCo, eventosMd, eventosCo, partidosCo, tickets, ticketsFecha, matchDay, pendientes] = await Promise.all([
+  const [notasMd, notasCo, eventosMd, eventosCo, partidosCo, partidosSel, tickets, ticketsFecha, matchDay, pendientes] = await Promise.all([
     repoMd.listarEventosParaNotas(hoyUy),
     repoCo.listarEventosParaNotas(hoyUy),
     repoMd.listarEventos(desde, hasta),
     repoCo.listarEventos(desde, hasta),
     repoCo.listarPartidosContenido(desde, hasta).catch(vacio('partidos de Contenido')),
+    repoMd.listarPartidosSeleccion(desde, hasta).catch(vacio('partidos de la selección')),
     repoTk.listarParaCalendario(desde).catch(vacio('tickets')),
     repoTk.listarEventosEntre(desde, hasta).catch(vacio('tickets de fecha')),
     repoTk.listarMatchDay(desde, hasta).catch(vacio('match day')),
     pendientesDeSesion(),
   ]);
 
-  const eventos = filtrarCalendario(unirEventos(eventosMd, [...eventosCo, ...partidosCo]), filtro);
+  // En "Todos", un partido de Uruguay que ya está en Match Day (convocado) se ve una sola vez.
+  const unidos = unirEventos(eventosMd, [...eventosCo, ...partidosCo, ...partidosSel]);
+  const eventos = filtrarCalendario(filtro === 'todos' ? quitarSeleccionDuplicada(unidos) : unidos, filtro);
+  const soloMd = filtro === 'matchday' || filtro === 'todos';
   const notas =
-    filtro === 'matchday'
-      ? notasProximas(notasMd, hoyUy)
-      : notasProximas(unirNotas(notasCo, notasMd), hoyUy, { fuentes: FUENTES_CONTENIDO });
+    filtro === 'seleccion'
+      ? []
+      : filtro === 'matchday'
+        ? notasProximas(notasMd, hoyUy)
+        : notasProximas(unirNotas(notasCo, notasMd), hoyUy, { fuentes: FUENTES_CONTENIDO });
 
   // Semáforo por partido: el peor estado entre sus jugadores (vencido > pendiente > completado).
   const porPartido: Record<string, (EstadoVisual | null)[]> = {};
@@ -76,7 +82,8 @@ export default async function PaginaCalendario({ searchParams }: { searchParams:
         <h1 className="d1">Calendario</h1>
         <p className="sub">
           Partidos de Match Day con su estado de diseño (rojo pendiente, verde completado, amarillo
-          vencido) y las fechas de Contenido. Las fechas a más de 90 días son tentativas.
+          vencido), las fechas de Contenido y los partidos de la selección uruguaya. Las fechas a más
+          de 90 días son tentativas.
         </p>
       </div>
 
@@ -86,10 +93,10 @@ export default async function PaginaCalendario({ searchParams }: { searchParams:
         eventos={eventos}
         hoyUy={hoyUy}
         filtro={filtro}
-        estadoPorPartido={filtro === 'contenido' ? {} : estadoPorPartido}
-        ticketsPorPartido={filtro === 'contenido' ? {} : resumirPorPartido(tickets as ResumenTicket[])}
-        alertasPorPartido={filtro === 'contenido' ? {} : alertasPorPartido(pendientes, hoyUy)}
-        ticketsPorDia={filtro === 'matchday' ? {} : ticketsPorDia(ticketsFecha as ResumenTicket[])}
+        estadoPorPartido={soloMd ? estadoPorPartido : {}}
+        ticketsPorPartido={soloMd ? resumirPorPartido(tickets as ResumenTicket[]) : {}}
+        alertasPorPartido={soloMd ? alertasPorPartido(pendientes, hoyUy) : {}}
+        ticketsPorDia={filtro === 'matchday' || filtro === 'seleccion' ? {} : ticketsPorDia(ticketsFecha as ResumenTicket[])}
         alertasPorTicket={alertasPorTicket(pendientes, hoyUy)}
       />
     </section>

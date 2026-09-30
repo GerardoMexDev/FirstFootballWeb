@@ -126,6 +126,44 @@ export class RepositorioAgendaSupabase {
       }));
   }
 
+  /** Partidos de la selección uruguaya (`partidos_seleccion`, 0031) entre dos días (grupo Selección). */
+  async listarPartidosSeleccion(desdeIso: string, hastaIso: string): Promise<EventoCalendario[]> {
+    const { data, error } = await this.supabase
+      .from('partidos_seleccion')
+      .select('partido_id, club_nombre, rival_nombre, es_local, inicio_utc, dia_uy, dia_local_sede, competencia_codigo, tentativo')
+      .gte('dia_uy', desdeIso)
+      .lte('dia_uy', hastaIso)
+      .returns<
+        Array<{
+          partido_id: string | null;
+          club_nombre: string | null;
+          rival_nombre: string | null;
+          es_local: boolean | null;
+          inicio_utc: string | null;
+          dia_uy: string | null;
+          dia_local_sede: string | null;
+          competencia_codigo: string | null;
+          tentativo: boolean | null;
+        }>
+      >();
+    if (error) throw new Error(`No se pudo leer partidos_seleccion: ${error.message}`);
+    return (data ?? [])
+      .filter((r) => r.partido_id && r.dia_uy)
+      .map((r) => ({
+        fuente: 'partido' as const,
+        refId: r.partido_id,
+        // Local primero, como el resto de los partidos.
+        titulo: r.es_local === false ? `${r.rival_nombre ?? '?'} vs Uruguay` : `Uruguay vs ${r.rival_nombre ?? '?'}`,
+        diaUy: r.dia_uy!,
+        diaLocalSede: r.dia_local_sede ?? r.dia_uy!,
+        cuandoUtc: r.inicio_utc,
+        competenciaCodigo: r.competencia_codigo,
+        esInternacional: true,
+        tentativo: r.tentativo ?? false,
+        grupo: 'seleccion' as const,
+      }));
+  }
+
   /**
    * Partidos de los jugadores solo-Contenido (`proximos_partidos_contenido`, 0027) entre dos días,
    * como eventos del calendario unificado (grupo Contenido, 2026-09-30).

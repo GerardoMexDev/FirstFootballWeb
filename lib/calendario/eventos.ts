@@ -34,7 +34,7 @@ export interface EventoCalendario {
   grupo?: GrupoCalendario;
 }
 
-export type GrupoCalendario = 'matchday' | 'contenido';
+export type GrupoCalendario = 'matchday' | 'contenido' | 'seleccion';
 export type FiltroCalendario = 'todos' | GrupoCalendario;
 
 export const MESES = [
@@ -151,7 +151,21 @@ export function unirEventos(matchday: EventoCalendario[], contenido: EventoCalen
   return salida;
 }
 
-/** Filtro del calendario: Todos, solo Match Day, solo Contenido. */
+/**
+ * En "Todos": si un partido de la selección (0031) cae el mismo día que un partido de Match Day
+ * de Uruguay (un representado convocado), se muestra una sola vez — gana Match Day (tiene
+ * ticket). Criterio: mismo día en Uruguay y "Uruguay" en el título del de Match Day.
+ */
+export function quitarSeleccionDuplicada(eventos: EventoCalendario[]): EventoCalendario[] {
+  const dias = new Set(
+    eventos
+      .filter((e) => e.fuente === 'partido' && (e.grupo ?? 'matchday') === 'matchday' && /uruguay/i.test(e.titulo))
+      .map((e) => e.diaUy),
+  );
+  return eventos.filter((e) => e.grupo !== 'seleccion' || !dias.has(e.diaUy));
+}
+
+/** Filtro del calendario: Todos, solo Match Day, solo Contenido, solo Selección (0031). */
 export function filtrarCalendario(eventos: EventoCalendario[], filtro: FiltroCalendario): EventoCalendario[] {
   if (filtro === 'todos') return eventos;
   return eventos.filter((e) => (e.grupo ?? 'matchday') === filtro);

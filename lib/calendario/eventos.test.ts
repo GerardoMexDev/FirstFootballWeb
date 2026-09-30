@@ -4,7 +4,7 @@
  */
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { agruparPorDia, partidosPorMes, celdasDelMes, filtrarCalendario, unirEventos, type EventoCalendario } from './eventos.ts';
+import { agruparPorDia, partidosPorMes, celdasDelMes, filtrarCalendario, quitarSeleccionDuplicada, unirEventos, type EventoCalendario } from './eventos.ts';
 
 function ev(p: Partial<EventoCalendario>): EventoCalendario {
   const base = {
@@ -107,4 +107,16 @@ test('unirEventos: la fecha fija de un jugador solo de Match Day no se pierde y 
   assert.deepEqual(todos.map((e) => e.refId).sort(), ['j1', 'j2']);
   assert.deepEqual(filtrarCalendario(todos, 'contenido').map((e) => e.refId).sort(), ['j1', 'j2']);
   assert.deepEqual(filtrarCalendario(todos, 'matchday'), []);
+});
+
+test('filtrarCalendario("seleccion") y Todos; un partido de Uruguay ya en Match Day no se repite en Todos', () => {
+  const eventos = [
+    ev({ fuente: 'partido', refId: 'm1', titulo: 'Uruguay vs India', diaUy: '2026-10-06', grupo: 'matchday' }),
+    ev({ fuente: 'partido', refId: 's1', titulo: 'Uruguay vs India', diaUy: '2026-10-06', grupo: 'seleccion' }),
+    ev({ fuente: 'partido', refId: 's2', titulo: 'Uruguay vs Chile', diaUy: '2026-11-12', grupo: 'seleccion' }),
+    ev({ fuente: 'cumpleanos', refId: 'j1', diaUy: '2026-10-06', grupo: 'contenido' }),
+  ];
+  assert.deepEqual(filtrarCalendario(eventos, 'seleccion').map((e) => e.refId), ['s1', 's2']);
+  assert.deepEqual(quitarSeleccionDuplicada(eventos).map((e) => e.refId), ['m1', 's2', 'j1']);
+  assert.deepEqual(filtrarCalendario(eventos, 'matchday').map((e) => e.refId), ['m1']);
 });
