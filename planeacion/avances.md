@@ -1547,6 +1547,17 @@ activa hasta 2027-04-04, 0 requests usados). Gerardo puso la clave correcta (f8f
       Azteca, EGO Stadium = Prince Mohamed bin Fahd…); donde la fuente dice OTRA cancha se respeta la fuente
       (opción a): Atlante/Cruz Azul en el Azteca (Excel: Ciudad de los Deportes), Huachipato, Deportes Limache,
       Al Ahli, MCT en el Centenario. Alias de equipos a mano (Juventud ≠ Juventude, Nacional ≠ Internacional).
+    - **✅ Parte 2 (estadios) EN PRODUCCIÓN (2026-09-30):** migraciones 0034 + 0035 aplicadas. Tabla
+      `estadios_equipo` (102 equipos; datos en `supabase/datos/estadios-agencia.json` = Excel + equivalencias
+      revisadas a mano) + trigger en `partidos` (todas las syncs): regla 1 = cancha habitual del local → nombre y
+      ciudad de la agencia (sin estadio: respaldo SOLO en liga, 0035); regla 2 = otra cancha que es la habitual de
+      OTRO equipo y no ambigua → nombre de la agencia (Atlante en el Azteca → "Estadio Azteca"). 47 de 95
+      próximos de Match Day cambiaron, 0 sin estadio. QA dev: tarjetas, panel y Copiar con los nombres nuevos.
+      Nombres literales del Excel ("Nabi Abi Chedid" sin "Estádio"). Falta Al-Qadisiyah en el Excel.
+      **Para editar:** cambiar el JSON/Excel → nueva migración con los updates a `estadios_equipo` y después
+      `update partidos set estadio = estadio;` (re-toca los partidos ya cargados).
+      Pendientes chicos: nombres genéricos en la regla 2 ("Estadio Parque Artigas" también es de Paysandú); alias
+      de API-Football para copas ("Club America", "Sao Paulo"…); estadio "" no se trata como vacío.
 
 ### 🎫 Tickets de diseño — ✅ EN PRODUCCIÓN (2026-09-29, Sesión 13)
 
