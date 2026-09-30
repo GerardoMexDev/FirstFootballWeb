@@ -1331,7 +1331,22 @@ Charla con Gerardo (no se codeó nada): tres preguntas de la agencia / de él.
 > `ticket_entregar/aprobar/devolver/publicar`; colores mezclados en chip con ticket manual + semáforo;
 > "No se pudo copiar" en verde; foco al tildar en Tickets; casilla "Pendiente" sin nombre del jugador.
 > **Ajuste de Gerardo (2026-09-30):** el botón Copiar lo ve SOLO el Diseñador (Maxi); Admin y CM no.
-> Pendientes: 4 y 9 (uruguayos y selección por ESPN), 6 (Excel de fechas), 10 (listas de Gerardo).
+> Pendientes: 6 (Excel de fechas), 10 (listas de Gerardo).
+>
+> **Puntos 4 y 9 — ✅ hechos (2026-09-30, rama `espn-uruguay`, migraciones `0031` + `0032` aplicadas).**
+> Spec `planeacion/specs/2026-09-30-espn-uruguay.md`, plan `planeacion/plans/2026-09-30-espn-uruguay.md`.
+> - Edge Function `sync-espn-uruguay` (ESPN, gratis): Peñarol y Nacional (liga uruguaya + Libertadores +
+>   Sudamericana) y la selección (amistosos, Eliminatorias, Copa América, Mundial). Cron 07:00 UTC
+>   (04:00 UY). Avisa en el cartel del Administrador si no corre bien en 36 h (`espn/partidos`).
+> - Contenido: los partidos de Peñarol quedan vinculados a Abel y Franco; los de Nacional a Martirena y
+>   Silvera (se recalcula en cada corrida por `club_actual_id`). ESPN publica ~2 fechas adelante en uru.1.
+>   Copa AUF: ESPN no la tiene.
+> - Selección: vista `partidos_seleccion`; chip **Selección** en /partidos y en el calendario, también en
+>   Todos. Sin ticket ni color, no abre panel.
+> - **Convocatoria a mano (0032):** Admin o CM tildan "Convocado: Nahitan" en la tarjeta de Uruguay → el
+>   partido pasa a Match Day con su cara ("Uruguay vs India · con la selección") y ticket automático para
+>   Maxi. En Todos se ve una sola vez. API-Football nunca trajo esos partidos (0 filas `con_seleccion`).
+> - Verificado: corrida local de la función (7 partidos, idempotente) y QA en dev con Felipe, Maxi y Pedro.
 
 1. **Ticket de partido: casilla "Terminado" para el Diseñador.** En el ticket, un checkbox que
    el Diseñador marca cuando el diseño está terminado. Motivo: el Administrador y el Community
