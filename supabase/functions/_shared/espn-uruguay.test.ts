@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
   EQUIPOS_URUGUAY, EQUIPOS_COPAS_MD, EQUIPOS_ESPN, URUGUAY_ESPN_ID, tareasDeSync, claveCompetencia, jugadoresPorClub, mapaCarteraEspn, zonaDeSede,
-  vinculosSobrantes, estadoDeCorrida,
+  vinculosSobrantes, estadoDeCorrida, quedaTiempo,
 } from './espn-uruguay.ts';
 
 test('claveCompetencia', () => {
@@ -86,4 +86,16 @@ test('mapaCarteraEspn: Toluca vs Atlante (Leagues Cup) → cada id ESPN apunta a
   assert.equal(m.get('223'), 'uuid-tol');
   assert.equal(m.get('226'), 'uuid-atl');
   assert.equal(m.get('2683'), 'uuid-pen');
+});
+
+test('tareasDeSync: primero las copas de Match Day (generan tickets) y después Uruguay', () => {
+  const t = tareasDeSync();
+  const primeraUruguay = t.findIndex((x) => x.equipo.servicio === 'contenido');
+  assert.equal(t.slice(0, primeraUruguay).length, 40);
+  assert.equal(t.slice(primeraUruguay).every((x) => x.equipo.servicio === 'contenido'), true);
+});
+
+test('quedaTiempo: corta antes del límite de la Edge Function', () => {
+  assert.equal(quedaTiempo(0, 119_000), true);
+  assert.equal(quedaTiempo(0, 120_000), false);
 });

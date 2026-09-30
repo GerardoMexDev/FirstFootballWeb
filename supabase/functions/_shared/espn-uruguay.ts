@@ -122,8 +122,11 @@ export const EQUIPOS_COPAS_MD: EquipoUruguay[] = [
   },
 ];
 
-/** Todo lo que sincroniza la función: Uruguay (Contenido + selección) + copas de Match Day. */
-export const EQUIPOS_ESPN: EquipoUruguay[] = [...EQUIPOS_URUGUAY, ...EQUIPOS_COPAS_MD];
+/**
+ * Todo lo que sincroniza la función. Primero las copas de Match Day (generan tickets): si la corrida
+ * se queda sin tiempo, lo que se corta es Uruguay (informativo), no los tickets.
+ */
+export const EQUIPOS_ESPN: EquipoUruguay[] = [...EQUIPOS_COPAS_MD, ...EQUIPOS_URUGUAY];
 
 /** Una tarea por equipo × liga, en el orden de la config. */
 export function tareasDeSync(equipos: EquipoUruguay[] = EQUIPOS_ESPN) {
@@ -194,6 +197,13 @@ export function vinculosSobrantes(
       return !deLocal.includes(f.jugador_id) && !deVisita.includes(f.jugador_id);
     })
     .map(({ partido_id, jugador_id }) => ({ partido_id, jugador_id }));
+}
+
+/** Presupuesto de la corrida: las Edge Functions cortan a ~150 s; se para prolijo a los 120 s. */
+export const PRESUPUESTO_MS = 120_000;
+
+export function quedaTiempo(inicioMs: number, ahoraMs: number, presupuestoMs = PRESUPUESTO_MS): boolean {
+  return ahoraMs - inicioMs < presupuestoMs;
 }
 
 /**

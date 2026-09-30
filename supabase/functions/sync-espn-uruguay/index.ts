@@ -35,6 +35,7 @@ import {
   mapaCarteraEspn,
   tareasDeSync,
   vinculosSobrantes,
+  quedaTiempo,
   estadoDeCorrida,
   zonaDeSede,
   type JugadorSync,
@@ -56,6 +57,7 @@ Deno.serve(async (req: Request) => {
   const supabase = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!);
 
   const iniciadoEn = new Date().toISOString();
+  const inicioMs = Date.now();
   let registros = 0;
   let errorDetalle: string | null = null;
   const errores: string[] = [];
@@ -101,6 +103,12 @@ Deno.serve(async (req: Request) => {
 
     // 4) Por cada equipo × liga. Una liga que falla no corta las demás.
     for (const { equipo, slug, competencia } of tareasDeSync()) {
+      // Sin tiempo: se corta prolijo (queda 'parcial' con lo salteado) antes del límite de la función.
+      if (!quedaTiempo(inicioMs, Date.now())) {
+        errores.push(`${equipo.clave}/${slug}: salteado (sin tiempo)`);
+        ligasFallidas++;
+        continue;
+      }
       const nuestroClubId = carteraPorEspnId.get(equipo.espnTeamId);
       if (!nuestroClubId) {
         errores.push(`${equipo.clave}: club sin uuid (id_externo ${equipo.clubAfId})`);
