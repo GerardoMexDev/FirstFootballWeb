@@ -46,3 +46,7 @@ test('null / vacío / desconocido → null', () => {
   assert.equal(zonaDePais(''), null);
   assert.equal(zonaDePais('Narnia'), null);
 });
+
+test('India (amistoso de Uruguay, 2026-10-06)', () => {
+  assert.equal(zonaDePais('India'), 'Asia/Kolkata');
+});

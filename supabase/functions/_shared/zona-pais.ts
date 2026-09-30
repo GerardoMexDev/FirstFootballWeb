@@ -58,6 +58,8 @@ const ZONA_POR_PAIS: Record<string, string> = {
   espana: 'Europe/Madrid',
   spain: 'Europe/Madrid',
   portugal: 'Europe/Lisbon',
+  // Amistosos de la selección uruguaya (2026-09-30: Uruguay vs India)
+  india: 'Asia/Kolkata',
 };
 
 /**
