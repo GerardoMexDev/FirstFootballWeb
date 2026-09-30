@@ -152,17 +152,22 @@ export function unirEventos(matchday: EventoCalendario[], contenido: EventoCalen
 }
 
 /**
- * En "Todos": si un partido de la selección (0031) cae el mismo día que un partido de Match Day
- * de Uruguay (un representado convocado), se muestra una sola vez — gana Match Day (tiene
- * ticket). Criterio: mismo día en Uruguay y "Uruguay" en el título del de Match Day.
+ * Suma los partidos de la selección (0031) al calendario ya unido. Van APARTE de `unirEventos`:
+ * si un representado está convocado (0032), ese mismo partido también llega de Match Day con el
+ * mismo `refId`, y el dedupe de `unirEventos` se comería el de la selección.
+ * - Selección: siempre todos los de la selección.
+ * - Todos: el convocado se ve una sola vez (gana Match Day, que tiene ticket) — mismo partido.
+ * - Match Day / Contenido: sin la selección.
  */
-export function quitarSeleccionDuplicada(eventos: EventoCalendario[]): EventoCalendario[] {
-  const dias = new Set(
-    eventos
-      .filter((e) => e.fuente === 'partido' && (e.grupo ?? 'matchday') === 'matchday' && /uruguay/i.test(e.titulo))
-      .map((e) => e.diaUy),
-  );
-  return eventos.filter((e) => e.grupo !== 'seleccion' || !dias.has(e.diaUy));
+export function sumarSeleccion(
+  eventos: EventoCalendario[],
+  seleccion: EventoCalendario[],
+  filtro: FiltroCalendario,
+): EventoCalendario[] {
+  if (filtro === 'seleccion') return [...eventos, ...seleccion];
+  if (filtro !== 'todos') return eventos;
+  const yaEstan = new Set(eventos.filter((e) => e.fuente === 'partido' && e.refId).map((e) => e.refId));
+  return [...eventos, ...seleccion.filter((s) => !s.refId || !yaEstan.has(s.refId))];
 }
 
 /** Filtro del calendario: Todos, solo Match Day, solo Contenido, solo Selección (0031). */

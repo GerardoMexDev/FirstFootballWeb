@@ -28,6 +28,8 @@ import {
   jugadoresPorClub,
   mapaCarteraEspn,
   tareasDeSync,
+  vinculosSobrantes,
+  estadoDeCorrida,
   zonaDeSede,
   type JugadorSync,
 } from '../_shared/espn-uruguay.ts';
@@ -52,6 +54,8 @@ Deno.serve(async (req: Request) => {
   let errorDetalle: string | null = null;
   const errores: string[] = [];
   const ligasOk: string[] = [];
+  let ligasFallidas = 0;
+  let desvinculados = 0;
 
   try {
     // 1) Nuestros clubes (Peñarol, Nacional) por id de API-Football, y el "club" Uruguay.
@@ -88,6 +92,7 @@ Deno.serve(async (req: Request) => {
       const nuestroClubId = carteraPorEspnId.get(equipo.espnTeamId);
       if (!nuestroClubId) {
         errores.push(`${equipo.clave}: club sin uuid (id_externo ${equipo.clubAfId})`);
+        ligasFallidas++;
         continue;
       }
       try {
@@ -162,6 +167,35 @@ Deno.serve(async (req: Request) => {
         ligasOk.push(`${equipo.clave}/${slug}`);
       } catch (e) {
         errores.push(`${equipo.clave}/${slug}: ${e instanceof Error ? e.message : JSON.stringify(e)}`);
+        ligasFallidas++;
+      }
+    }
+
+    // 5) Traspasos: se desvincula a quien ya no es del club de ninguno de los dos lados de un
+    //    partido futuro de Peñarol/Nacional (si no, se vería "Boca vs Peñarol").
+    const clubIds = [...clubIdPorAf.values()];
+    if (clubIds.length) {
+      const lista = clubIds.join(',');
+      const { data: links, error: errLinks } = await supabase
+        .from('partidos_jugadores')
+        .select('partido_id, jugador_id, partidos!inner(proveedor_externo, inicio_utc, club_local_id, club_visitante_id)')
+        .eq('con_seleccion', false)
+        .eq('partidos.proveedor_externo', PROVEEDOR)
+        .gt('partidos.inicio_utc', new Date().toISOString())
+        .or(`club_local_id.in.(${lista}),club_visitante_id.in.(${lista})`, { referencedTable: 'partidos' });
+      if (errLinks) throw errLinks;
+      // deno-lint-ignore no-explicit-any
+      const filas = (links ?? []).map((l: any) => ({
+        partido_id: l.partido_id,
+        jugador_id: l.jugador_id,
+        club_local_id: l.partidos.club_local_id,
+        club_visitante_id: l.partidos.club_visitante_id,
+      }));
+      for (const v of vinculosSobrantes(filas, vinculos)) {
+        const { error: errDel } = await supabase
+          .from('partidos_jugadores').delete().eq('partido_id', v.partido_id).eq('jugador_id', v.jugador_id).eq('con_seleccion', false);
+        if (errDel) errores.push(`desvincular ${v.jugador_id}: ${errDel.message}`);
+        else desvinculados++;
       }
     }
   } catch (e) {
@@ -169,8 +203,8 @@ Deno.serve(async (req: Request) => {
     console.error(errorDetalle);
   }
 
-  const huboFalla = errorDetalle !== null || errores.length > 0;
-  const estadoSync = huboFalla ? (registros > 0 ? 'parcial' : 'error') : 'ok';
+  // Un evento suelto que falla no degrada la corrida (queda en parametros.errores); una liga sí.
+  const estadoSync = estadoDeCorrida({ falloGeneral: errorDetalle !== null, ligasFallidas, guardados: registros });
   if (!errorDetalle && errores.length) errorDetalle = `${errores.length} error(es): ${errores.slice(0, 5).join(' | ')}`;
 
   await supabase.from('sincronizaciones').insert({
@@ -181,7 +215,7 @@ Deno.serve(async (req: Request) => {
     estado: estadoSync,
     registros_afectados: registros,
     error_detalle: errorDetalle,
-    parametros: { alcance: 'uruguay', ligas: ligasOk, errores },
+    parametros: { alcance: 'uruguay', ligas: ligasOk, errores, desvinculados },
   });
 
   return new Response(JSON.stringify({ estado: estadoSync, registros, errorDetalle }), {

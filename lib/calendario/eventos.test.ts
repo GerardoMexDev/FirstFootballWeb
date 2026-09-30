@@ -4,7 +4,7 @@
  */
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { agruparPorDia, partidosPorMes, celdasDelMes, filtrarCalendario, quitarSeleccionDuplicada, unirEventos, type EventoCalendario } from './eventos.ts';
+import { agruparPorDia, partidosPorMes, celdasDelMes, filtrarCalendario, sumarSeleccion, unirEventos, type EventoCalendario } from './eventos.ts';
 
 function ev(p: Partial<EventoCalendario>): EventoCalendario {
   const base = {
@@ -109,14 +109,21 @@ test('unirEventos: la fecha fija de un jugador solo de Match Day no se pierde y 
   assert.deepEqual(filtrarCalendario(todos, 'matchday'), []);
 });
 
-test('filtrarCalendario("seleccion") y Todos; un partido de Uruguay ya en Match Day no se repite en Todos', () => {
-  const eventos = [
-    ev({ fuente: 'partido', refId: 'm1', titulo: 'Uruguay vs India', diaUy: '2026-10-06', grupo: 'matchday' }),
-    ev({ fuente: 'partido', refId: 's1', titulo: 'Uruguay vs India', diaUy: '2026-10-06', grupo: 'seleccion' }),
-    ev({ fuente: 'partido', refId: 's2', titulo: 'Uruguay vs Chile', diaUy: '2026-11-12', grupo: 'seleccion' }),
-    ev({ fuente: 'cumpleanos', refId: 'j1', diaUy: '2026-10-06', grupo: 'contenido' }),
+test('sumarSeleccion: convocado (mismo partido en Match Day) → Selección lo sigue mostrando; Todos una sola vez', () => {
+  // Nández convocado a Uruguay–India: agenda_anual trae el partido p6 como Match Day.
+  const md = [
+    ev({ fuente: 'partido', refId: 'p6', titulo: 'Uruguay vs India', diaUy: '2026-10-06', grupo: 'matchday' }),
+    ev({ fuente: 'partido', refId: 'p9', titulo: 'Toluca vs Uruguay FC', diaUy: '2026-11-12', grupo: 'matchday' }),
   ];
-  assert.deepEqual(filtrarCalendario(eventos, 'seleccion').map((e) => e.refId), ['s1', 's2']);
-  assert.deepEqual(quitarSeleccionDuplicada(eventos).map((e) => e.refId), ['m1', 's2', 'j1']);
-  assert.deepEqual(filtrarCalendario(eventos, 'matchday').map((e) => e.refId), ['m1']);
+  const co = [ev({ fuente: 'cumpleanos', refId: 'j1', diaUy: '2026-10-06', grupo: 'contenido' })];
+  const sel = [
+    ev({ fuente: 'partido', refId: 'p6', titulo: 'India vs Uruguay', diaUy: '2026-10-06', grupo: 'seleccion' }),
+    ev({ fuente: 'partido', refId: 'p7', titulo: 'Uruguay vs Chile', diaUy: '2026-11-12', grupo: 'seleccion' }),
+  ];
+  const unidos = unirEventos(md, co);
+  const ids = (f: Parameters<typeof sumarSeleccion>[2]) => filtrarCalendario(sumarSeleccion(unidos, sel, f), f).map((e) => `${e.grupo}:${e.refId}`);
+  assert.deepEqual(ids('seleccion'), ['seleccion:p6', 'seleccion:p7']);
+  assert.deepEqual(ids('todos'), ['matchday:p6', 'matchday:p9', 'contenido:j1', 'seleccion:p7']);
+  assert.deepEqual(ids('matchday'), ['matchday:p6', 'matchday:p9']);
+  assert.deepEqual(ids('contenido'), ['contenido:j1']);
 });

@@ -2,6 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
   EQUIPOS_URUGUAY, URUGUAY_ESPN_ID, tareasDeSync, claveCompetencia, jugadoresPorClub, mapaCarteraEspn, zonaDeSede,
+  vinculosSobrantes, estadoDeCorrida,
 } from './espn-uruguay.ts';
 
 test('tareasDeSync: Peñarol y Nacional × 3 ligas + Uruguay × 4 = 10 tareas', () => {
@@ -48,4 +49,23 @@ test('zonaDeSede: país conocido; uru.1 sin país → Montevideo; selección sin
   assert.equal(zonaDeSede('India', 'fifa.friendly'), 'Asia/Kolkata');
   assert.equal(zonaDeSede(null, 'uru.1'), 'America/Montevideo');
   assert.equal(zonaDeSede(null, 'fifa.friendly'), null);
+});
+
+test('vinculosSobrantes: el que se fue del club se desvincula; en el clásico cada uno sigue con su club', () => {
+  const vigentes = new Map([['PEN', ['franco']], ['NAC', ['silvera']]]); // Abel se fue de Peñarol
+  const filas = [
+    { partido_id: 'p1', jugador_id: 'abel', club_local_id: 'PEN', club_visitante_id: 'RAC' },
+    { partido_id: 'p1', jugador_id: 'franco', club_local_id: 'PEN', club_visitante_id: 'RAC' },
+    { partido_id: 'clasico', jugador_id: 'franco', club_local_id: 'NAC', club_visitante_id: 'PEN' },
+    { partido_id: 'clasico', jugador_id: 'silvera', club_local_id: 'NAC', club_visitante_id: 'PEN' },
+  ];
+  assert.deepEqual(vinculosSobrantes(filas, vigentes), [{ partido_id: 'p1', jugador_id: 'abel' }]);
+});
+
+test('estadoDeCorrida: un evento suelto que falla no prende el aviso; una liga caída sí', () => {
+  assert.equal(estadoDeCorrida({ falloGeneral: false, ligasFallidas: 0, guardados: 7 }), 'ok');
+  assert.equal(estadoDeCorrida({ falloGeneral: false, ligasFallidas: 1, guardados: 5 }), 'parcial');
+  assert.equal(estadoDeCorrida({ falloGeneral: false, ligasFallidas: 10, guardados: 0 }), 'error');
+  assert.equal(estadoDeCorrida({ falloGeneral: true, ligasFallidas: 0, guardados: 0 }), 'error');
+  assert.equal(estadoDeCorrida({ falloGeneral: true, ligasFallidas: 0, guardados: 3 }), 'parcial');
 });

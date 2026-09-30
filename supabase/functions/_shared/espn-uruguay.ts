@@ -96,3 +96,31 @@ export function mapaCarteraEspn(clubIdPorAf: Map<string, string>, equipos: Equip
 export function zonaDeSede(sedePais: string | null, slug: string): string | null {
   return zonaDePais(sedePais) ?? (slug === 'uru.1' ? 'America/Montevideo' : null);
 }
+
+/**
+ * Vínculos jugador↔partido que sobran: el jugador ya no es del club (traspaso) de NINGUNO de los
+ * dos lados del partido. En un clásico cada uno sigue vinculado por su club. Sin esto, tras un
+ * traspaso sus partidos viejos se verían con el club nuevo ("Boca vs Peñarol").
+ */
+export function vinculosSobrantes(
+  filas: Array<{ partido_id: string; jugador_id: string; club_local_id: string | null; club_visitante_id: string | null }>,
+  vigentes: Map<string, string[]>,
+): Array<{ partido_id: string; jugador_id: string }> {
+  return filas
+    .filter((f) => {
+      const deLocal = f.club_local_id ? (vigentes.get(f.club_local_id) ?? []) : [];
+      const deVisita = f.club_visitante_id ? (vigentes.get(f.club_visitante_id) ?? []) : [];
+      return !deLocal.includes(f.jugador_id) && !deVisita.includes(f.jugador_id);
+    })
+    .map(({ partido_id, jugador_id }) => ({ partido_id, jugador_id }));
+}
+
+/**
+ * Estado de la corrida para la bitácora (y el cartel del Administrador, que avisa si no es 'ok'):
+ * un evento suelto que falla NO la degrada (queda anotado en `parametros.errores`); una liga que
+ * no respondió o un fallo general sí.
+ */
+export function estadoDeCorrida(r: { falloGeneral: boolean; ligasFallidas: number; guardados: number }): 'ok' | 'parcial' | 'error' {
+  if (!r.falloGeneral && r.ligasFallidas === 0) return 'ok';
+  return r.guardados > 0 ? 'parcial' : 'error';
+}

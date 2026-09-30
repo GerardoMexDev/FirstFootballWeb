@@ -9,12 +9,12 @@ import type { PartidoProximo } from '../repositorios/tipos.ts';
 
 /**
  * Todos = Match Day + selección (0031), por fecha. Si un partido de Uruguay ya está en Match Day
- * (un representado convocado: competencia de selección el mismo día en Uruguay), se muestra una
- * sola vez — gana el de Match Day, que es el que tiene ticket.
+ * (un representado convocado, 0032: es el MISMO partido), se muestra una sola vez — gana el de
+ * Match Day, que es el que tiene ticket.
  */
 export function unirConSeleccion(md: PartidoProximo[], sel: PartidoProximo[]): PartidoProximo[] {
-  const diasSeleccionMd = new Set(md.filter((p) => p.competenciaTipo === 'seleccion' && p.diaUy).map((p) => p.diaUy));
-  const extra = sel.filter((p) => !p.diaUy || !diasSeleccionMd.has(p.diaUy));
+  const enMatchDay = new Set(md.map((p) => p.partidoId));
+  const extra = sel.filter((p) => !enMatchDay.has(p.partidoId));
   const clave = (p: PartidoProximo) => p.inicioUtc ?? '9999';
   return [...md, ...extra].sort((a, b) => clave(a).localeCompare(clave(b)));
 }

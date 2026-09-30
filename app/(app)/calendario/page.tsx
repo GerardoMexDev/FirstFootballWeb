@@ -15,7 +15,7 @@ import { DateTime } from 'luxon';
 import { NotasAgenda } from '@/components/agenda/NotasAgenda';
 import { Calendario } from '@/components/calendario/Calendario';
 import { FUENTES_CONTENIDO, notasProximas, unirNotas } from '@/lib/agenda/notas-proximas';
-import { filtrarCalendario, quitarSeleccionDuplicada, unirEventos, type FiltroCalendario } from '@/lib/calendario/eventos';
+import { filtrarCalendario, sumarSeleccion, unirEventos, type FiltroCalendario } from '@/lib/calendario/eventos';
 import { RepositorioAgendaSupabase } from '@/lib/repositorios/repositorio-agenda';
 import { RepositorioTicketsSupabase } from '@/lib/repositorios/repositorio-tickets';
 import { alertasPorPartido, alertasPorTicket, resumirPorPartido, ticketsPorDia } from '@/lib/tickets/estados';
@@ -56,9 +56,9 @@ export default async function PaginaCalendario({ searchParams }: { searchParams:
     pendientesDeSesion(),
   ]);
 
-  // En "Todos", un partido de Uruguay que ya está en Match Day (convocado) se ve una sola vez.
-  const unidos = unirEventos(eventosMd, [...eventosCo, ...partidosCo, ...partidosSel]);
-  const eventos = filtrarCalendario(filtro === 'todos' ? quitarSeleccionDuplicada(unidos) : unidos, filtro);
+  // La selección va aparte de unirEventos (un convocado comparte refId con Match Day; ver sumarSeleccion).
+  const unidos = unirEventos(eventosMd, [...eventosCo, ...partidosCo]);
+  const eventos = filtrarCalendario(sumarSeleccion(unidos, partidosSel, filtro), filtro);
   const soloMd = filtro === 'matchday' || filtro === 'todos';
   const notas =
     filtro === 'seleccion'

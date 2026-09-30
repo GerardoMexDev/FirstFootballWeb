@@ -13,9 +13,16 @@ const pp = (id: string, dia: string, extra: Partial<PartidoProximo> = {}): Parti
 });
 
 test('unirConSeleccion: ordena por fecha y NO repite un partido de Uruguay que ya está en Match Day', () => {
-  const md = [pp('m1', '2026-10-04'), pp('m2', '2026-10-06', { competenciaTipo: 'seleccion', conSeleccion: true })];
-  const sel = [pp('s1', '2026-10-06', { esSeleccion: true, competenciaTipo: 'seleccion' }), pp('s2', '2026-10-10', { esSeleccion: true, competenciaTipo: 'seleccion' })];
-  assert.deepEqual(unirConSeleccion(md, sel).map((p) => p.partidoId), ['m1', 'm2', 's2']);
+  // p6 = Uruguay–India con Nández convocado (mismo partido en las dos listas); s3 = otro partido el mismo día.
+  const md = [pp('m1', '2026-10-04'), pp('p6', '2026-10-06', { competenciaTipo: 'seleccion', conSeleccion: true })];
+  const sel = [
+    pp('p6', '2026-10-06', { esSeleccion: true, competenciaTipo: 'seleccion' }),
+    pp('s3', '2026-10-06', { esSeleccion: true, competenciaTipo: 'seleccion', inicioUtc: '2026-10-06T23:00:00Z' }),
+    pp('s2', '2026-10-10', { esSeleccion: true, competenciaTipo: 'seleccion' }),
+  ];
+  const r = unirConSeleccion(md, sel);
+  assert.deepEqual(r.map((p) => p.partidoId), ['m1', 'p6', 's3', 's2']);
+  assert.equal(r.find((p) => p.partidoId === 'p6')?.esSeleccion, undefined); // gana la de Match Day
 });
 
 test('listaSegunFiltro: Selección = solo selección; Todos = Match Day + selección; Contenido aparte; Match Day sin selección', () => {
