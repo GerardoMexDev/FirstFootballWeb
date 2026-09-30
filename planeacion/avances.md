@@ -1330,6 +1330,7 @@ Charla con Gerardo (no se codeó nada): tres preguntas de la agencia / de él.
 > de la revisión: partido suspendido pasa a vencido (migración nueva); revocar RPC viejos
 > `ticket_entregar/aprobar/devolver/publicar`; colores mezclados en chip con ticket manual + semáforo;
 > "No se pudo copiar" en verde; foco al tildar en Tickets; casilla "Pendiente" sin nombre del jugador.
+> **Ajuste de Gerardo (2026-09-30):** el botón Copiar lo ve SOLO el Diseñador (Maxi); Admin y CM no.
 > Pendientes: 4 y 9 (uruguayos y selección por ESPN), 6 (Excel de fechas), 10 (listas de Gerardo).
 
 1. **Ticket de partido: casilla "Terminado" para el Diseñador.** En el ticket, un checkbox que
@@ -1478,8 +1479,9 @@ activa hasta 2027-04-04, 0 requests usados). Gerardo puso la clave correcta (f8f
    - Lo que se sabe: la clave de API-Football (plan free) no tiene fecha de vencimiento propia;
      deja de andar si la cuenta se borra/suspende o si se regenera la clave (confirmar en el
      dashboard qué pasó el 22/09). SportMonks: el trial terminaba **hoy 2026-09-30 22:21**; desde
-     ahí cobra a la tarjeta de la agencia — **verificar mañana 01/10 que `sportmonks/partidos`
-     siga en `ok`**.
+     ahí cobra a la tarjeta de la agencia. **Confirmado por Gerardo (2026-09-30): la suscripción ya
+     tiene la tarjeta de pago cargada.** (Igual el cartel de avisos del Administrador salta si
+     `sportmonks/partidos` deja de estar en `ok`.)
    - Una clave no se puede renovar sola desde la app (la emite el proveedor). Lo automatizable:
      **detectar y avisar** — p.ej. un aviso visible para el Administrador ("La fuente de copas no
      responde desde el 22/09") y/o mail a Mazdesign cuando una sync falla 2 días seguidos.

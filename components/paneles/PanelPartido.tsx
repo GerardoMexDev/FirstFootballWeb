@@ -181,17 +181,19 @@ export function PanelPartido({
       <div className="bloque">
         <div className="bcp__fila">
           <span className="label">{d.jugadores.length > 1 ? 'Jugadores a cubrir' : 'Jugador a cubrir'}</span>
-          {/* Datos clave para pegar en Photoshop (0030). */}
-          <BotonCopiar
-            texto={textoCopiarPartido({
-              local: d.local.nombre,
-              visitante: d.visitante.nombre,
-              inicioUtc: d.inicioUtc,
-              zona: d.zonaHorariaEvento,
-              estadio: d.estadio,
-              ciudad: d.ciudad,
-            })}
-          />
+          {/* Datos clave para pegar en Photoshop (0030). Solo el Diseñador (Gerardo, 2026-09-30). */}
+          {bundle.usuario?.cargo === 'Diseñador' && (
+            <BotonCopiar
+              texto={textoCopiarPartido({
+                local: d.local.nombre,
+                visitante: d.visitante.nombre,
+                inicioUtc: d.inicioUtc,
+                zona: d.zonaHorariaEvento,
+                estadio: d.estadio,
+                ciudad: d.ciudad,
+              })}
+            />
+          )}
         </div>
         <div className="lst">
           {bundle.ticketsError && (
