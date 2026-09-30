@@ -2277,6 +2277,23 @@ F–H → I (con migración). Cada ítem cerrado se documenta en §4.
       `pereira` 495×619 quedan blandas al escalar). Recambio: ver `public/jugadores/LEEME.md`. — baja
 - [ ] Tests de zona horaria en fines de semana de cambio de hora. — media
 
+### 💡 Ideas para la etapa de mantenimiento (NO son de Fase 1 — solo anotadas)
+
+- **Sección "Noticias" (propuesta de Gerardo, 2026-09-30).** Noticias de los jugadores de la
+  cartera y de la selección uruguaya (+ fixtures), en una sección propia. Pensada para el
+  mantenimiento de la web, no para esta entrega.
+  - **Spike (Claude, 2026-09-30, solo lectura): SÍ se puede, gratis.** Google News RSS
+    (`news.google.com/rss/search?q=<término> when:7d&hl=es-419&gl=UY&ceid=UY:es-419`, sin clave)
+    devolvió notas recientes y en español: "Nahitan Nández" 12, "Maxi Silvera" Nacional 6,
+    "selección uruguaya" 100 — cada una con título, medio, fecha y link. Las noticias de ESPN
+    (`site.api.espn.com/.../news`) NO sirven: en inglés, viejas y poco relevantes.
+  - Forma propuesta: tarjetas con título + medio + fecha que abren la nota en el sitio original
+    (no se copia el texto → sin problema de derechos); filtros por jugador y "Selección".
+  - A resolver cuando se haga: ruido/homónimos (con "Maxi Silvera" salió una de Maximiliano
+    Gómez → afinar búsqueda por nombre + apodo + club), agrupar la misma noticia de varios medios,
+    RSS no oficial (puede cambiar → avisarlo en el cartel del Administrador), el RSS no trae
+    imágenes.
+
 ## 6. Bugs conocidos / cosas a vigilar
 
 - **Sedes de partidos incorrectas o incompletas — PENDIENTE DE VERIFICAR** (reportado por
