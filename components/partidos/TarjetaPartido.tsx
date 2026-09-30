@@ -135,26 +135,29 @@ export function TarjetaPartido({
             {p.estadio || p.ciudad ? `${mostrar(p.estadio)}, ${mostrar(p.ciudad)}` : 'Sin datos'}
           </span>
         </div>
-        <div className="caras">
-          <div className="caras__pila">
-            <CaraJugador nombre={p.jugadorNombre} fotoUrl={p.jugadorFotoUrl} />
+        {/* La selección (0031) no tiene representado: sin cara, hito, semáforo ni Dropbox. */}
+        {!p.esSeleccion && (
+          <div className="caras">
+            <div className="caras__pila">
+              <CaraJugador nombre={p.jugadorNombre} fotoUrl={p.jugadorFotoUrl} />
+            </div>
+            <small>
+              {p.jugadorApodo || p.jugadorNombre}
+              {p.conSeleccion ? ' · con la selección' : ''}
+            </small>
+            {tieneHito && (
+              <span className="tag tag--hito">
+                <Ico nombre="medalla" clase="ico ico--sm" />
+                Hito
+              </span>
+            )}
+            {estadoDiseno && <PastillaSemaforo estado={estadoDiseno} />}
+            {alertaTicket && <AlertaTicket texto={alertaTicket} />}
+            {linksDropbox && (
+              <BotonesDropbox links={linksDropbox} nombreJugador={p.jugadorApodo || p.jugadorNombre} />
+            )}
           </div>
-          <small>
-            {p.jugadorApodo || p.jugadorNombre}
-            {p.conSeleccion ? ' · con la selección' : ''}
-          </small>
-          {tieneHito && (
-            <span className="tag tag--hito">
-              <Ico nombre="medalla" clase="ico ico--sm" />
-              Hito
-            </span>
-          )}
-          {estadoDiseno && <PastillaSemaforo estado={estadoDiseno} />}
-          {alertaTicket && <AlertaTicket texto={alertaTicket} />}
-          {linksDropbox && (
-            <BotonesDropbox links={linksDropbox} nombreJugador={p.jugadorApodo || p.jugadorNombre} />
-          )}
-        </div>
+        )}
       </div>
 
       {/* La flecha promete que la tarjeta abre algo: sin `onAbrir` no se muestra. */}

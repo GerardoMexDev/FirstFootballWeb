@@ -62,8 +62,9 @@ export function ListaPartidos({
                   key={`${p.partidoId}-${p.jugadorId}`}
                   partido={p}
                   tieneHito={partidosConHito.has(p.partidoId)}
-                  onAbrir={onAbrirPartido ? () => onAbrirPartido(p.partidoId) : undefined}
-                  linksDropbox={linksDropbox ? (linksDropbox[p.jugadorId] ?? SIN_LINKS) : undefined}
+                  // La selección (0031) no tiene panel ni carpetas de Dropbox.
+                  onAbrir={onAbrirPartido && !p.esSeleccion ? () => onAbrirPartido(p.partidoId) : undefined}
+                  linksDropbox={linksDropbox && !p.esSeleccion ? (linksDropbox[p.jugadorId] ?? SIN_LINKS) : undefined}
                   alertaTicket={alertasTicket[`${p.partidoId}:${p.jugadorId}`]}
                   estadoDiseno={estadosDiseno[`${p.partidoId}:${p.jugadorId}`]}
                 />

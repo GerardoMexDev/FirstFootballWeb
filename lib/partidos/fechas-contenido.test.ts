@@ -102,3 +102,8 @@ test('filtrarFechas: Match Day → ninguna; Contenido → todas', () => {
   assert.deepEqual(filtrarFechas(fs, 'matchday', dia(0)), []);
   assert.equal(filtrarFechas(fs, 'contenido', dia(0)).length, 2);
 });
+
+test('filtrarFechas: Selección → ninguna fecha de Contenido (0031)', () => {
+  const fs = [fecha('cumpleanos', 0, 'A'), fecha('cumpleanos', 3, 'B')];
+  assert.deepEqual(filtrarFechas(fs, 'seleccion', dia(0)), []);
+});

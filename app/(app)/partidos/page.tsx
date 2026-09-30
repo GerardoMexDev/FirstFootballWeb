@@ -41,7 +41,7 @@ export default async function PaginaPartidos() {
 
   const repositorioHitos = new RepositorioHitosSupabase(supabase);
   const repositorioAgenda = new RepositorioAgendaSupabase(supabase);
-  const [jugadores, totales, escalas, eventosAgenda, linksDropbox, fechasContenido, pendientes, matchDay, partidosContenido] = await Promise.all([
+  const [jugadores, totales, escalas, eventosAgenda, linksDropbox, fechasContenido, pendientes, matchDay, partidosContenido, partidosSeleccion] = await Promise.all([
     repositorioHitos.listarJugadoresActivos(),
     repositorioHitos.listarTotales(),
     repositorioHitos.listarEscalasActivas(),
@@ -60,6 +60,11 @@ export default async function PaginaPartidos() {
     // solo con las fechas y el resto de la página no se entera.
     repositorioPartidos.listarProximosContenido().catch((e) => {
       console.error('partidos de Contenido:', e);
+      return [];
+    }),
+    // Partidos de la selección uruguaya (0031). Si falla, Selección/Todos siguen sin ellos.
+    repositorioPartidos.listarProximosSeleccion().catch((e) => {
+      console.error('partidos de la selección:', e);
       return [];
     }),
   ]);
@@ -89,6 +94,7 @@ export default async function PaginaPartidos() {
       <SeccionPartidos
         partidos={partidos}
         partidosContenido={partidosContenido}
+        partidosSeleccion={partidosSeleccion}
         partidosConHito={partidosConHito(hitos)}
         linksDropbox={linksDropbox}
         fechas={fechasContenido}

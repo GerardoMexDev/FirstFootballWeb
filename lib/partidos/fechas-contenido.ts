@@ -95,6 +95,7 @@ export function filtrarFechas(
     case 'int':
     case 'hito':
     case 'matchday': // Match Day = solo partidos (2026-09-29)
+    case 'seleccion': // Selección = solo partidos de Uruguay (0031)
       return [];
     case 'fechas':
     case 'contenido': // Contenido = fechas + partidos de jugadores solo-Contenido (0027)

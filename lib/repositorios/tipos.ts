@@ -54,6 +54,8 @@ export interface PartidoProximo {
   marcadorLocal: number | null;
   marcadorVisitante: number | null;
   tentativo: boolean;
+  /** Partido de la selección uruguaya (vista `partidos_seleccion`, 0031): sin representado. */
+  esSeleccion?: boolean;
 }
 
 export interface RepositorioPartidos {

@@ -84,8 +84,15 @@ export class RepositorioPartidosSupabase implements RepositorioPartidos {
     return this.proximosDe('proximos_partidos_contenido');
   }
 
-  /** Las dos vistas tienen las mismas columnas (0027 copia el cuerpo de 0017). */
-  private async proximosDe(vista: 'proximos_partidos' | 'proximos_partidos_contenido'): Promise<PartidoProximo[]> {
+  /** Partidos de la selección uruguaya (vista 0031): filtros "Selección" y "Todos". */
+  async listarProximosSeleccion(): Promise<PartidoProximo[]> {
+    return (await this.proximosDe('partidos_seleccion')).map((p) => ({ ...p, esSeleccion: true }));
+  }
+
+  /** Las tres vistas tienen las mismas columnas (0027 copia el cuerpo de 0017; 0031 las repite). */
+  private async proximosDe(
+    vista: 'proximos_partidos' | 'proximos_partidos_contenido' | 'partidos_seleccion',
+  ): Promise<PartidoProximo[]> {
     const { data, error } = await this.supabase
       .from(vista)
       .select('*')

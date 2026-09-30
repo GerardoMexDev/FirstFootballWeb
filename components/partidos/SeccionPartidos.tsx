@@ -6,6 +6,8 @@
  * Desde 2026-09-29: "Match Day" = solo partidos; "Contenido" = fechas + partidos de los
  * jugadores solo-Contenido (`partidosContenido`, vista 0027). Esas tarjetas no abren panel
  * ni muestran Dropbox: el panel del partido y los tickets son de Match Day.
+ * Desde 2026-09-30: "Selección" = partidos de la selección uruguaya (`partidosSeleccion`, vista
+ * 0031), que también se suman a "Todos" (`listaSegunFiltro`). No abren panel.
  * Los partidos y los hitos ya llegan traídos por el Server Component `PaginaPartidos`.
  */
 'use client';
@@ -15,6 +17,7 @@ import { BarraFiltros } from '@/components/partidos/BarraFiltros';
 import { ListaPartidos } from '@/components/partidos/ListaPartidos';
 import { usePanel } from '@/lib/paneles/use-panel';
 import { filtrarPartidos, type FiltroPartidos } from '@/lib/partidos/utilidades';
+import { listaSegunFiltro } from '@/lib/partidos/seleccion';
 import type { PartidoProximo } from '@/lib/repositorios/tipos';
 import type { EstadoVisual } from '@/lib/tickets/tipos';
 import type { LinksDropbox } from '@/lib/jugadores/links-dropbox';
@@ -23,6 +26,7 @@ import { filtrarFechas, type FechaContenido } from '@/lib/partidos/fechas-conten
 export function SeccionPartidos({
   partidos,
   partidosContenido = [],
+  partidosSeleccion = [],
   partidosConHito,
   linksDropbox,
   fechas = [],
@@ -33,6 +37,8 @@ export function SeccionPartidos({
   partidos: PartidoProximo[];
   /** Partidos de jugadores solo-Contenido: se ven únicamente con el filtro "Contenido". */
   partidosContenido?: PartidoProximo[];
+  /** Partidos de la selección uruguaya (0031): filtros Selección y Todos. */
+  partidosSeleccion?: PartidoProximo[];
   partidosConHito: Set<string>;
   linksDropbox?: Record<string, LinksDropbox>;
   /** Fechas de Contenido de la ventana de la lista (ya normalizadas). */
@@ -48,8 +54,11 @@ export function SeccionPartidos({
   const { abrir } = usePanel();
   const esContenido = filtro === 'contenido';
   const filtrados = useMemo(
-    () => (esContenido ? partidosContenido : filtrarPartidos(partidos, filtro, partidosConHito)),
-    [esContenido, partidosContenido, partidos, filtro, partidosConHito],
+    () =>
+      listaSegunFiltro(filtro, { partidos, contenido: partidosContenido, seleccion: partidosSeleccion }, (l) =>
+        filtrarPartidos(l, filtro, partidosConHito),
+      ),
+    [filtro, partidos, partidosContenido, partidosSeleccion, partidosConHito],
   );
   const fechasFiltradas = useMemo(() => filtrarFechas(fechas, filtro, hoyUy), [fechas, filtro, hoyUy]);
 

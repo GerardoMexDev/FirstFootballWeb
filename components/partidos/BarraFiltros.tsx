@@ -11,6 +11,7 @@ const FILTROS: { f: FiltroPartidos; etiqueta: string }[] = [
   { f: 'todos', etiqueta: 'Todos' },
   { f: 'matchday', etiqueta: 'Match Day' },
   { f: 'contenido', etiqueta: 'Contenido' },
+  { f: 'seleccion', etiqueta: 'Selección' },
   { f: 'hoy', etiqueta: 'Hoy' },
   { f: 'semana', etiqueta: 'Esta semana' },
   { f: 'int', etiqueta: 'Internacional' },
