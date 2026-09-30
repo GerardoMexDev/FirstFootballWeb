@@ -435,9 +435,11 @@ html { overflow-x: clip; }
 .tkk__k.on { border-color: var(--text); }
 .tkk__k:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .tkl { display: flex; flex-direction: column; gap: 8px; }
-.tkf { display: flex; flex-direction: column; gap: 8px; width: 100%; padding: 16px 18px; border-radius: var(--r-sm); background: var(--surface); box-shadow: var(--sh-1); text-align: left; cursor: pointer; transition: box-shadow .3s var(--ease); }
+/* 0030: la fila es un contenedor; el título es un botón y las casillas van al lado (no dentro). */
+.tkf { display: flex; flex-direction: column; gap: 10px; width: 100%; padding: 16px 18px; border-radius: var(--r-sm); background: var(--surface); box-shadow: var(--sh-1); transition: box-shadow .3s var(--ease); }
 .tkf:hover { box-shadow: var(--sh-2); }
-.tkf:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.tkf__abrir { display: flex; flex-direction: column; gap: 8px; width: 100%; text-align: left; cursor: pointer; border-radius: var(--r-xs); }
+.tkf__abrir:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; }
 .tkf__1 { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
 .tkf__1 b { font-weight: 600; overflow-wrap: anywhere; }
 .tkf__2 { display: flex; align-items: center; gap: 6px 14px; flex-wrap: wrap; font-size: var(--t-sm); color: var(--text-2); }

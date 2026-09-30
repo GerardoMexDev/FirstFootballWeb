@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { contarUrgencias, esAbierto, esUrgenteHoy, filtrarPantalla, haceCuanto, textoCreado, urgencia, visiblesPara } from './pantalla.ts';
+import { contarUrgencias, esAbierto, esUrgenteHoy, filtrarPantalla, haceCuanto, ordenarPantalla, textoCreado, urgencia, visiblesPara } from './pantalla.ts';
 import type { ResumenTicket } from './tipos.ts';
 
 const HOY = '2026-09-29';
@@ -81,4 +81,15 @@ test('textoCreado: con y sin nombre del creador', () => {
   const ahora = '2026-09-29T15:00:00Z';
   assert.equal(textoCreado(tk('a', 'pendiente', null), ahora), 'Creado por Felipe · ayer');
   assert.equal(textoCreado({ ...tk('a', 'pendiente', null), creadoPorNombre: null }, ahora), 'Creado por alguien del equipo · ayer');
+});
+
+test('ordenarPantalla: pendientes por fecha límite (sin fecha al final); después el resto del más nuevo al más viejo', () => {
+  const l = [
+    { ...tk('c1', 'publicado', '2026-09-01'), creadoEn: '2026-09-10T00:00:00Z' },
+    tk('p2', 'pendiente', '2026-10-05'),
+    tk('p0', 'pendiente', null),
+    { ...tk('c2', 'publicado', '2026-09-01'), creadoEn: '2026-09-20T00:00:00Z' },
+    tk('p1', 'pendiente', '2026-09-30'),
+  ];
+  assert.deepEqual(ordenarPantalla(l).map((t) => t.id), ['p1', 'p2', 'p0', 'c2', 'c1']);
 });

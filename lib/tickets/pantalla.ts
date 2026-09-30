@@ -99,3 +99,16 @@ export function haceCuanto(iso: string, ahoraIso: string): string {
 export function textoCreado(t: ResumenTicket, ahoraIso: string): string {
   return `Creado por ${t.creadoPorNombre ?? 'alguien del equipo'} · ${haceCuanto(t.creadoEn, ahoraIso)}`;
 }
+
+/**
+ * Orden de la pantalla Tickets (0030, con los automáticos de Match Day): primero lo pendiente por
+ * fecha límite (lo que vence antes arriba; sin fecha al final), después completados y cancelados
+ * del más nuevo al más viejo.
+ */
+export function ordenarPantalla(tickets: ResumenTicket[]): ResumenTicket[] {
+  const abiertos = tickets.filter((t) => esAbierto(t.estado));
+  const resto = tickets.filter((t) => !esAbierto(t.estado));
+  abiertos.sort((a, b) => (a.fechaLimite ?? '9999-12-31').localeCompare(b.fechaLimite ?? '9999-12-31'));
+  resto.sort((a, b) => b.creadoEn.localeCompare(a.creadoEn));
+  return [...abiertos, ...resto];
+}

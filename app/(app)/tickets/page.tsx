@@ -14,7 +14,7 @@ import { sesionActual } from '@/lib/sesion/sesion-actual';
 import { ZONA_AGENCIA } from '@/lib/fechas/zonas';
 import { RepositorioTicketsSupabase } from '@/lib/repositorios/repositorio-tickets';
 import { crearClienteServidor } from '@/lib/supabase/cliente-servidor';
-import { visiblesPara } from '@/lib/tickets/pantalla';
+import { ordenarPantalla, visiblesPara } from '@/lib/tickets/pantalla';
 import type { ResumenTicket } from '@/lib/tickets/tipos';
 
 /** Cerrados más viejos que esto no se traen (spec §3). */
@@ -31,7 +31,17 @@ export default async function PaginaTickets() {
 
   let tickets: ResumenTicket[] | null = null;
   try {
-    tickets = await new RepositorioTicketsSupabase(crearClienteServidor()).listarParaPantalla(desde);
+    const repo = new RepositorioTicketsSupabase(crearClienteServidor());
+    // Manuales (abiertos + cerrados de 60 días) y automáticos de Match Day (0030): de 60 días
+    // atrás a todo lo que viene. Si los automáticos fallan, se muestran los manuales igual.
+    const [manuales, automaticos] = await Promise.all([
+      repo.listarParaPantalla(desde),
+      repo.listarMatchDay(desde, ahora.plus({ days: 300 }).toISODate() ?? hoyUy).catch((e) => {
+        console.error('match day (pantalla tickets):', e);
+        return [] as ResumenTicket[];
+      }),
+    ]);
+    tickets = ordenarPantalla([...manuales, ...automaticos]);
   } catch (e) {
     console.error('tickets (pantalla):', e);
   }
@@ -40,7 +50,7 @@ export default async function PaginaTickets() {
     <section className="vista on" id="v-tickets" tabIndex={-1}>
       <div className="head">
         <h1 className="d1">Tickets</h1>
-        <p className="sub">Lo que está en marcha, del más nuevo al más viejo.</p>
+        <p className="sub">Primero lo que vence antes; después lo completado.</p>
       </div>
 
       {tickets === null ? (

@@ -12,7 +12,8 @@
 import { useEffect, useRef, useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { rutaPanel } from '@/lib/paneles/use-panel';
-import { META_ESTADO } from '@/lib/tickets/estados';
+import { PastillaSemaforo } from '@/components/tickets/PastillaSemaforo';
+import { estadoVisual } from '@/lib/tickets/semaforo';
 import { textoVencimiento } from '@/lib/tickets/vencimiento';
 import type { ResumenTicket } from '@/lib/tickets/tipos';
 
@@ -77,12 +78,14 @@ export function ContadorTickets({ pendientes, hoyUy }: { pendientes: ResumenTick
                 setAbierto(false);
                 // El foco vuelve a este botón al cerrar el panel (el ítem se oculta con el desplegable).
                 botonRef.current?.focus();
-                router.push(rutaPanel(pathname, 'ticket', t.id), { scroll: false });
+                // Automático de Match Day (0030): se abre el partido; manual: el ticket.
+                router.push(
+                  t.automatico && t.partidoId ? rutaPanel(pathname, 'partido', t.partidoId) : rutaPanel(pathname, 'ticket', t.id),
+                  { scroll: false },
+                );
               }}
             >
-              <span className={`tk tk--${t.estado}`}>
-                <span aria-hidden="true">{META_ESTADO[t.estado].simbolo}</span> {META_ESTADO[t.estado].corta}
-              </span>
+              <PastillaSemaforo estado={estadoVisual(t, hoyUy) ?? 'pendiente'} />
               <span className="tkc__t">
                 <b>{t.titulo}</b>
                 {vence && <small className={vence.vencido ? 'tk__vence--mal' : ''}>{vence.texto}</small>}
