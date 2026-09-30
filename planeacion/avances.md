@@ -1351,6 +1351,8 @@ Charla con Gerardo (no se codeó nada): tres preguntas de la agencia / de él.
    - A investigar (spike): ESPN tiene la liga uruguaya (`uru.1`) y ya hay `sync-fixtures-espn`;
      ver si trae fixture y resultados de Peñarol/Nacional y si alcanza para estadísticas (goles,
      minutos) o solo para el calendario de partidos. Ver también copas (Libertadores/Sudamericana).
+   - **Spike ESPN (2026-09-30): SÍ sirve.** `uru.1` trae los próximos partidos de Peñarol (2683),
+     Nacional (2684) y Liverpool (5492) con fecha y estadio (ESPN publica ~2 fechas adelante).
 5. **Calendarios = panorama del mes con color por estado.** El Administrador y el Community
    Manager quieren abrir el calendario y ver de un vistazo qué está **pendiente**, qué está
    **terminado** y qué está **vencido**.
@@ -1379,6 +1381,30 @@ Charla con Gerardo (no se codeó nada): tres preguntas de la agencia / de él.
    - A aclarar al ver el archivo: tipos de fecha nuevos (títulos, etc.) y cómo se muestran; dónde
      van las fechas de First (¿Calendario general, otra vista, /partidos?); si las fechas de First
      también llevan ticket/estado (punto 5); si hay fechas que no se repiten cada año.
+   - **Análisis del archivo (Claude, 2026-09-30, solo lectura):** grilla por hoja (días 1–31 × meses);
+     cada celda = texto libre, a veces con el año entre paréntesis. **114 fechas**: @first 31, abelito
+     21, nández 13, fede pereira 12, martirena 8, javi 7, franco 7, maxi 4, kevin 4, martín 4, nacho 3,
+     aguirre 0. Tipos: 44 aniversarios de club/logro, 22 cumpleaños del jugador, 15 familia (hijos,
+     parejas, casamientos), 11 títulos ("campeón…"), 4 debuts, 2 días del hincha, 1 gol, 15 días
+     generales (en @first: Año Nuevo, Día del Diseñador, Navidad…). Todas se repiten cada año.
+   - **@first mezcla** días generales + cumpleaños de jugadores + aniversarios de clubes (que ya están
+     en las hojas de cada jugador) + "cumple chino rochet" (¿alguien del equipo?). Propuesta: de @first
+     tomar solo lo que NO es de un jugador (días generales y equipo) para no duplicar.
+   - **Inconsistencias a confirmar con la agencia:**
+     a) Abel: su hoja dice "cumple abelito (1990)" el **6/8**; @first y la base dicen **8/8**.
+     b) Sin cumpleaños propio en su hoja: **Martirena** (base: 5/1) y **Martín Fernández** (base: 8/5).
+     c) Sin aniversario de su club ACTUAL: **Javi** (Colo-Colo, 19/4) y **Nández** (Al-Qadisiyah).
+     d) Debuts: el Excel solo trae los de Nández (1/3 y selección 8/9) y Martirena ("debut con
+        Nacional" 30/8, distinto del debut profesional de la base 24/3). Faltan los demás debuts y
+        debuts en selección que hoy muestra la app (Abel sel. 11/8, Kevin sel. 9/9, Nacho debut 3/7…).
+     e) Nacho: "aniversario Red Bull Bragantino" 8/1 — la base tiene 1/1/2020 (dato malo nuestro; el
+        del Excel es el correcto) → se corrige.
+     f) Errores de tipeo a limpiar al mostrar: "aniversairo", "atalnte", "cebut mundial", "cumpleños",
+        "debút".
+   - **Decisión que falta (Gerardo):** "reemplazar" literal borraría (b), (c) y (d). Propuesta de
+     Claude: el Excel manda y se carga todo; las 4 fechas automáticas de hoy (cumpleaños, club
+     actual, debut, debut selección) quedan SOLO donde el Excel no tiene esa fecha; si chocan, gana el
+     Excel. Para Aguirre se deja lo actual.
 7. **Traspasos (cambio de club): ¿automáticos? + temporadas de pases.** La agencia pregunta si los
    traspasos de los jugadores Match Day son automáticos (y que cambie el club en todo), y cómo se
    controla a los de solo Contenido en cada ventana de pases (grande: ~julio–septiembre; chica:
@@ -1399,6 +1425,11 @@ Charla con Gerardo (no se codeó nada): tres preguntas de la agencia / de él.
      (SportMonks para los de Match Day; ESPN/plantel del club para los demás) — ver propuesta.
    - Propuesta a charlar: en ventana de pases, un control extra (script/aviso) que compare el club
      de cada jugador contra 2 fuentes (API-Football + ESPN/SportMonks) y avise si difieren.
+   - **Spike SportMonks (2026-09-30): SÍ tiene traspasos al día** (Nacho → Bragantino 01/01/2026,
+     Aguirre → Tigres, Kevin → Genk) y el club actual de Abel (Peñarol), Maxi Silvera (Nacional) y
+     Javi (Colo-Colo) aunque Uruguay no esté en el plan. → Propuesta: que sync-roster use SportMonks
+     como fuente principal (API-Football de respaldo). Ventanas de pases (aprox., a confirmar):
+     grande jun–sep, chica ene–feb según liga. Con SportMonks se puede revisar todas las semanas.
 
 **🐞 URGENTE (hallado 2026-09-30): la clave de API-Football no funciona desde el 22/09.** Todas las
 corridas de `api-football` (partidos de copas/selección, estadísticas de esos partidos y
@@ -1428,6 +1459,8 @@ activa hasta 2027-04-04, 0 requests usados). Gerardo puso la clave correcta (f8f
    (ya trae selecciones; depende del punto 🐞), ESPN (`fifa.worldq.conmebol`, amistosos), web de la
    AUF. Definir: ¿en qué calendario (Match Day / general)? ¿generan ticket? ¿solo si convocan a un
    representado o siempre?
+   - **Spike ESPN (2026-09-30): SÍ sirve.** Uruguay = equipo 212; ya figura "Uruguay vs India" el 6/10
+     (amistoso). Las Eliminatorias CONMEBOL también están en ESPN (`fifa.worldq.conmebol`).
 10. **Gerardo pasa 2 listas (pendiente de él):**
     - **Torneos** que juegan los equipos de las 5 ligas además del local (copas sudamericanas,
       Concachampions, copas nacionales, etc.).
