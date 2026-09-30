@@ -1520,6 +1520,22 @@ activa hasta 2027-04-04, 0 requests usados). Gerardo puso la clave correcta (f8f
     - **Torneos** que juegan los equipos de las 5 ligas además del local (copas sudamericanas,
       Concachampions, copas nacionales, etc.).
     - **Estadios** de todos los equipos (respaldo para cuando SportMonks no trae o trae mal la sede).
+    - **✅ Recibidas (2026-09-30):** `WebFirst/Estadios.xlsx` (hoja por liga: Liga MX, Brasileirão, Jupiler, Chile,
+      Saudi) + `WebFirst/Estadios uruguay.xlsx` (16 equipos, incluye Central Español y MCT) + `WebFirst/Torneos ligas.xlsx`.
+    - **Estadios — decidido (Gerardo): opción a.** Se muestra el nombre del Excel cuando el partido es en la cancha
+      HABITUAL del local; si la fuente trae otra (neutral, mudanza) se respeta la fuente. Nota de Gerardo: los chicos
+      de Uruguay a veces reciben a Peñarol en el Centenario (se avisa con tiempo, no siempre) → la fuente manda ahí.
+      Hoy los 86 próximos de Match Day tienen estadio, pero en inglés/otro nombre ("Mexico City Stadium" = Estadio
+      Banorte (Azteca), "Guadalajara Stadium" = Akron, ciudades en inglés). Nombres de equipo ≠ fuentes → tabla de alias.
+    - **Torneos — spike ESPN (2026-09-30, solo lectura):** ESPN tiene casi todos (mex.campeon, concacaf.champions,
+      concacaf.leagues.cup, campeones.cup, fifa.cwc, fifa.intercontinental_cup, bra.copa_do_brazil,
+      bra.supercopa_do_brazil, bra.camp.paulista, conmebol.libertadores/sudamericana/recopa, chi.copa_chi,
+      chi.super_cup, uefa.champions/europa/europa.conf, ksa.kings.cup, afc.champions, afc.cup). NO tiene: Copa de
+      Bélgica, Supercopa de Bélgica, Supercopa saudí, Liga de Campeones del Golfo, Campeonato Árabe (siguen con
+      API-Football, ventana de ~3 días).
+      **Hallazgo:** faltan HOY partidos de Match Day en la web: Colo-Colo–Puerto Montt (Copa Chile, 6/10) y
+      Al-Qadisiyah en AFC Champions League Elite (7 partidos desde el 12/10) + Copa del Rey (1/12). Causa: las copas
+      vienen de API-Football gratis (ventana ~3 días) → aparecen tarde y el ticket nace vencido.
 
 ### 🎫 Tickets de diseño — ✅ EN PRODUCCIÓN (2026-09-29, Sesión 13)
 
