@@ -1536,6 +1536,17 @@ activa hasta 2027-04-04, 0 requests usados). Gerardo puso la clave correcta (f8f
       **Hallazgo:** faltan HOY partidos de Match Day en la web: Colo-Colo–Puerto Montt (Copa Chile, 6/10) y
       Al-Qadisiyah en AFC Champions League Elite (7 partidos desde el 12/10) + Copa del Rey (1/12). Causa: las copas
       vienen de API-Football gratis (ventana ~3 días) → aparecen tarde y el ticket nace vencido.
+    - **✅ Parte 1 (copas desde ESPN) EN PRODUCCIÓN (2026-09-30):** migración 0033 aplicada (10 competencias +
+      prioridad sportmonks → espn → api-football en proximos_partidos), `sync-espn-uruguay` deployada (50 torneos,
+      copas de Match Day primero, tope 120 s; corrida en prod 48 s, ok, 17 partidos). QA en prod: Colo-Colo–Puerto
+      Montt (Copa Chile, 6/10) con ticket de Javi que vence el 4/10; Al-Qadisiyah–Pakhtakor (AFC Elite, 12/10) con
+      ticket de Nahitan que vence el 10/10. Spec/plan: planeacion/specs|plans/2026-09-30-copas-espn*.
+      Pendientes chicos: tarjetas de copa sin ronda y rivales ESPN sin escudo; texto del aviso "partidos de
+      Uruguay (ESPN)" ahora cubre también copas; distinto día ESPN vs API-Football → dos tarjetas (raro).
+    - **Parte 2 (estadios) en curso.** Cruce Excel ↔ fuentes: la mayoría son renombres (Mexico City Stadium =
+      Azteca, EGO Stadium = Prince Mohamed bin Fahd…); donde la fuente dice OTRA cancha se respeta la fuente
+      (opción a): Atlante/Cruz Azul en el Azteca (Excel: Ciudad de los Deportes), Huachipato, Deportes Limache,
+      Al Ahli, MCT en el Centenario. Alias de equipos a mano (Juventud ≠ Juventude, Nacional ≠ Internacional).
 
 ### 🎫 Tickets de diseño — ✅ EN PRODUCCIÓN (2026-09-29, Sesión 13)
 
