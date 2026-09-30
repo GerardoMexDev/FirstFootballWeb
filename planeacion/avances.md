@@ -1450,6 +1450,17 @@ Charla con Gerardo (no se codeó nada): tres preguntas de la agencia / de él.
    - **✅ Decidido por Gerardo (2026-09-30):** se combinan. Si el Excel NO trae un dato que nosotros sí
      tenemos, queda el nuestro junto con los del Excel; si se repite, gana el del Excel de la agencia.
      Consultas (a)–(f) enviadas a la agencia por Gerardo (texto armado 2026-09-30); falta su respuesta.
+   - **▶ RETOMAR AQUÍ (cierre 2026-09-30):** Gerardo dijo NO esperar a la agencia: manda el Excel; lo nuestro queda
+     donde el Excel no tiene. Claude propuso diseño (falta el OK de Gerardo, luego spec → plan → implementar):
+     1) tabla nueva "fechas de la agencia" cargada por migración (jugador o First, día, mes, año, texto limpio);
+        de @first solo lo que NO es de un jugador (días generales + equipo, incl. "cumple chino rochet");
+     2) van a Contenido + Todos + Fechas señaladas; chip "Nández · Cumple Matilda (hija)" / "First · Día del Diseñador";
+     3) las 4 fechas calculadas (cumpleaños, debut, debut selección, aniversario club actual) se ocultan si el Excel
+        trae esa misma fecha (Abel pasa a 6/8; Nández debuts del Excel; Martirena ve los 2 debuts; Martirena y Martín
+        Fernández mantienen cumple nuestro; Javi mantiene aniversario Colo-Colo; Aguirre todo lo nuestro) — en
+        agenda_contenido Y agenda_anual (si no, vuelve a aparecer por Match Day);
+     4) corregir fundación de Bragantino a 8/1; 5) sin tickets ni colores.
+     Datos normalizados de la sesión: 114 fechas (scratchpad se pierde → releer `WebFirst/calendario first.xlsx`).
 7. **Traspasos (cambio de club): ¿automáticos? + temporadas de pases.** La agencia pregunta si los
    traspasos de los jugadores Match Day son automáticos (y que cambie el club en todo), y cómo se
    controla a los de solo Contenido en cada ventana de pases (grande: ~julio–septiembre; chica:
