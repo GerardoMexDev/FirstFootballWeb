@@ -1325,7 +1325,11 @@ Charla con Gerardo (no se codeó nada): tres preguntas de la agencia / de él.
 > scroll lateral). Tickets automáticos = solo partidos de Match Day, uno por jugador, desde
 > `match_day_desde()` = **2026-09-30**, vencen 2 días antes. Las fechas de Contenido y de First van
 > al calendario sin ticket ni color. Nav: Partidos · Calendario · Jugadores · Tickets.
-> Falta: revisión final de la rama, merge a `main`, push (Gerardo) y QA en producción.
+> ✅ Revisión final (0 críticos; 4 arreglos con test), merge a `main`, push y **QA en producción OK**
+> (2026-09-30: tildar/destildar, chips ●/✓/!, Copiar, filtros, redirección, 390 px). Pendientes chicos
+> de la revisión: partido suspendido pasa a vencido (migración nueva); revocar RPC viejos
+> `ticket_entregar/aprobar/devolver/publicar`; colores mezclados en chip con ticket manual + semáforo;
+> "No se pudo copiar" en verde; foco al tildar en Tickets; casilla "Pendiente" sin nombre del jugador.
 > Pendientes: 4 y 9 (uruguayos y selección por ESPN), 6 (Excel de fechas), 10 (listas de Gerardo).
 
 1. **Ticket de partido: casilla "Terminado" para el Diseñador.** En el ticket, un checkbox que
