@@ -1137,7 +1137,8 @@
     "ciudad": "Buraidah",
     "pais": "Arabia Saudita",
     "nombres_fuente": [
-      "King Abdullah Sport City Stadium"
+      "King Abdullah Sport City Stadium",
+      "King Abdullah Sports City"
     ]
   },
   {
@@ -1193,7 +1194,8 @@
     "ciudad": "Buraidah",
     "pais": "Arabia Saudita",
     "nombres_fuente": [
-      "King Abdullah Sport City Stadium"
+      "King Abdullah Sport City Stadium",
+      "King Abdullah Sports City"
     ]
   },
   {
@@ -1421,8 +1423,7 @@
     "equipo": "Racing Club",
     "liga": "Primera División Uruguay",
     "alias": [
-      "Racing (Montevideo)",
-      "Racing Club"
+      "Racing (Montevideo)"
     ],
     "estadio": "Estadio Parque Osvaldo Roberto",
     "ciudad": "Montevideo",

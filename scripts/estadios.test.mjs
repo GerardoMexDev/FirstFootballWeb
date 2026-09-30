@@ -19,11 +19,16 @@ const MIGRACION = readFileSync(new URL('../supabase/migrations/0034_estadios_age
   .replace(/^\s*begin;\s*$/m, '')
   .replace(/^\s*commit;\s*$/m, '');
 let aplicada = false;
+const MIGRACION_35 = readFileSync(new URL('../supabase/migrations/0035_estadios_solo_liga.sql', import.meta.url), 'utf8')
+  .replace(/^s*begin;s*$/m, '')
+  .replace(/^s*commit;s*$/m, '');
+let aplicada35 = false;
 const ids = {};
 
 before(async () => {
   await c.connect();
   aplicada = (await c.query(`select to_regclass('public.estadios_equipo') is not null as ok`)).rows[0].ok;
+  aplicada35 = aplicada && (await c.query(`select pg_get_functiondef('public.partidos_estadio_agencia'::regproc) like '%''liga''%' as ok`)).rows[0].ok;
   const u = await c.query(`select email, id from auth.users where email = 'felipe@footballfirst.uy'`);
   ids.felipe = u.rows[0]?.id;
   assert.ok(ids.felipe, 'falta Felipe');
@@ -34,6 +39,7 @@ async function enTransaccion(fn) {
   await c.query('begin');
   try {
     if (!aplicada) await c.query(MIGRACION);
+    if (!aplicada35) await c.query(MIGRACION_35);
     await fn(c);
   } finally {
     await c.query('rollback');
@@ -46,12 +52,12 @@ async function club(nombre) {
   return (await uno(`insert into clubes (nombre, origen, proveedor_externo, id_externo) values ($1, 'api', 'espn', $2) returning id`, [nombre, 'qa-' + nombre])).id;
 }
 /** Inserta un partido con ese local y estadio/ciudad de la fuente; devuelve lo que quedó guardado. */
-async function partido(localId, estadio, ciudad) {
+async function partido(localId, estadio, ciudad, competenciaId = null) {
   const riv = await club('Rival QA ' + Math.random().toString(36).slice(2, 8));
   return uno(
-    `insert into partidos (club_local_id, club_visitante_id, inicio_utc, estado, origen, proveedor_externo, id_externo, estadio, ciudad)
-     values ($1, $2, '2030-08-01T20:00:00Z', 'programado', 'api', 'espn', $3, $4, $5) returning id, estadio, ciudad`,
-    [localId, riv, 'qa-' + Math.random().toString(36).slice(2), estadio, ciudad],
+    `insert into partidos (club_local_id, club_visitante_id, inicio_utc, estado, origen, proveedor_externo, id_externo, estadio, ciudad, competencia_id)
+     values ($1, $2, '2030-08-01T20:00:00Z', 'programado', 'api', 'espn', $3, $4, $5, $6) returning id, estadio, ciudad`,
+    [localId, riv, 'qa-' + Math.random().toString(36).slice(2), estadio, ciudad, competenciaId],
   );
 }
 
@@ -79,7 +85,8 @@ test('opción a: Racing de local en el Centenario (contra Peñarol) → queda el
 test('estadio vacío → el de la agencia (respaldo)', () =>
   enTransaccion(async () => {
     const ce = await club('Central Español Fútbol Club');
-    const p = await partido(ce, null, null);
+    const uru1 = (await uno(`select id from competencias where proveedor_externo = 'espn' and id_externo = 'uru.1'`)).id;
+    const p = await partido(ce, null, null, uru1);
     assert.deepEqual([p.estadio, p.ciudad], ['Parque Palermo', 'Montevideo']);
   }));
 
@@ -121,4 +128,27 @@ test('nombre ambiguo (misma denominación en dos ciudades) → queda el de la fu
     const x = await club('Club Sin Tabla QA 2');
     const p = await partido(x, 'King Abdullah Sport City Stadium', 'Buraydah');
     assert.deepEqual([p.estadio, p.ciudad], ['King Abdullah Sport City Stadium', 'Buraydah']);
+  }));
+
+test('0035: estadio vacío en una COPA → queda vacío (sede a confirmar, no se inventa la cancha del local)', () =>
+  enTransaccion(async () => {
+    const fla = await club('Flamengo');
+    const cwc = (await uno(`select id from competencias where proveedor_externo = 'espn' and id_externo = 'fifa.cwc'`)).id;
+    const p = await partido(fla, null, null, cwc);
+    assert.deepEqual([p.estadio, p.ciudad], [null, null]);
+  }));
+
+test('0035: "Racing Club" (el argentino, de ESPN) ya no es alias del Racing uruguayo', () =>
+  enTransaccion(async () => {
+    const r = await club('Racing Club');
+    const uru1 = (await uno(`select id from competencias where proveedor_externo = 'espn' and id_externo = 'uru.1'`)).id;
+    const p = await partido(r, null, null, uru1);
+    assert.deepEqual([p.estadio, p.ciudad], [null, null]);
+  }));
+
+test('0035: Al Taawoun de local con "King Abdullah Sports City" → Buraidah (no Jeddah)', () =>
+  enTransaccion(async () => {
+    const t = await club('Al Taawoun');
+    const p = await partido(t, 'King Abdullah Sports City', 'Buraydah');
+    assert.deepEqual([p.estadio, p.ciudad], ['King Abdullah Sport City Stadium', 'Buraidah']);
   }));
