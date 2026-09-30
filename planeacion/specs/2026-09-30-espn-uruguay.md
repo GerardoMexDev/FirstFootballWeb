@@ -12,10 +12,17 @@ conversación por Gerardo:** enfoque A (función nueva) + este diseño.
 2. **Punto 9.** Los partidos de la **selección uruguaya** (amistosos, Eliminatorias, Copa América,
    Mundial) aparecen en un filtro nuevo **Selección** y también en **Todos** — en el calendario y en
    /partidos. Siempre, haya o no un representado convocado.
-3. Nada de esto genera ticket ni lleva color de estado (Contenido y Selección son informativos;
-   solo Match Day tiene tickets — spec 2026-09-30-match-day-automatico).
+3. Contenido y Selección no generan ticket ni llevan color de estado (spec
+   2026-09-30-match-day-automatico) — **salvo** la convocatoria (punto 4).
+4. **Convocatoria (Gerardo, 2026-09-30):** si un representado de **Match Day** con selección
+   Uruguay (hoy Nahitan Nández) está convocado, ese partido de Uruguay **es de Match Day**: tarjeta
+   con su cara, "Uruguay vs <rival>", y su ticket automático para el Diseñador. Cómo se sabe:
+   **tilde a mano** del Administrador o del Community Manager en la tarjeta del partido de la
+   selección ("Convocado: Nández"). Motivo: ninguna fuente gratis publica la lista con tiempo, y
+   API-Football nunca trajo los partidos de Nández con la selección (0 filas `con_seleccion` en la
+   base; ESPN sí tiene Uruguay–Japón 24/9 y Corea 28/9).
 
-**Fuera de alcance:** convocatorias de la selección; estadísticas de los uruguayos; Copa AUF
+**Fuera de alcance:** convocatoria automática; estadísticas de los uruguayos; Copa AUF
 (ESPN no la tiene: `uru.copa` → 400); noticias (idea anotada para mantenimiento); tocar Match
 Day / SportMonks.
 
@@ -96,6 +103,23 @@ Day / SportMonks.
   Uruguay y competencia `tipo='seleccion'`. En el filtro Selección se ve siempre.
 - **Fechas señaladas** del calendario: sin cambios (los partidos no son notas).
 
+### 3.4 Convocatoria a mano (migración `0032`)
+
+- RPC `seleccion_convocar(p_partido, p_jugador, p_convocado)` (security definer): solo
+  Administrador o Community Manager; el partido tiene que estar en `partidos_seleccion`; el
+  jugador, activo, de Match Day y con `seleccion = 'Uruguay'`. Tildar → fila en
+  `partidos_jugadores` (`con_seleccion = true`, `convocado = true`); destildar → se borra esa fila.
+- `proximos_partidos` (`create or replace`, mismas columnas): cuando `con_seleccion`, el "club"
+  del jugador es el lado del partido que se llama como su selección (Uruguay) y el rival es el
+  otro. Así la tarjeta, el calendario (`agenda_anual`) y el ticket (`tickets_match_day`) dicen
+  "Uruguay vs India" y no "Al-Qadisiyah vs India". Lo demás sale solo de esa vista: tarjeta con
+  la cara, ticket pendiente que vence 2 días antes, semáforo.
+- Front: en la tarjeta de la selección, una casilla por representado convocable ("Convocado:
+  Nández"): habilitada para Administrador y CM; el resto la ve deshabilitada. En **Todos** manda la
+  tarjeta de Match Day (con cara), como en §3.3.
+- Destildar después de que el Diseñador marcó Completado: el ticket desaparece (la marca en
+  `disenos_partido` queda, inofensiva; si se vuelve a tildar, reaparece completado).
+
 ## 4. Errores y bordes
 
 - ESPN caído o una liga con 400 → la corrida sigue con el resto; si todo falla, `estado='error'` y
@@ -119,6 +143,6 @@ Day / SportMonks.
 
 ## 6. Deploy (lo corre Gerardo)
 
-1. Migración `0031` en el SQL Editor.
+1. Migraciones `0031` y `0032` en el SQL Editor.
 2. `npm run deploy:funcion -- sync-espn-uruguay`.
 3. Claude verifica la primera corrida (manual) y el cartel.

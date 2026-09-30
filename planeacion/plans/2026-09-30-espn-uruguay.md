@@ -12,7 +12,7 @@
 
 ## Global Constraints
 
-- Contenido y Selección **no generan ticket ni llevan color de estado** (solo Match Day).
+- Contenido y Selección **no generan ticket ni llevan color de estado** (solo Match Day). Excepción: un representado de Match Day **convocado a mano** (Task 6) → ese partido de Uruguay es de Match Day (cara + ticket).
 - Selección aparece en su filtro **Selección** y también en **Todos** (calendario y /partidos).
 - No se toca Match Day / SportMonks ni `sync-fixtures-espn` (queda apagada).
 - ESPN: ventana −3 días / +300 días, upsert por (`proveedor_externo='espn'`, `id_externo=<eventId>`).
@@ -29,7 +29,8 @@
 2. **Uruguay convocando a un representado de Match Day:** en **Todos** el partido aparece una sola vez (gana Match Day); en **Selección** se ve siempre. → tests de `unirConSeleccion` (Task 4) y `quitarSeleccionDuplicada` (Task 5).
 3. **Una liga de ESPN que falla (400/timeout):** la corrida sigue con las demás y queda `parcial`, no `error`, si guardó algo. → estructura de la función (Task 3) + corrida manual.
 4. **Jugador uruguayo que cambia a un club fuera de la config:** deja de vincularse a partidos de Peñarol/Nacional en la corrida siguiente. → test de `jugadoresPorClub` (Task 1).
-5. **Tarjeta/chip de la selección:** no abre panel, no muestra cara de jugador ni Dropbox ni semáforo. → test de `listaSegunFiltro` + QA (Tasks 4, 6).
+5. **Convocado y después destildado:** la tarjeta de Match Day y el ticket desaparecen; la de Selección queda. Un Diseñador o un anónimo NO pueden convocar. → tests de base (Task 6).
+6. **Tarjeta/chip de la selección:** no abre panel, no muestra cara de jugador ni Dropbox ni semáforo. → test de `listaSegunFiltro` + QA (Tasks 4, 6).
 
 ---
 
@@ -48,6 +49,8 @@
 | `components/partidos/{BarraFiltros,SeccionPartidos,ListaPartidos,TarjetaPartido}.tsx`, `app/(app)/partidos/page.tsx` | Chip y tarjetas de la selección |
 | `lib/calendario/eventos.ts` (+ test), `lib/repositorios/repositorio-agenda.ts` | Grupo/filtro `seleccion`, `quitarSeleccionDuplicada`, `listarPartidosSeleccion` |
 | `components/calendario/Calendario.tsx`, `app/(app)/calendario/page.tsx` | Chip Selección en el calendario |
+| `supabase/migrations/0032_convocatoria_seleccion.sql`, `scripts/espn-uruguay.test.mjs` | RPC `seleccion_convocar` + `proximos_partidos` con club = selección |
+| `lib/partidos/convocatoria.ts`, `components/partidos/CasillasConvocatoria.tsx` | Casilla "Convocado: Nández" en la tarjeta de la selección |
 
 ---
 
@@ -1099,9 +1102,193 @@ git commit -m "feat(calendario): filtro Selección con los partidos de Uruguay (
 
 ---
 
-### Task 6: QA + deploy + avances
+### Task 6: Convocatoria a mano (Nández con la selección = Match Day)
+
+**Files:**
+- Create: `supabase/migrations/0032_convocatoria_seleccion.sql`
+- Modify: `scripts/espn-uruguay.test.mjs` (tests de 0032)
+- Create: `lib/partidos/convocatoria.ts`, `components/partidos/CasillasConvocatoria.tsx`
+- Modify: `lib/repositorios/repositorio-partidos.ts`, `components/partidos/{TarjetaPartido,ListaPartidos,SeccionPartidos}.tsx`, `app/(app)/partidos/page.tsx`
+
+**Interfaces:**
+- Consumes: `partidos_seleccion` (Task 2), `esSeleccion` y el filtro Selección (Task 4).
+- Produces: RPC `seleccion_convocar(p_partido uuid, p_jugador uuid, p_convocado boolean) returns void`; `convocar(supabase, partidoId, jugadorId, convocado): Promise<Resultado<null>>`; `RepositorioPartidosSupabase.listarConvocatoria(): Promise<{ convocables: { id: string; nombre: string }[]; convocados: Record<string, string[]> }>`.
+
+- [ ] **Step 1: Write the failing test** — en `scripts/espn-uruguay.test.mjs`:
+
+Arriba, junto a `MIGRACION`:
+
+```js
+const MIGRACION_32 = readFileSync(new URL('../supabase/migrations/0032_convocatoria_seleccion.sql', import.meta.url), 'utf8')
+  .replace(/^\s*begin;\s*$/m, '')
+  .replace(/^\s*commit;\s*$/m, '');
+let aplicada32 = false;
+```
+
+En `before`: sumar `'pedro@footballfirst.uy'` (CM) a la lista de usuarios y
+`aplicada32 = (await c.query("select to_regprocedure('public.seleccion_convocar(uuid,uuid,boolean)') is not null as ok")).rows[0].ok;`.
+En `enTransaccion`, después de aplicar 0031: `if (!aplicada32) await c.query(MIGRACION_32);`.
+
+```js
+async function partidoUruguay() {
+  await comoDueno();
+  const uy = (await uno("select id from clubes where proveedor_externo = 'espn' and id_externo = '212'")).id;
+  const ind = (await uno("insert into clubes (nombre, origen, proveedor_externo, id_externo) values ('India QA', 'api', 'espn', 'qa-ind') returning id")).id;
+  const ami = (await uno("select id from competencias where proveedor_externo = 'espn' and id_externo = 'fifa.friendly'")).id;
+  const nandez = (await uno("select id from jugadores where seleccion = 'Uruguay' and servicio_match_day and activo limit 1")).id;
+  const p = await partido(ind, uy, ami, 'qa-conv-1'); // India local, Uruguay visitante (2030-06-10)
+  return { p, nandez };
+}
+
+test('convocar: el CM tilda → Match Day con club = Uruguay y ticket pendiente; destildar lo saca', () =>
+  enTransaccion(async () => {
+    const { p, nandez } = await partidoUruguay();
+    await como(ids.pedro);
+    await c.query('select seleccion_convocar($1, $2, true)', [p, nandez]);
+    const pp = await uno('select club_nombre, rival_nombre, con_seleccion from proximos_partidos where partido_id = $1 and jugador_id = $2', [p, nandez]);
+    assert.deepEqual(pp, { club_nombre: 'Uruguay', rival_nombre: 'India QA', con_seleccion: true });
+    const tk = await uno('select estado, titulo from tickets_match_day where partido_id = $1 and jugador_id = $2', [p, nandez]);
+    assert.equal(tk.estado, 'pendiente');
+    assert.match(tk.titulo, /Uruguay vs India QA/);
+    await c.query('select seleccion_convocar($1, $2, false)', [p, nandez]);
+    const r = await c.query('select 1 from proximos_partidos where partido_id = $1', [p]);
+    assert.equal(r.rows.length, 0);
+  }));
+
+test('convocar: el Diseñador no puede (42501); un partido de liga no se puede (22023)', () =>
+  enTransaccion(async () => {
+    const { p, nandez } = await partidoUruguay();
+    await como(ids.maxi);
+    await assert.rejects(c.query('select seleccion_convocar($1, $2, true)', [p, nandez]), (e) => e.code === '42501');
+    await comoDueno();
+    const pen = (await uno("select id from clubes where id_externo = '2348'")).id;
+    const nac = (await uno("select id from clubes where id_externo = '2356'")).id;
+    const uru1 = (await uno("select id from competencias where proveedor_externo = 'espn' and id_externo = 'uru.1'")).id;
+    const liga = await partido(pen, nac, uru1, 'qa-conv-liga');
+    await como(ids.felipe);
+    await assert.rejects(c.query('select seleccion_convocar($1, $2, true)', [liga, nandez]), (e) => e.code === '22023');
+  }));
+
+test('proximos_partidos: los partidos de club siguen con su club (ninguno queda sin club_nombre)', () =>
+  enTransaccion(async () => {
+    await como(ids.felipe);
+    const r = await c.query('select count(*)::int as n from proximos_partidos where not con_seleccion and club_nombre is null');
+    assert.equal(r.rows[0].n, 0);
+  }));
+```
+
+(Nota: el `tickets_match_day` de 0030 solo cuenta desde `match_day_desde()` = 2026-09-30; el partido de prueba es de 2030, así que entra.)
+
+- [ ] **Step 2: Run test to verify it fails**
+
+Run: `npm run test:espn-uruguay 2>&1 | grep -E "^ℹ (pass|fail)|ENOENT"`
+Expected: ENOENT de `0032_convocatoria_seleccion.sql`.
+
+- [ ] **Step 3: Write the migration** — `supabase/migrations/0032_convocatoria_seleccion.sql`
+
+Cabecera (mismo estilo que 0031: qué y por qué — convocatoria a mano pedida por Gerardo 2026-09-30, API-Football con 0 filas `con_seleccion`; reversible = `create or replace` con el cuerpo de 0017 + `drop function seleccion_convocar`). Luego `begin;` y:
+
+1. `create or replace view proximos_partidos` copiando **exacto** el cuerpo de `supabase/migrations/0017_proximos_partidos_solo_match_day.sql` (mismas columnas y orden, mismo `distinct on` / `order by`, mismo comment), cambiando SOLO los joins de `cl` y `riv` por:
+
+```sql
+left join clubes loc       on loc.id = p.club_local_id
+-- 0032: jugando con la selección, "su club" es el lado que se llama como su selección.
+left join clubes cl        on cl.id = case
+  when pj.con_seleccion and loc.nombre = j.seleccion then p.club_local_id
+  when pj.con_seleccion then p.club_visitante_id
+  else j.club_actual_id
+end
+left join clubes riv on riv.id = case
+  when pj.con_seleccion and loc.nombre = j.seleccion then p.club_visitante_id
+  when pj.con_seleccion then p.club_local_id
+  when j.club_actual_id = p.club_local_id then p.club_visitante_id
+  else p.club_local_id
+end
+```
+
+2. La RPC:
+
+```sql
+create or replace function seleccion_convocar(p_partido uuid, p_jugador uuid, p_convocado boolean)
+returns void language plpgsql security definer set search_path = public as $
+declare
+  v_cargo text := ticket__cargo_actual(); -- sin sesión → 42501
+begin
+  if v_cargo not in ('Administrador', 'Community Manager') then
+    raise exception 'Solo el Administrador o el Community Manager marcan convocados.' using errcode = '42501';
+  end if;
+  if not exists (select 1 from partidos_seleccion s where s.partido_id = p_partido) then
+    raise exception 'Ese partido no es de la selección.' using errcode = '22023';
+  end if;
+  if not exists (
+    select 1 from jugadores j
+    where j.id = p_jugador and j.activo and j.servicio_match_day and j.seleccion = 'Uruguay'
+  ) then
+    raise exception 'Ese jugador no es un representado de Match Day de la selección uruguaya.' using errcode = '22023';
+  end if;
+  if p_convocado then
+    insert into partidos_jugadores (partido_id, jugador_id, convocado, con_seleccion)
+    values (p_partido, p_jugador, true, true)
+    on conflict (partido_id, jugador_id) do update set convocado = true, con_seleccion = true;
+  else
+    delete from partidos_jugadores
+    where partido_id = p_partido and jugador_id = p_jugador and con_seleccion;
+  end if;
+end;
+$;
+
+revoke all on function seleccion_convocar(uuid, uuid, boolean) from public, anon;
+grant execute on function seleccion_convocar(uuid, uuid, boolean) to authenticated;
+
+commit;
+```
+
+- [ ] **Step 4: Run test to verify it passes**
+
+Run: `npm run test:espn-uruguay 2>&1 | grep -E "^ℹ (pass|fail)|not ok"; npm run test:tickets 2>&1 | grep -E "^ℹ (pass|fail)"`
+Expected: `fail 0` en los dos (tickets sigue 46/46: 0032 no cambia columnas).
+
+- [ ] **Step 5: Front**
+
+`lib/partidos/convocatoria.ts` — acción, mismo patrón que `marcarDiseno` en `lib/tickets/acciones.ts` (importar `Cliente`, `Resultado` y `mensajeError` desde donde los importa ese archivo):
+
+```ts
+/**
+ * Tildar/destildar "Convocado" de un representado en un partido de la selección (0032).
+ * Football First. Creado 2026-09-30.
+ */
+export async function convocar(supabase: Cliente, partidoId: string, jugadorId: string, convocado: boolean): Promise<Resultado<null>> {
+  const { error } = await supabase.rpc('seleccion_convocar', { p_partido: partidoId, p_jugador: jugadorId, p_convocado: convocado });
+  if (error) return { ok: false, mensaje: mensajeError(error) };
+  return { ok: true, valor: null };
+}
+```
+
+`RepositorioPartidosSupabase.listarConvocatoria()`: de `jugadores` activos, `servicio_match_day`, `seleccion = 'Uruguay'` → `convocables` (`{ id, nombre: apodo ?? nombre }`); de `partidos_jugadores` con `con_seleccion = true` → `convocados[partido_id] = [jugador_id, …]`.
+
+`components/partidos/CasillasConvocatoria.tsx` (Client): por cada convocable, `<label className="csd"><input type="checkbox" … /> Convocado: {nombre}</label>` dentro de `<span className="csds">`; optimista como `CasillasDiseno` (vuelve atrás y muestra `role="alert"` si falla); `disabled` si `!puedeMarcar` o enviando; `router.refresh()` al guardar.
+
+`TarjetaPartido`: prop `convocatoria?: React.ReactNode`, que se renderiza en lugar de `.caras` cuando `p.esSeleccion`. `ListaPartidos` recibe `convocatoria?: { convocables; convocados; puedeMarcar }` y, para las tarjetas `esSeleccion`, pasa `<CasillasConvocatoria partidoId={p.partidoId} convocables=… convocados={convocados[p.partidoId] ?? []} puedeMarcar=… />`. `SeccionPartidos` la pasa tal cual. `partidos/page.tsx`: suma `listarConvocatoria()` al `Promise.all` (si falla → `{ convocables: [], convocados: {} }`) y `puedeMarcar` = cargo Administrador o Community Manager (leer el cargo como ya lo hace la app para el panel/tickets).
+
+- [ ] **Step 6: Tests, tipos, lint**
+
+Run: `npm test 2>&1 | grep -E "^ℹ (pass|fail)"; npx tsc --noEmit -p . 2>&1 | grep -v TS5097 | head; npm run lint 2>&1 | tail -1`
+Expected: `fail 0`, tsc sin salida, lint limpio.
+
+- [ ] **Step 7: Commit**
+
+```bash
+git add supabase/migrations/0032_convocatoria_seleccion.sql scripts/espn-uruguay.test.mjs lib components app
+git commit -m "feat(seleccion): convocatoria a mano — Nández con Uruguay pasa a Match Day con ticket"
+```
+
+- [ ] **Step 8:** Pedirle a Gerardo que aplique `0032` (junto con 0031 si todavía no). Verificar con service role que `proximos_partidos` responde y que ningún partido de club cambió de `club_nombre` (conteo por club antes/después).
+
+---
+
+### Task 7: QA + deploy + avances
 
 - [ ] **Step 1:** Pedirle a Gerardo el deploy: `npm run deploy:funcion -- sync-espn-uruguay`. Después, disparo manual (curl con `x-sync-secret` a `https://thplgzufenxrzegwfxkg.functions.supabase.co/sync-espn-uruguay`; si el auto-mode lo bloquea, pedírselo a Gerardo). Verificar con service role: fila `sincronizaciones` espn/partidos `ok|parcial` con `parametros.alcance='uruguay'`; partidos de Peñarol (4/10) y Nacional (5/10) vinculados a sus 2 jugadores; Uruguay–India en `partidos_seleccion`; `avisos_sistema` sin la fuente espn (como Felipe).
-- [ ] **Step 2:** Script `qa-espn-uruguay.mjs` (scratchpad) con `browser.mjs --script` contra dev `:3100` (Felipe): `/partidos` chip Selección → tarjeta Uruguay vs India sin cara, sin Dropbox y sin abrir panel; Todos incluye Uruguay–India; Contenido incluye Peñarol 4/10 y Nacional 5/10; `/calendario?f=seleccion` → chip Uruguay–India en octubre (sin clic, sin color); `?f=contenido` → Peñarol/Nacional; 390 px sin scroll lateral; 0 errores de consola. Apagar dev (TaskStop + Stop-Process `*next*dev*-p*3100*`).
+- [ ] **Step 2:** Script `qa-espn-uruguay.mjs` (scratchpad) con `browser.mjs --script` contra dev `:3100` (Felipe): `/partidos` chip Selección → tarjeta Uruguay vs India sin cara, sin Dropbox y sin abrir panel; Todos incluye Uruguay–India; **Pedro (CM) tilda "Convocado: Nández" en Uruguay–India → aparece en Match Day/Todos con la cara de Nández y "· con la selección", con pastilla Pendiente; Maxi lo ve en Tickets; Maxi no puede tildar la convocatoria; destildar al final (limpieza)**; Contenido incluye Peñarol 4/10 y Nacional 5/10; `/calendario?f=seleccion` → chip Uruguay–India en octubre (sin clic, sin color); `?f=contenido` → Peñarol/Nacional; 390 px sin scroll lateral; 0 errores de consola. Apagar dev (TaskStop + Stop-Process `*next*dev*-p*3100*`).
 - [ ] **Step 3:** `avances.md` §5: puntos 4 y 9 hechos (fecha, función, cron 07:00 UTC, limitación ~2 fechas en uru.1, Copa AUF no disponible en ESPN). Commit `docs(avances): puntos 4 y 9 — ESPN Uruguay`.
 - [ ] **Step 4:** Tras merge + push de Gerardo, repetir el QA de Step 2 contra producción.
