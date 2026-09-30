@@ -1,0 +1,1435 @@
+[
+  {
+    "equipo": "América",
+    "liga": "Liga MX",
+    "alias": [
+      "América"
+    ],
+    "estadio": "Estadio Azteca",
+    "ciudad": "Ciudad de México",
+    "pais": "México",
+    "nombres_fuente": [
+      "Mexico City Stadium",
+      "Estadio Azteca",
+      "Estadio Banorte"
+    ]
+  },
+  {
+    "equipo": "Atlante",
+    "liga": "Liga MX",
+    "alias": [
+      "Atlante FC",
+      "Atlante"
+    ],
+    "estadio": "Estadio Ciudad de los Deportes",
+    "ciudad": "Ciudad de México",
+    "pais": "México",
+    "nombres_fuente": [
+      "Estadio Ciudad de los Deportes"
+    ]
+  },
+  {
+    "equipo": "Atlas",
+    "liga": "Liga MX",
+    "alias": [
+      "Atlas"
+    ],
+    "estadio": "Estadio Jalisco",
+    "ciudad": "Guadalajara",
+    "pais": "México",
+    "nombres_fuente": [
+      "Estadio Jalisco"
+    ]
+  },
+  {
+    "equipo": "Atlético San Luis",
+    "liga": "Liga MX",
+    "alias": [
+      "Atlético de San Luis",
+      "Atlético San Luis"
+    ],
+    "estadio": "Estadio Libertad Financiera",
+    "ciudad": "San Luis Potosí",
+    "pais": "México",
+    "nombres_fuente": [
+      "Estadio Alfonso Lastras Ramírez",
+      "Estadio Libertad Financiera"
+    ]
+  },
+  {
+    "equipo": "Cruz Azul",
+    "liga": "Liga MX",
+    "alias": [
+      "Cruz Azul"
+    ],
+    "estadio": "Estadio Ciudad de los Deportes",
+    "ciudad": "Ciudad de México",
+    "pais": "México",
+    "nombres_fuente": [
+      "Estadio Ciudad de los Deportes"
+    ]
+  },
+  {
+    "equipo": "Guadalajara",
+    "liga": "Liga MX",
+    "alias": [
+      "Guadalajara"
+    ],
+    "estadio": "Estadio Akron",
+    "ciudad": "Zapopan",
+    "pais": "México",
+    "nombres_fuente": [
+      "Guadalajara Stadium",
+      "Estadio Akron"
+    ]
+  },
+  {
+    "equipo": "FC Juárez",
+    "liga": "Liga MX",
+    "alias": [
+      "FC Juarez",
+      "Juárez",
+      "FC Juárez"
+    ],
+    "estadio": "Estadio Olímpico Benito Juárez",
+    "ciudad": "Ciudad Juárez",
+    "pais": "México",
+    "nombres_fuente": [
+      "Estadio Olímpico Benito Juárez"
+    ]
+  },
+  {
+    "equipo": "León",
+    "liga": "Liga MX",
+    "alias": [
+      "León"
+    ],
+    "estadio": "Estadio León",
+    "ciudad": "León",
+    "pais": "México",
+    "nombres_fuente": [
+      "Estadio León",
+      "Estadio Nou Camp"
+    ]
+  },
+  {
+    "equipo": "Monterrey",
+    "liga": "Liga MX",
+    "alias": [
+      "Monterrey"
+    ],
+    "estadio": "Estadio BBVA",
+    "ciudad": "Guadalupe",
+    "pais": "México",
+    "nombres_fuente": [
+      "Monterrey Stadium",
+      "Estadio BBVA"
+    ]
+  },
+  {
+    "equipo": "Necaxa",
+    "liga": "Liga MX",
+    "alias": [
+      "Necaxa"
+    ],
+    "estadio": "Estadio Victoria",
+    "ciudad": "Aguascalientes",
+    "pais": "México",
+    "nombres_fuente": [
+      "Estadio Victoria de Aguascalientes",
+      "Estadio Victoria"
+    ]
+  },
+  {
+    "equipo": "Pachuca",
+    "liga": "Liga MX",
+    "alias": [
+      "Pachuca",
+      "CF Pachuca"
+    ],
+    "estadio": "Estadio Hidalgo",
+    "ciudad": "Pachuca",
+    "pais": "México",
+    "nombres_fuente": [
+      "Estadio Hidalgo"
+    ]
+  },
+  {
+    "equipo": "Puebla",
+    "liga": "Liga MX",
+    "alias": [
+      "Puebla"
+    ],
+    "estadio": "Estadio Cuauhtémoc",
+    "ciudad": "Puebla",
+    "pais": "México",
+    "nombres_fuente": [
+      "Estadio Cuauhtémoc"
+    ]
+  },
+  {
+    "equipo": "Pumas UNAM",
+    "liga": "Liga MX",
+    "alias": [
+      "Pumas UNAM"
+    ],
+    "estadio": "Estadio Olímpico Universitario",
+    "ciudad": "Ciudad de México",
+    "pais": "México",
+    "nombres_fuente": [
+      "Estadio Olímpico de Universitario",
+      "Estadio Olímpico Universitario"
+    ]
+  },
+  {
+    "equipo": "Querétaro",
+    "liga": "Liga MX",
+    "alias": [
+      "Querétaro"
+    ],
+    "estadio": "Estadio Corregidora",
+    "ciudad": "Querétaro",
+    "pais": "México",
+    "nombres_fuente": [
+      "Estadio La Corregidora",
+      "Estadio Corregidora"
+    ]
+  },
+  {
+    "equipo": "Santos Laguna",
+    "liga": "Liga MX",
+    "alias": [
+      "Santos Laguna"
+    ],
+    "estadio": "Estadio Corona",
+    "ciudad": "Torreón",
+    "pais": "México",
+    "nombres_fuente": [
+      "Estadio Nuevo Corona",
+      "Estadio Corona"
+    ]
+  },
+  {
+    "equipo": "Tigres UANL",
+    "liga": "Liga MX",
+    "alias": [
+      "Tigres UANL"
+    ],
+    "estadio": "Estadio Universitario",
+    "ciudad": "San Nicolás de los Garza",
+    "pais": "México",
+    "nombres_fuente": [
+      "Estadio Universitario de Nuevo León",
+      "Estadio Universitario"
+    ]
+  },
+  {
+    "equipo": "Tijuana",
+    "liga": "Liga MX",
+    "alias": [
+      "Tijuana"
+    ],
+    "estadio": "Estadio Caliente",
+    "ciudad": "Tijuana",
+    "pais": "México",
+    "nombres_fuente": [
+      "Estadio Caliente"
+    ]
+  },
+  {
+    "equipo": "Toluca",
+    "liga": "Liga MX",
+    "alias": [
+      "Toluca"
+    ],
+    "estadio": "Estadio Nemesio Díez",
+    "ciudad": "Toluca",
+    "pais": "México",
+    "nombres_fuente": [
+      "Estadio Nemesio Díez",
+      "Estadio Nemesio Diez"
+    ]
+  },
+  {
+    "equipo": "Flamengo",
+    "liga": "Brasileirão Serie A",
+    "alias": [
+      "Flamengo"
+    ],
+    "estadio": "Maracanã",
+    "ciudad": "Río de Janeiro",
+    "pais": "Brasil",
+    "nombres_fuente": [
+      "Estadio Jornalista Mário Filho",
+      "Estádio Jornalista Mário Filho",
+      "Maracanã",
+      "Estádio do Maracanã"
+    ]
+  },
+  {
+    "equipo": "Fluminense",
+    "liga": "Brasileirão Serie A",
+    "alias": [
+      "Fluminense"
+    ],
+    "estadio": "Maracanã",
+    "ciudad": "Río de Janeiro",
+    "pais": "Brasil",
+    "nombres_fuente": [
+      "Estadio Jornalista Mário Filho",
+      "Estádio Jornalista Mário Filho",
+      "Maracanã",
+      "Estádio do Maracanã"
+    ]
+  },
+  {
+    "equipo": "Botafogo",
+    "liga": "Brasileirão Serie A",
+    "alias": [
+      "Botafogo"
+    ],
+    "estadio": "Estadio Nilton Santos",
+    "ciudad": "Río de Janeiro",
+    "pais": "Brasil",
+    "nombres_fuente": [
+      "Estádio Nilton Santos",
+      "Estadio Nilton Santos"
+    ]
+  },
+  {
+    "equipo": "Vasco da Gama",
+    "liga": "Brasileirão Serie A",
+    "alias": [
+      "Vasco da Gama"
+    ],
+    "estadio": "São Januário",
+    "ciudad": "Río de Janeiro",
+    "pais": "Brasil",
+    "nombres_fuente": [
+      "Estádio Club de Regatas Vasco da Gama",
+      "Estádio São Januário",
+      "São Januário"
+    ]
+  },
+  {
+    "equipo": "Corinthians",
+    "liga": "Brasileirão Serie A",
+    "alias": [
+      "Corinthians"
+    ],
+    "estadio": "Neo Química Arena",
+    "ciudad": "São Paulo",
+    "pais": "Brasil",
+    "nombres_fuente": [
+      "Arena Corinthians",
+      "Neo Química Arena"
+    ]
+  },
+  {
+    "equipo": "Palmeiras",
+    "liga": "Brasileirão Serie A",
+    "alias": [
+      "Palmeiras"
+    ],
+    "estadio": "Allianz Parque",
+    "ciudad": "São Paulo",
+    "pais": "Brasil",
+    "nombres_fuente": [
+      "Allianz Parque"
+    ]
+  },
+  {
+    "equipo": "São Paulo",
+    "liga": "Brasileirão Serie A",
+    "alias": [
+      "São Paulo"
+    ],
+    "estadio": "Morumbi",
+    "ciudad": "São Paulo",
+    "pais": "Brasil",
+    "nombres_fuente": [
+      "Estádio Cícero Pompeu de Toledo",
+      "Morumbi",
+      "MorumBIS"
+    ]
+  },
+  {
+    "equipo": "Santos",
+    "liga": "Brasileirão Serie A",
+    "alias": [
+      "Santos"
+    ],
+    "estadio": "Vila Belmiro",
+    "ciudad": "Santos",
+    "pais": "Brasil",
+    "nombres_fuente": [
+      "Estádio Urbano Caldeira",
+      "Vila Belmiro"
+    ]
+  },
+  {
+    "equipo": "Athletico Paranaense",
+    "liga": "Brasileirão Serie A",
+    "alias": [
+      "Athletico PR",
+      "Athletico Paranaense"
+    ],
+    "estadio": "Ligga Arena",
+    "ciudad": "Curitiba",
+    "pais": "Brasil",
+    "nombres_fuente": [
+      "Estádio Joaquim Américo Guimarães",
+      "Ligga Arena",
+      "Arena da Baixada"
+    ]
+  },
+  {
+    "equipo": "Coritiba",
+    "liga": "Brasileirão Serie A",
+    "alias": [
+      "Coritiba"
+    ],
+    "estadio": "Couto Pereira",
+    "ciudad": "Curitiba",
+    "pais": "Brasil",
+    "nombres_fuente": [
+      "Estádio Major Antônio Couto Pereira",
+      "Couto Pereira"
+    ]
+  },
+  {
+    "equipo": "Atlético Mineiro",
+    "liga": "Brasileirão Serie A",
+    "alias": [
+      "Atlético Mineiro"
+    ],
+    "estadio": "Arena MRV",
+    "ciudad": "Belo Horizonte",
+    "pais": "Brasil",
+    "nombres_fuente": [
+      "Arena MRV"
+    ]
+  },
+  {
+    "equipo": "Cruzeiro",
+    "liga": "Brasileirão Serie A",
+    "alias": [
+      "Cruzeiro"
+    ],
+    "estadio": "Mineirão",
+    "ciudad": "Belo Horizonte",
+    "pais": "Brasil",
+    "nombres_fuente": [
+      "Estádio Governador Magalhães Pinto",
+      "Mineirão"
+    ]
+  },
+  {
+    "equipo": "Grêmio",
+    "liga": "Brasileirão Serie A",
+    "alias": [
+      "Grêmio"
+    ],
+    "estadio": "Arena do Grêmio",
+    "ciudad": "Porto Alegre",
+    "pais": "Brasil",
+    "nombres_fuente": [
+      "Arena do Grêmio"
+    ]
+  },
+  {
+    "equipo": "Internacional",
+    "liga": "Brasileirão Serie A",
+    "alias": [
+      "Internacional",
+      "SC Internacional"
+    ],
+    "estadio": "Beira-Rio",
+    "ciudad": "Porto Alegre",
+    "pais": "Brasil",
+    "nombres_fuente": [
+      "Estadio Beira-Rio",
+      "Estádio José Pinheiro Borda",
+      "Beira-Rio"
+    ]
+  },
+  {
+    "equipo": "Bahia",
+    "liga": "Brasileirão Serie A",
+    "alias": [
+      "Bahia"
+    ],
+    "estadio": "Arena Fonte Nova",
+    "ciudad": "Salvador",
+    "pais": "Brasil",
+    "nombres_fuente": [
+      "Arena Fonte Nova"
+    ]
+  },
+  {
+    "equipo": "Vitória",
+    "liga": "Brasileirão Serie A",
+    "alias": [
+      "Vitória"
+    ],
+    "estadio": "Barradão",
+    "ciudad": "Salvador",
+    "pais": "Brasil",
+    "nombres_fuente": [
+      "Estádio Manoel Barradas",
+      "Barradão"
+    ]
+  },
+  {
+    "equipo": "Chapecoense",
+    "liga": "Brasileirão Serie A",
+    "alias": [
+      "Chapecoense",
+      "Chapecoense-sc"
+    ],
+    "estadio": "Arena Condá",
+    "ciudad": "Chapecó",
+    "pais": "Brasil",
+    "nombres_fuente": [
+      "Arena Condá"
+    ]
+  },
+  {
+    "equipo": "Mirassol",
+    "liga": "Brasileirão Serie A",
+    "alias": [
+      "Mirassol"
+    ],
+    "estadio": "Estadio José Maria de Campos Maia",
+    "ciudad": "Mirassol",
+    "pais": "Brasil",
+    "nombres_fuente": [
+      "Estádio José Maria de Campos Maia",
+      "Estadio José Maria de Campos Maia"
+    ]
+  },
+  {
+    "equipo": "Red Bull Bragantino",
+    "liga": "Brasileirão Serie A",
+    "alias": [
+      "RB Bragantino",
+      "Red Bull Bragantino"
+    ],
+    "estadio": "Nabi Abi Chedid",
+    "ciudad": "Bragança Paulista",
+    "pais": "Brasil",
+    "nombres_fuente": [
+      "Estádio Nabi Abi Chedid",
+      "Nabi Abi Chedid"
+    ]
+  },
+  {
+    "equipo": "Remo",
+    "liga": "Brasileirão Serie A",
+    "alias": [
+      "Remo"
+    ],
+    "estadio": "Mangueirão",
+    "ciudad": "Belém",
+    "pais": "Brasil",
+    "nombres_fuente": [
+      "Estádio Estadual Jornalista Edgar Augusto Proença",
+      "Mangueirão"
+    ]
+  },
+  {
+    "equipo": "Anderlecht",
+    "liga": "Jupiler Pro League",
+    "alias": [
+      "Anderlecht"
+    ],
+    "estadio": "Lotto Park",
+    "ciudad": "Bruselas",
+    "pais": "Bélgica",
+    "nombres_fuente": [
+      "Lotto Park"
+    ]
+  },
+  {
+    "equipo": "Antwerp",
+    "liga": "Jupiler Pro League",
+    "alias": [
+      "Antwerp"
+    ],
+    "estadio": "Bosuilstadion",
+    "ciudad": "Deurne",
+    "pais": "Bélgica",
+    "nombres_fuente": [
+      "Bosuilstadion"
+    ]
+  },
+  {
+    "equipo": "Club Brugge",
+    "liga": "Jupiler Pro League",
+    "alias": [
+      "Club Brugge"
+    ],
+    "estadio": "Jan Breydelstadion",
+    "ciudad": "Brujas",
+    "pais": "Bélgica",
+    "nombres_fuente": [
+      "Jan Breydelstadion"
+    ]
+  },
+  {
+    "equipo": "Cercle Brugge",
+    "liga": "Jupiler Pro League",
+    "alias": [
+      "Cercle Brugge KSV",
+      "Cercle Brugge"
+    ],
+    "estadio": "Jan Breydelstadion",
+    "ciudad": "Brujas",
+    "pais": "Bélgica",
+    "nombres_fuente": [
+      "Jan Breydelstadion"
+    ]
+  },
+  {
+    "equipo": "Genk",
+    "liga": "Jupiler Pro League",
+    "alias": [
+      "Genk"
+    ],
+    "estadio": "Cegeka Arena",
+    "ciudad": "Genk",
+    "pais": "Bélgica",
+    "nombres_fuente": [
+      "Cegeka Arena"
+    ]
+  },
+  {
+    "equipo": "Gent",
+    "liga": "Jupiler Pro League",
+    "alias": [
+      "KAA Gent",
+      "Gent"
+    ],
+    "estadio": "Planet Group Arena",
+    "ciudad": "Gante",
+    "pais": "Bélgica",
+    "nombres_fuente": [
+      "Planet Group Arena",
+      "Ghelamco Arena"
+    ]
+  },
+  {
+    "equipo": "Standard Liège",
+    "liga": "Jupiler Pro League",
+    "alias": [
+      "Standard Liege",
+      "Standard Liège"
+    ],
+    "estadio": "Stade Maurice Dufrasne",
+    "ciudad": "Lieja",
+    "pais": "Bélgica",
+    "nombres_fuente": [
+      "Stade Maurice Dufrasne"
+    ]
+  },
+  {
+    "equipo": "Charleroi",
+    "liga": "Jupiler Pro League",
+    "alias": [
+      "Royal Charleroi SC",
+      "Sporting Charleroi"
+    ],
+    "estadio": "Stade du Pays de Charleroi",
+    "ciudad": "Charleroi",
+    "pais": "Bélgica",
+    "nombres_fuente": [
+      "Stade du Pays de Charleroi"
+    ]
+  },
+  {
+    "equipo": "Mechelen",
+    "liga": "Jupiler Pro League",
+    "alias": [
+      "KV Mechelen",
+      "Mechelen"
+    ],
+    "estadio": "Achter de Kazerne",
+    "ciudad": "Malinas",
+    "pais": "Bélgica",
+    "nombres_fuente": [
+      "Achter de Kazerne"
+    ]
+  },
+  {
+    "equipo": "OH Leuven",
+    "liga": "Jupiler Pro League",
+    "alias": [
+      "Oud-Heverlee Leuven",
+      "OH Leuven"
+    ],
+    "estadio": "King Power at Den Dreef",
+    "ciudad": "Heverlee",
+    "pais": "Bélgica",
+    "nombres_fuente": [
+      "King Power at Den Dreef"
+    ]
+  },
+  {
+    "equipo": "Sint-Truiden",
+    "liga": "Jupiler Pro League",
+    "alias": [
+      "Sint-Truidense",
+      "Sint-Truiden"
+    ],
+    "estadio": "Stayen Stadium",
+    "ciudad": "Sint-Truiden",
+    "pais": "Bélgica",
+    "nombres_fuente": [
+      "Stayen Stadion",
+      "Stayen Stadium"
+    ]
+  },
+  {
+    "equipo": "Kortrijk",
+    "liga": "Jupiler Pro League",
+    "alias": [
+      "KV Kortrijk",
+      "Kortrijk"
+    ],
+    "estadio": "Guldensporenstadion",
+    "ciudad": "Kortrijk",
+    "pais": "Bélgica",
+    "nombres_fuente": [
+      "Guldensporen Stadion",
+      "Guldensporenstadion"
+    ]
+  },
+  {
+    "equipo": "Union Saint-Gilloise",
+    "liga": "Jupiler Pro League",
+    "alias": [
+      "Union St.-Gilloise",
+      "Union Saint-Gilloise"
+    ],
+    "estadio": "Stade Joseph Mariën",
+    "ciudad": "Bruselas",
+    "pais": "Bélgica",
+    "nombres_fuente": [
+      "Stade Joseph Mariën"
+    ]
+  },
+  {
+    "equipo": "Westerlo",
+    "liga": "Jupiler Pro League",
+    "alias": [
+      "KVC Westerlo",
+      "Westerlo"
+    ],
+    "estadio": "Het Kuipje",
+    "ciudad": "Westerlo",
+    "pais": "Bélgica",
+    "nombres_fuente": [
+      "Het Kuipje"
+    ]
+  },
+  {
+    "equipo": "Zulte-Waregem",
+    "liga": "Jupiler Pro League",
+    "alias": [
+      "Zulte-Waregem"
+    ],
+    "estadio": "Elindus Arena",
+    "ciudad": "Waregem",
+    "pais": "Bélgica",
+    "nombres_fuente": [
+      "Elindus Arena"
+    ]
+  },
+  {
+    "equipo": "Lommel SK",
+    "liga": "Jupiler Pro League",
+    "alias": [
+      "Lommel SK"
+    ],
+    "estadio": "Soeverein Stadion",
+    "ciudad": "Lommel",
+    "pais": "Bélgica",
+    "nombres_fuente": [
+      "Soevereinstadion",
+      "Soeverein Stadion"
+    ]
+  },
+  {
+    "equipo": "SK Beveren",
+    "liga": "Jupiler Pro League",
+    "alias": [
+      "Waasland-Beveren",
+      "SK Beveren"
+    ],
+    "estadio": "Freethielstadion",
+    "ciudad": "Beveren",
+    "pais": "Bélgica",
+    "nombres_fuente": [
+      "Freethiel-Stadion",
+      "Freethielstadion"
+    ]
+  },
+  {
+    "equipo": "RAAL La Louvière",
+    "liga": "Jupiler Pro League",
+    "alias": [
+      "RAAL La Louvière",
+      "La Louvière"
+    ],
+    "estadio": "Easi Arena",
+    "ciudad": "La Louvière",
+    "pais": "Bélgica",
+    "nombres_fuente": [
+      "Stade du Tivoli",
+      "Easi Arena"
+    ]
+  },
+  {
+    "equipo": "Colo Colo",
+    "liga": "Primera División Chile",
+    "alias": [
+      "Colo-Colo",
+      "Colo Colo"
+    ],
+    "estadio": "Estadio Monumental David Arellano",
+    "ciudad": "Santiago",
+    "pais": "Chile",
+    "nombres_fuente": [
+      "Estadio Monumental David Arellano"
+    ]
+  },
+  {
+    "equipo": "Universidad de Chile",
+    "liga": "Primera División Chile",
+    "alias": [
+      "Universidad Chile",
+      "Universidad de Chile"
+    ],
+    "estadio": "Estadio Nacional Julio Martínez Prádanos",
+    "ciudad": "Santiago",
+    "pais": "Chile",
+    "nombres_fuente": [
+      "Estadio Nacional Julio Martínez Prádanos"
+    ]
+  },
+  {
+    "equipo": "Universidad Católica",
+    "liga": "Primera División Chile",
+    "alias": [
+      "Universidad Católica"
+    ],
+    "estadio": "Claro Arena",
+    "ciudad": "Santiago",
+    "pais": "Chile",
+    "nombres_fuente": [
+      "Estadio San Carlos de Apoquindo",
+      "Claro Arena"
+    ]
+  },
+  {
+    "equipo": "Unión Española",
+    "liga": "Primera División Chile",
+    "alias": [
+      "Unión Española"
+    ],
+    "estadio": "Estadio Santa Laura",
+    "ciudad": "Santiago",
+    "pais": "Chile",
+    "nombres_fuente": [
+      "Estadio Santa Laura-Universidad SEK",
+      "Estadio Santa Laura"
+    ]
+  },
+  {
+    "equipo": "Audax Italiano",
+    "liga": "Primera División Chile",
+    "alias": [
+      "Audax Italiano",
+      "A. Italiano"
+    ],
+    "estadio": "Estadio Bicentenario La Florida",
+    "ciudad": "Santiago",
+    "pais": "Chile",
+    "nombres_fuente": [
+      "Estadio Bicentenario Municipal de La Florida",
+      "Estadio Bicentenario La Florida"
+    ]
+  },
+  {
+    "equipo": "Palestino",
+    "liga": "Primera División Chile",
+    "alias": [
+      "Palestino"
+    ],
+    "estadio": "Estadio Municipal de La Cisterna",
+    "ciudad": "Santiago",
+    "pais": "Chile",
+    "nombres_fuente": [
+      "Estadio Municipal de La Cisterna"
+    ]
+  },
+  {
+    "equipo": "Unión La Calera",
+    "liga": "Primera División Chile",
+    "alias": [
+      "Unión La Calera"
+    ],
+    "estadio": "Estadio Nicolás Chahuán Nazar",
+    "ciudad": "La Calera",
+    "pais": "Chile",
+    "nombres_fuente": [
+      "Estadio Municipal Nicolás Chahuán Nazar",
+      "Estadio Nicolás Chahuán Nazar"
+    ]
+  },
+  {
+    "equipo": "Everton",
+    "liga": "Primera División Chile",
+    "alias": [
+      "Everton"
+    ],
+    "estadio": "Estadio Sausalito",
+    "ciudad": "Viña del Mar",
+    "pais": "Chile",
+    "nombres_fuente": [
+      "Estadio Sausalito"
+    ]
+  },
+  {
+    "equipo": "Coquimbo Unido",
+    "liga": "Primera División Chile",
+    "alias": [
+      "Coquimbo Unido"
+    ],
+    "estadio": "Estadio Francisco Sánchez Rumoroso",
+    "ciudad": "Coquimbo",
+    "pais": "Chile",
+    "nombres_fuente": [
+      "Estadio Bicentenario Francisco Sánchez Rumoroso",
+      "Estadio Francisco Sánchez Rumoroso"
+    ]
+  },
+  {
+    "equipo": "Deportes La Serena",
+    "liga": "Primera División Chile",
+    "alias": [
+      "La Serena",
+      "Deportes La Serena"
+    ],
+    "estadio": "Estadio La Portada",
+    "ciudad": "La Serena",
+    "pais": "Chile",
+    "nombres_fuente": [
+      "Estadio La Portada de La Serena",
+      "Estadio La Portada"
+    ]
+  },
+  {
+    "equipo": "Ñublense",
+    "liga": "Primera División Chile",
+    "alias": [
+      "Ñublense"
+    ],
+    "estadio": "Estadio Nelson Oyarzún",
+    "ciudad": "Chillán",
+    "pais": "Chile",
+    "nombres_fuente": [
+      "Estadio Bicentenario Municipal Nelson Oyarzún",
+      "Estadio Nelson Oyarzún"
+    ]
+  },
+  {
+    "equipo": "O’Higgins",
+    "liga": "Primera División Chile",
+    "alias": [
+      "O'Higgins",
+      "O’Higgins"
+    ],
+    "estadio": "Estadio El Teniente",
+    "ciudad": "Rancagua",
+    "pais": "Chile",
+    "nombres_fuente": [
+      "Estadio El Teniente"
+    ]
+  },
+  {
+    "equipo": "Cobresal",
+    "liga": "Primera División Chile",
+    "alias": [
+      "Cobresal"
+    ],
+    "estadio": "Estadio El Cobre",
+    "ciudad": "El Salvador",
+    "pais": "Chile",
+    "nombres_fuente": [
+      "Estadio El Cobre"
+    ]
+  },
+  {
+    "equipo": "Huachipato",
+    "liga": "Primera División Chile",
+    "alias": [
+      "Huachipato"
+    ],
+    "estadio": "Estadio CAP",
+    "ciudad": "Talcahuano",
+    "pais": "Chile",
+    "nombres_fuente": [
+      "Estadio Huachipato-CAP Acero",
+      "Estadio CAP"
+    ]
+  },
+  {
+    "equipo": "Deportes Concepción",
+    "liga": "Primera División Chile",
+    "alias": [
+      "Deportes Concepcion",
+      "Deportes Concepción",
+      "Concepcion",
+      "Concepción"
+    ],
+    "estadio": "Estadio Ester Roa Rebolledo",
+    "ciudad": "Concepción",
+    "pais": "Chile",
+    "nombres_fuente": [
+      "Estadio Municipal Alcaldesa Ester Roa Rebolledo",
+      "Estadio Ester Roa Rebolledo"
+    ]
+  },
+  {
+    "equipo": "Deportes Limache",
+    "liga": "Primera División Chile",
+    "alias": [
+      "Deportes Limache"
+    ],
+    "estadio": "Estadio Lucio Fariña Fernández",
+    "ciudad": "Quillota",
+    "pais": "Chile",
+    "nombres_fuente": [
+      "Estadio Municipal Lucio Fariña Fernández",
+      "Estadio Lucio Fariña Fernández"
+    ]
+  },
+  {
+    "equipo": "Al Hilal",
+    "liga": "Saudi Pro League",
+    "alias": [
+      "Al Hilal"
+    ],
+    "estadio": "Kingdom Arena",
+    "ciudad": "Riad",
+    "pais": "Arabia Saudita",
+    "nombres_fuente": [
+      "Kingdom Arena"
+    ]
+  },
+  {
+    "equipo": "Al Nassr",
+    "liga": "Saudi Pro League",
+    "alias": [
+      "Al Nassr"
+    ],
+    "estadio": "Al-Awwal Park",
+    "ciudad": "Riad",
+    "pais": "Arabia Saudita",
+    "nombres_fuente": [
+      "Al-Awwal Park"
+    ]
+  },
+  {
+    "equipo": "Al Shabab",
+    "liga": "Saudi Pro League",
+    "alias": [
+      "Al Shabab"
+    ],
+    "estadio": "Prince Faisal bin Fahd Stadium",
+    "ciudad": "Riad",
+    "pais": "Arabia Saudita",
+    "nombres_fuente": [
+      "Prince Faisal bin Fahd Stadium"
+    ]
+  },
+  {
+    "equipo": "Al Ittihad",
+    "liga": "Saudi Pro League",
+    "alias": [
+      "Al Ittihad"
+    ],
+    "estadio": "King Abdullah Sport City Stadium",
+    "ciudad": "Yeda",
+    "pais": "Arabia Saudita",
+    "nombres_fuente": [
+      "King Abdullah Sport City Stadium",
+      "King Abdullah Sports City",
+      "Alinma Stadium"
+    ]
+  },
+  {
+    "equipo": "Al Ahli",
+    "liga": "Saudi Pro League",
+    "alias": [
+      "Al Ahli",
+      "Al-Ahli Jeddah"
+    ],
+    "estadio": "Prince Abdullah Al Faisal Stadium",
+    "ciudad": "Yeda",
+    "pais": "Arabia Saudita",
+    "nombres_fuente": [
+      "Prince Abdullah Al Faisal Stadium"
+    ]
+  },
+  {
+    "equipo": "Al Fateh",
+    "liga": "Saudi Pro League",
+    "alias": [
+      "Al Fateh"
+    ],
+    "estadio": "Prince Abdullah bin Jalawi Stadium",
+    "ciudad": "Al Hofuf",
+    "pais": "Arabia Saudita",
+    "nombres_fuente": [
+      "Prince Abdullah bin Jalawi Sports City Stadium",
+      "Prince Abdullah bin Jalawi Stadium"
+    ]
+  },
+  {
+    "equipo": "Al Ettifaq",
+    "liga": "Saudi Pro League",
+    "alias": [
+      "Al Ettifaq",
+      "Al-Ettifaq"
+    ],
+    "estadio": "Prince Mohamed bin Fahd Stadium",
+    "ciudad": "Dammam",
+    "pais": "Arabia Saudita",
+    "nombres_fuente": [
+      "EGO STADIUM",
+      "Prince Mohamed bin Fahd Stadium",
+      "Prince Mohamed bin Fahd Stadium (Ad Dammām (Dammam))"
+    ]
+  },
+  {
+    "equipo": "Al Khaleej",
+    "liga": "Saudi Pro League",
+    "alias": [
+      "Al Khaleej"
+    ],
+    "estadio": "Prince Nayef bin Abdulaziz Stadium",
+    "ciudad": "Saihat",
+    "pais": "Arabia Saudita",
+    "nombres_fuente": [
+      "Prince Nayef bin Abdul Aziz Sports City Stadium",
+      "Prince Nayef bin Abdulaziz Stadium"
+    ]
+  },
+  {
+    "equipo": "Al Taawoun",
+    "liga": "Saudi Pro League",
+    "alias": [
+      "Al Taawoun"
+    ],
+    "estadio": "King Abdullah Sport City Stadium",
+    "ciudad": "Buraidah",
+    "pais": "Arabia Saudita",
+    "nombres_fuente": [
+      "King Abdullah Sport City Stadium"
+    ]
+  },
+  {
+    "equipo": "Al Hazm",
+    "liga": "Saudi Pro League",
+    "alias": [
+      "Al Hazm"
+    ],
+    "estadio": "Al Hazm Club Stadium",
+    "ciudad": "Ar Rass",
+    "pais": "Arabia Saudita",
+    "nombres_fuente": [
+      "Ar-Rass Stadium (Al Hazm Club Stadium) (Ar-Rass (Rass))",
+      "Al Hazm Club Stadium"
+    ]
+  },
+  {
+    "equipo": "Abha",
+    "liga": "Saudi Pro League",
+    "alias": [
+      "Abha"
+    ],
+    "estadio": "Prince Sultan bin Abdulaziz Stadium",
+    "ciudad": "Abha",
+    "pais": "Arabia Saudita",
+    "nombres_fuente": [
+      "Prince Sultan bin Abdul Aziz Stadium",
+      "Prince Sultan bin Abdulaziz Stadium"
+    ]
+  },
+  {
+    "equipo": "Damac",
+    "liga": "Saudi Pro League",
+    "alias": [
+      "Damac FC",
+      "Damac"
+    ],
+    "estadio": "Damac Club Stadium",
+    "ciudad": "Khamis Mushait",
+    "pais": "Arabia Saudita",
+    "nombres_fuente": [
+      "Dhamak Club Stadium",
+      "Damac Club Stadium"
+    ]
+  },
+  {
+    "equipo": "Al Raed",
+    "liga": "Saudi Pro League",
+    "alias": [
+      "Al Raed"
+    ],
+    "estadio": "King Abdullah Sport City Stadium",
+    "ciudad": "Buraidah",
+    "pais": "Arabia Saudita",
+    "nombres_fuente": [
+      "King Abdullah Sport City Stadium"
+    ]
+  },
+  {
+    "equipo": "Al Majma’ah",
+    "liga": "Saudi Pro League",
+    "alias": [
+      "Al Majma'ah",
+      "Al-Majma’ah",
+      "Al Majma’ah"
+    ],
+    "estadio": "Al Majma’ah Sports City",
+    "ciudad": "Al Majma’ah",
+    "pais": "Arabia Saudita",
+    "nombres_fuente": [
+      "Al Majma’ah Sports City"
+    ]
+  },
+  {
+    "equipo": "Albion FC",
+    "liga": "Primera División Uruguay",
+    "alias": [
+      "Albion FC"
+    ],
+    "estadio": "Parque Federico Omar Saroldi",
+    "ciudad": "Montevideo",
+    "pais": "Uruguay",
+    "nombres_fuente": [
+      "Parque Federico Omar Saroldi"
+    ]
+  },
+  {
+    "equipo": "Boston River",
+    "liga": "Primera División Uruguay",
+    "alias": [
+      "Boston River"
+    ],
+    "estadio": "Estadio Campeones Olímpicos",
+    "ciudad": "Florida",
+    "pais": "Uruguay",
+    "nombres_fuente": [
+      "Estadio Campeones Olímpicos"
+    ]
+  },
+  {
+    "equipo": "Central Español",
+    "liga": "Primera División Uruguay",
+    "alias": [
+      "Central Español Fútbol Club",
+      "Central Español"
+    ],
+    "estadio": "Parque Palermo",
+    "ciudad": "Montevideo",
+    "pais": "Uruguay",
+    "nombres_fuente": [
+      "Parque Palermo"
+    ]
+  },
+  {
+    "equipo": "Cerro",
+    "liga": "Primera División Uruguay",
+    "alias": [
+      "Cerro"
+    ],
+    "estadio": "Estadio Luis Tróccoli",
+    "ciudad": "Montevideo",
+    "pais": "Uruguay",
+    "nombres_fuente": [
+      "Estadio Luis Tróccoli"
+    ]
+  },
+  {
+    "equipo": "Cerro Largo",
+    "liga": "Primera División Uruguay",
+    "alias": [
+      "Cerro Largo"
+    ],
+    "estadio": "Estadio Arquitecto Antonio Ubilla",
+    "ciudad": "Melo",
+    "pais": "Uruguay",
+    "nombres_fuente": [
+      "Estadio Arquitecto Antonio Ubilla",
+      "Estadio Antonio Ubilla"
+    ]
+  },
+  {
+    "equipo": "Danubio",
+    "liga": "Primera División Uruguay",
+    "alias": [
+      "Danubio"
+    ],
+    "estadio": "Estadio Jardines del Hipódromo",
+    "ciudad": "Montevideo",
+    "pais": "Uruguay",
+    "nombres_fuente": [
+      "Estadio Jardines del Hipódromo",
+      "Jardines del Hipódromo"
+    ]
+  },
+  {
+    "equipo": "Defensor Sporting",
+    "liga": "Primera División Uruguay",
+    "alias": [
+      "Defensor Sporting"
+    ],
+    "estadio": "Estadio Luis Franzini",
+    "ciudad": "Montevideo",
+    "pais": "Uruguay",
+    "nombres_fuente": [
+      "Estadio Luis Franzini"
+    ]
+  },
+  {
+    "equipo": "Deportivo Maldonado",
+    "liga": "Primera División Uruguay",
+    "alias": [
+      "Deportivo Maldonado"
+    ],
+    "estadio": "Estadio Domingo Burgueño Miguel",
+    "ciudad": "Maldonado",
+    "pais": "Uruguay",
+    "nombres_fuente": [
+      "Estadio Domingo Burgueño Miguel",
+      "Estadio Domingo Burgueño"
+    ]
+  },
+  {
+    "equipo": "Juventud",
+    "liga": "Primera División Uruguay",
+    "alias": [
+      "Juventud"
+    ],
+    "estadio": "Estadio Juventud Parque Artigas",
+    "ciudad": "Las Piedras",
+    "pais": "Uruguay",
+    "nombres_fuente": [
+      "Estadio Parque Artigas",
+      "Estadio Juventud Parque Artigas"
+    ]
+  },
+  {
+    "equipo": "Liverpool",
+    "liga": "Primera División Uruguay",
+    "alias": [
+      "Liverpool"
+    ],
+    "estadio": "Estadio Belvedere",
+    "ciudad": "Montevideo",
+    "pais": "Uruguay",
+    "nombres_fuente": [
+      "Estadio Belvedere"
+    ]
+  },
+  {
+    "equipo": "Montevideo City Torque",
+    "liga": "Primera División Uruguay",
+    "alias": [
+      "Montevideo City Torque"
+    ],
+    "estadio": "Estadio Charrúa",
+    "ciudad": "Montevideo",
+    "pais": "Uruguay",
+    "nombres_fuente": [
+      "Estadio Charrúa"
+    ]
+  },
+  {
+    "equipo": "Montevideo Wanderers",
+    "liga": "Primera División Uruguay",
+    "alias": [
+      "Montevideo Wanderers"
+    ],
+    "estadio": "Estadio Alfredo Víctor Viera",
+    "ciudad": "Montevideo",
+    "pais": "Uruguay",
+    "nombres_fuente": [
+      "Parque Alfredo Víctor Viera",
+      "Estadio Alfredo Víctor Viera"
+    ]
+  },
+  {
+    "equipo": "Nacional",
+    "liga": "Primera División Uruguay",
+    "alias": [
+      "Club Nacional",
+      "Nacional"
+    ],
+    "estadio": "Estadio Gran Parque Central",
+    "ciudad": "Montevideo",
+    "pais": "Uruguay",
+    "nombres_fuente": [
+      "Gran Parque Central",
+      "Estadio Gran Parque Central"
+    ]
+  },
+  {
+    "equipo": "Peñarol",
+    "liga": "Primera División Uruguay",
+    "alias": [
+      "CA Peñarol",
+      "Peñarol"
+    ],
+    "estadio": "Estadio Campeón del Siglo",
+    "ciudad": "Montevideo",
+    "pais": "Uruguay",
+    "nombres_fuente": [
+      "Estadio Campeón del Siglo",
+      "Campeón del Siglo"
+    ]
+  },
+  {
+    "equipo": "Progreso",
+    "liga": "Primera División Uruguay",
+    "alias": [
+      "Progreso"
+    ],
+    "estadio": "Estadio Abraham Paladino",
+    "ciudad": "Montevideo",
+    "pais": "Uruguay",
+    "nombres_fuente": [
+      "Parque Abraham Paladino",
+      "Estadio Abraham Paladino"
+    ]
+  },
+  {
+    "equipo": "Racing Club",
+    "liga": "Primera División Uruguay",
+    "alias": [
+      "Racing (Montevideo)",
+      "Racing Club"
+    ],
+    "estadio": "Estadio Parque Osvaldo Roberto",
+    "ciudad": "Montevideo",
+    "pais": "Uruguay",
+    "nombres_fuente": [
+      "Parque Osvaldo Roberto",
+      "Estadio Parque Osvaldo Roberto"
+    ]
+  }
+]
