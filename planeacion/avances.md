@@ -1443,7 +1443,16 @@ activa hasta 2027-04-04, 0 requests usados). Gerardo puso la clave correcta (f8f
 `.secretos/.env` y en el secret. Claude disparó a mano `sync-partidos` (ok), `sync-estadisticas`
 (ok, 1 registro) y `sync-roster` (ok, sin cambios). Queda pendiente el aviso automático (punto 8).
 
+   - **✅ HECHO 2026-09-30 (rama `avisos-roster`):** `sync-roster` ahora usa SportMonks (contratos del
+     jugador; respaldo: plantel del club) y SOLO avisa (opción 1 de Gerardo: no cambia datos).
+     Migración 0029 (aplicada): códigos de SportMonks de Abel 1568, Franco Romero 260747, Martirena
+     37420346, Silvera 261815, Peñarol 3338, Nacional 828. Deploy hecho por Gerardo; corrida
+     manual: 11 revisados, 0 cambios, 0 errores. 7 tests unitarios + 5 de base (`npm run test:avisos`).
 8. **Que la app no dependa de que alguien "renueve" claves + aviso automático si una fuente se cae.**
+   - **✅ HECHO 2026-09-30 (misma rama):** cartel de avisos arriba de cada vista, solo para el
+     Administrador (`avisos_sistema()`, 0029): fuente caída > 36 h (roster > 8 días), traspasos
+     detectados y jugadores que ya no figuran en su club. El mail automático queda para después
+     (necesita contratar un servicio de envío).
    La agencia no va a saber actualizar claves. Pedido: saber la vigencia de cada clave y
    automatizar lo posible.
    - Lo que se sabe: la clave de API-Football (plan free) no tiene fecha de vencimiento propia;
