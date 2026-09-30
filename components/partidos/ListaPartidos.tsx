@@ -13,6 +13,7 @@ import { TarjetaFecha } from '@/components/partidos/TarjetaFecha';
 import { diasDesdeHoyUy, etiquetaDiaUy } from '@/lib/fechas/zonas';
 import { mezclarPorDia, textoCantidades, type FechaContenido } from '@/lib/partidos/fechas-contenido';
 import type { PartidoProximo } from '@/lib/repositorios/tipos';
+import type { EstadoVisual } from '@/lib/tickets/tipos';
 import { SIN_LINKS, type LinksDropbox } from '@/lib/jugadores/links-dropbox';
 
 export function ListaPartidos({
@@ -22,10 +23,13 @@ export function ListaPartidos({
   linksDropbox,
   fechas = [],
   alertasTicket = {},
+  estadosDiseno = {},
 }: {
   partidos: PartidoProximo[];
   /** `{ partidoId: texto }` de la lucecita de ticket (`alertasPorPartido`). */
   alertasTicket?: Record<string, string>;
+  /** `{ '<partido>:<jugador>': estado }` del semáforo de diseño (0030). */
+  estadosDiseno?: Record<string, EstadoVisual>;
   /** Fechas de Contenido ya filtradas; van debajo de los partidos de su día. */
   fechas?: FechaContenido[];
   partidosConHito?: Set<string>;
@@ -61,6 +65,7 @@ export function ListaPartidos({
                   onAbrir={onAbrirPartido ? () => onAbrirPartido(p.partidoId) : undefined}
                   linksDropbox={linksDropbox ? (linksDropbox[p.jugadorId] ?? SIN_LINKS) : undefined}
                   alertaTicket={alertasTicket[p.partidoId]}
+                  estadoDiseno={estadosDiseno[`${p.partidoId}:${p.jugadorId}`]}
                 />
               ))}
               {fechasDelDia.map((f) => (

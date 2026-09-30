@@ -21,6 +21,8 @@ import { Escudo } from '@/components/comunes/Escudo';
 import { CaraJugador } from '@/components/comunes/CaraJugador';
 import { BotonesDropbox } from '@/components/jugadores/BotonesDropbox';
 import { AlertaTicket } from '@/components/tickets/AlertaTicket';
+import { PastillaSemaforo } from '@/components/tickets/PastillaSemaforo';
+import type { EstadoVisual } from '@/lib/tickets/tipos';
 import type { LinksDropbox } from '@/lib/jugadores/links-dropbox';
 import { horaCortaEnUruguay, horaCortaEnSede, marcadorCambioDeDia } from '@/lib/fechas/zonas';
 import { mostrar } from '@/lib/formato/valores';
@@ -33,11 +35,14 @@ export function TarjetaPartido({
   onAbrir,
   linksDropbox,
   alertaTicket,
+  estadoDiseno,
 }: {
   partido: PartidoProximo;
   tieneHito?: boolean;
   /** "Ticket pendiente" / "Para revisar" / "Para publicar" si el partido espera algo del usuario. */
   alertaTicket?: string;
+  /** Semáforo de diseño de este jugador en este partido (0030). */
+  estadoDiseno?: EstadoVisual;
   onAbrir?: () => void;
   /** Si se pasa, muestra los botones de Dropbox junto a la cara del jugador. */
   linksDropbox?: LinksDropbox;
@@ -144,6 +149,7 @@ export function TarjetaPartido({
               Hito
             </span>
           )}
+          {estadoDiseno && <PastillaSemaforo estado={estadoDiseno} />}
           {alertaTicket && <AlertaTicket texto={alertaTicket} />}
           {linksDropbox && (
             <BotonesDropbox links={linksDropbox} nombreJugador={p.jugadorApodo || p.jugadorNombre} />

@@ -15,6 +15,8 @@ import { usePanel } from '@/lib/paneles/use-panel';
 import { useRouter } from 'next/navigation';
 import { Ico } from '@/components/comunes/Ico';
 import { PastillaEstado } from '@/components/tickets/PastillaEstado';
+import { PastillaSemaforo } from '@/components/tickets/PastillaSemaforo';
+import { estadoVisual } from '@/lib/tickets/semaforo';
 import { crearClienteNavegador } from '@/lib/supabase/cliente-navegador';
 import { ejecutarAccion } from '@/lib/tickets/acciones';
 import { accionesPermitidas } from '@/lib/tickets/permisos';
@@ -113,7 +115,11 @@ export function PanelTicket({ bundle, onActualizar }: { bundle: DetalleTicketBun
     <>
       <div role="status" className="solo-lector">{aviso}</div>
       <div className="linea" style={{ marginBottom: 14 }}>
-        <PastillaEstado estado={ticket.estado} />
+        {ticket.estado === 'cancelado' ? (
+          <PastillaEstado estado={ticket.estado} />
+        ) : (
+          <PastillaSemaforo estado={estadoVisual(ticket, hoyUy) ?? 'pendiente'} />
+        )}
         {vence && (
           <span className={vence.vencido ? 'tk__vence tk__vence--mal' : 'tk__vence'}>
             {vence.vencido ? '⚠️ ' : ''}

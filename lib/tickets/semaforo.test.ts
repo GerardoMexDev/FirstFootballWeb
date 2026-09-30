@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { estadoVisual, peorEstado } from './semaforo.ts';
+import { estadoVisual, estadosPorPartidoJugador, peorEstado } from './semaforo.ts';
 import type { ResumenTicket } from './tipos.ts';
 
 const HOY = '2026-10-05';
@@ -22,4 +22,12 @@ test('peorEstado: vencido > pendiente > completado; sin estados → null', () =>
   assert.equal(peorEstado(['completado', 'pendiente']), 'pendiente');
   assert.equal(peorEstado(['completado', null]), 'completado');
   assert.equal(peorEstado([null]), null);
+});
+
+test('estadosPorPartidoJugador: clave partido:jugador → semáforo; sin partido o cancelado no entran', () => {
+  const a = { ...tk('pendiente', '2026-10-01'), partidoId: 'p1', jugadorId: 'j1' };
+  const b = { ...tk('publicado', '2026-10-01'), partidoId: 'p1', jugadorId: 'j2' };
+  const c = { ...tk('cancelado', '2026-10-01'), partidoId: 'p2', jugadorId: 'j1' };
+  const d = { ...tk('pendiente', '2026-10-09'), partidoId: null, jugadorId: 'j3' };
+  assert.deepEqual(estadosPorPartidoJugador([a, b, c, d], HOY), { 'p1:j1': 'vencido', 'p1:j2': 'completado' });
 });

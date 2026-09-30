@@ -21,6 +21,8 @@ import { crearClienteServidor } from '@/lib/supabase/cliente-servidor';
 import { ZONA_AGENCIA } from '@/lib/fechas/zonas';
 import { hastaFechas } from '@/lib/partidos/fechas-contenido';
 import { pendientesDeSesion } from '@/lib/tickets/pendientes-de-sesion';
+import { RepositorioTicketsSupabase, type TicketAutomatico } from '@/lib/repositorios/repositorio-tickets';
+import { estadosPorPartidoJugador } from '@/lib/tickets/semaforo';
 import { alertasPorPartido } from '@/lib/tickets/estados';
 
 export default async function PaginaPartidos() {
@@ -39,7 +41,7 @@ export default async function PaginaPartidos() {
 
   const repositorioHitos = new RepositorioHitosSupabase(supabase);
   const repositorioAgenda = new RepositorioAgendaSupabase(supabase);
-  const [jugadores, totales, escalas, eventosAgenda, linksDropbox, fechasContenido, pendientes, partidosContenido] = await Promise.all([
+  const [jugadores, totales, escalas, eventosAgenda, linksDropbox, fechasContenido, pendientes, matchDay, partidosContenido] = await Promise.all([
     repositorioHitos.listarJugadoresActivos(),
     repositorioHitos.listarTotales(),
     repositorioHitos.listarEscalasActivas(),
@@ -49,6 +51,11 @@ export default async function PaginaPartidos() {
     repositorioAgenda.listarFechasContenido(hoyUy, hastaFechas(partidos, hoyUy)),
     // Lo que le toca al usuario (misma lectura que el contador de la barra, cacheada).
     pendientesDeSesion(),
+    // Semáforo de diseño por partido y jugador (0030). Si falla, las tarjetas se ven sin pastilla.
+    new RepositorioTicketsSupabase(supabase).listarMatchDay(hoyUy, hastaFechas(partidos, hoyUy)).catch((e) => {
+      console.error('match day (partidos):', e);
+      return [] as TicketAutomatico[];
+    }),
     // Partidos de jugadores solo-Contenido (filtro "Contenido"). Si falla, el filtro queda
     // solo con las fechas y el resto de la página no se entera.
     repositorioPartidos.listarProximosContenido().catch((e) => {
@@ -87,6 +94,7 @@ export default async function PaginaPartidos() {
         fechas={fechasContenido}
         hoyUy={hoyUy}
         alertasTicket={alertasPorPartido(pendientes, hoyUy)}
+        estadosDiseno={estadosPorPartidoJugador(matchDay, hoyUy)}
       />
     </section>
   );

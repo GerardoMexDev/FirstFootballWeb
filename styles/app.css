@@ -514,3 +514,22 @@ html { overflow-x: clip; }
 /* Cartel de avisos del sistema (solo Administrador, 0029, 2026-09-30): arriba de cada vista. */
 .avs { display: flex; flex-direction: column; gap: 8px; margin-bottom: 18px; }
 .avs .aviso { color: var(--text); }
+
+/* Semáforo de diseño (0030): rojo pendiente, verde completado, amarillo vencido. Siempre con texto. */
+.sem { display: inline-flex; align-items: center; gap: 5px; padding: 3px 10px; border-radius: 999px; font-size: var(--t-xs); font-weight: 600; white-space: nowrap; line-height: 1.4; }
+.sem--pendiente { background: var(--tk-rojo-bg); color: var(--tk-rojo); }
+.sem--completado { background: var(--tk-verde-bg); color: var(--tk-verde); }
+.sem--vencido { background: var(--tk-amarillo-bg); color: var(--tk-amarillo); }
+/* Casillas Pendiente / Completado del ticket automático. */
+.csds { display: inline-flex; align-items: center; gap: 6px 14px; flex-wrap: wrap; }
+.csd { display: inline-flex; align-items: center; gap: 8px; min-height: 36px; font-size: var(--t-sm); cursor: pointer; }
+.csd input { width: 18px; height: 18px; accent-color: var(--tk-verde-borde); cursor: pointer; }
+.csd input:disabled { cursor: default; }
+.csd__err { font-size: var(--t-xs); color: var(--tk-rojo); }
+.mdj { display: flex; align-items: center; gap: 8px 14px; flex-wrap: wrap; padding: 6px 16px 4px; }
+.mdj__q { font-size: var(--t-xs); color: var(--text-2); }
+/* Botón Copiar datos del partido. */
+.bcp__fila { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+.bcp { display: inline-flex; align-items: center; gap: 8px; }
+.bcp__b { display: inline-flex; align-items: center; gap: 6px; }
+.bcp__a { font-size: var(--t-xs); color: var(--tk-verde); font-weight: 600; min-width: 1px; }

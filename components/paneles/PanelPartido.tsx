@@ -19,6 +19,12 @@ import { Escudo } from '@/components/comunes/Escudo';
 import { CaraJugador } from '@/components/comunes/CaraJugador';
 import { BotonesDropbox } from '@/components/jugadores/BotonesDropbox';
 import { CrearTicket } from '@/components/tickets/CrearTicket';
+import { BotonCopiar } from '@/components/tickets/BotonCopiar';
+import { CasillasDiseno } from '@/components/tickets/CasillasDiseno';
+import { PastillaSemaforo } from '@/components/tickets/PastillaSemaforo';
+import { textoCopiarPartido } from '@/lib/tickets/copiar';
+import { estadoVisual } from '@/lib/tickets/semaforo';
+import { fechaCortaUy } from '@/lib/tickets/vencimiento';
 import { PastillaEstado } from '@/components/tickets/PastillaEstado';
 import { AlertaTicket } from '@/components/tickets/AlertaTicket';
 import { debeActuar, puedeCrear } from '@/lib/tickets/permisos';
@@ -166,7 +172,20 @@ export function PanelPartido({ bundle }: { bundle: DetallePartidoBundle }) {
       )}
 
       <div className="bloque">
-        <span className="label">{d.jugadores.length > 1 ? 'Jugadores a cubrir' : 'Jugador a cubrir'}</span>
+        <div className="bcp__fila">
+          <span className="label">{d.jugadores.length > 1 ? 'Jugadores a cubrir' : 'Jugador a cubrir'}</span>
+          {/* Datos clave para pegar en Photoshop (0030). */}
+          <BotonCopiar
+            texto={textoCopiarPartido({
+              local: d.local.nombre,
+              visitante: d.visitante.nombre,
+              inicioUtc: d.inicioUtc,
+              zona: d.zonaHorariaEvento,
+              estadio: d.estadio,
+              ciudad: d.ciudad,
+            })}
+          />
+        </div>
         <div className="lst">
           {bundle.ticketsError && (
             <div className="aviso" style={{ margin: '0 16px 12px' }}>
@@ -189,6 +208,25 @@ export function PanelPartido({ bundle }: { bundle: DetallePartidoBundle }) {
                 nombreJugador={j.nombre}
                 style={{ padding: '10px 16px 6px' }}
               />
+              {(() => {
+                // Ticket automático de Match Day de este jugador (0030): semáforo + casillas.
+                const md = bundle.matchDay.find((m) => m.jugadorId === j.jugadorId);
+                const estado = md ? estadoVisual(md, bundle.hoyUy) : null;
+                if (!md || !estado) return null;
+                return (
+                  <div className="mdj">
+                    <PastillaSemaforo estado={estado} detalle={md.fechaLimite && estado !== 'completado' ? `vence el ${fechaCortaUy(md.fechaLimite)}` : undefined} />
+                    <CasillasDiseno
+                      partidoId={d.partidoId}
+                      jugadorId={j.jugadorId}
+                      jugadorNombre={j.nombre}
+                      completado={md.estado === 'publicado'}
+                      puedeMarcar={bundle.usuario?.cargo === 'Diseñador'}
+                    />
+                    {md.estado === 'publicado' && md.completadoPorNombre && <small className="mdj__q">Completado por {md.completadoPorNombre}</small>}
+                  </div>
+                );
+              })()}
               <div className="tkp">
                 {(bundle.tickets ?? [])
                   .filter((t) => t.jugadorId === j.jugadorId)

@@ -38,6 +38,8 @@ export const PATHS: Record<string, string> = {
   ojoCerrado:
     '<path d="M17.94 17.94A10.94 10.94 0 0 1 12 20c-7 0-11-8-11-8a21.6 21.6 0 0 1 5.06-6.06"/><path d="M9.9 4.24A10.94 10.94 0 0 1 12 4c7 0 11 8 11 8a21.6 21.6 0 0 1-3.22 4.44"/><path d="M14.12 14.12a3 3 0 1 1-4.24-4.24"/><path d="M1 1l22 22"/>',
   // Pestaña "Tickets" de la barra inferior (acordado con Gerardo en la spec 2026-09-29-pantalla-tickets).
+  // Botón "Copiar datos del partido" (ícono aprobado por Gerardo 2026-09-30: dos hojas, sin fondo).
+  copiar: '<rect x="8.5" y="8.5" width="11" height="12" rx="2"/><path d="M15.5 8.5V6a2 2 0 0 0-2-2h-7a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h2"/>',
   lista:
     '<rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9.5 4V3h5v1"/><path d="m8.5 10.5 1.5 1.5 2.5-2.5"/><path d="M14.5 11h1.5"/><path d="m8.5 16 1.5 1.5 2.5-2.5"/><path d="M14.5 16.5h1.5"/>',
 };

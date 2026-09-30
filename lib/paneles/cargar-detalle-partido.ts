@@ -15,7 +15,7 @@ import type { crearClienteServidor } from '@/lib/supabase/cliente-servidor';
 import { RepositorioHitosSupabase } from '@/lib/repositorios/repositorio-hitos';
 import { RepositorioPartidosSupabase } from '@/lib/repositorios/repositorio-partidos';
 import { RepositorioJugadoresSupabase } from '@/lib/repositorios/repositorio-jugadores';
-import { RepositorioTicketsSupabase } from '@/lib/repositorios/repositorio-tickets';
+import { RepositorioTicketsSupabase, type TicketAutomatico } from '@/lib/repositorios/repositorio-tickets';
 import { sesionActual } from '@/lib/sesion/sesion-actual';
 import type { ResumenTicket } from '@/lib/tickets/tipos';
 import type { LinksDropbox } from '@/lib/jugadores/links-dropbox';
@@ -36,6 +36,8 @@ export interface DetallePartidoBundle {
   usuario: { id: string; cargo: string } | null;
   /** true si no se pudieron leer los tickets: no se ofrece "Crear" (podría duplicar). */
   ticketsError?: boolean;
+  /** Tickets automáticos de Match Day de este partido, uno por jugador (0030). */
+  matchDay: TicketAutomatico[];
 }
 
 /** Devuelve el bundle, o `null` si el partido no tiene filas en `proximos_partidos`. */
@@ -50,7 +52,7 @@ export async function cargarDetallePartido(
 
   let ticketsError = false;
   const repositorioHitos = new RepositorioHitosSupabase(supabase);
-  const [proximos, jugadoresBasicos, totales, escalas, linksDropbox, tickets, sesion] = await Promise.all([
+  const [proximos, jugadoresBasicos, totales, escalas, linksDropbox, tickets, sesion, matchDay] = await Promise.all([
     repositorioPartidos.listarProximos(),
     repositorioHitos.listarJugadoresActivos(),
     repositorioHitos.listarTotales(),
@@ -61,6 +63,8 @@ export async function cargarDetallePartido(
       return [] as ResumenTicket[];
     }),
     sesionActual(),
+    // Estado de diseño por jugador (0030). Si falla, el panel se ve sin casillas.
+    new RepositorioTicketsSupabase(supabase).listarMatchDayDePartido(partidoId).catch(() => [] as TicketAutomatico[]),
   ]);
 
   const totalesPorJugador = new Map(totales.map((t) => [t.jugadorId, t]));
@@ -76,5 +80,6 @@ export async function cargarDetallePartido(
     tickets,
     ...(ticketsError ? { ticketsError } : {}),
     usuario: sesion ? { id: sesion.usuarioId, cargo: sesion.cargo } : null,
+    matchDay,
   };
 }

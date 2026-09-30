@@ -16,6 +16,7 @@ import { ListaPartidos } from '@/components/partidos/ListaPartidos';
 import { usePanel } from '@/lib/paneles/use-panel';
 import { filtrarPartidos, type FiltroPartidos } from '@/lib/partidos/utilidades';
 import type { PartidoProximo } from '@/lib/repositorios/tipos';
+import type { EstadoVisual } from '@/lib/tickets/tipos';
 import type { LinksDropbox } from '@/lib/jugadores/links-dropbox';
 import { filtrarFechas, type FechaContenido } from '@/lib/partidos/fechas-contenido';
 
@@ -27,6 +28,7 @@ export function SeccionPartidos({
   fechas = [],
   hoyUy,
   alertasTicket = {},
+  estadosDiseno = {},
 }: {
   partidos: PartidoProximo[];
   /** Partidos de jugadores solo-Contenido: se ven únicamente con el filtro "Contenido". */
@@ -39,6 +41,8 @@ export function SeccionPartidos({
   hoyUy: string;
   /** `{ partidoId: texto }` de la lucecita de ticket del usuario (`alertasPorPartido`). */
   alertasTicket?: Record<string, string>;
+  /** `{ '<partido>:<jugador>': estado }` del semáforo de diseño (0030). */
+  estadosDiseno?: Record<string, EstadoVisual>;
 }) {
   const [filtro, setFiltro] = useState<FiltroPartidos>('todos');
   const { abrir } = usePanel();
@@ -60,6 +64,7 @@ export function SeccionPartidos({
           linksDropbox={esContenido ? undefined : linksDropbox}
           fechas={fechasFiltradas}
           alertasTicket={esContenido ? {} : alertasTicket}
+          estadosDiseno={esContenido ? {} : estadosDiseno}
         />
       </div>
     </>

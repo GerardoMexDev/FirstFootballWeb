@@ -25,3 +25,13 @@ export function peorEstado(estados: (EstadoVisual | null)[]): EstadoVisual | nul
   for (const e of ORDEN) if (estados.includes(e)) return e;
   return null;
 }
+
+/** `{ '<partido>:<jugador>': semáforo }` para las tarjetas de /partidos (0030). */
+export function estadosPorPartidoJugador(tickets: ResumenTicket[], hoyUy: string): Record<string, EstadoVisual> {
+  const r: Record<string, EstadoVisual> = {};
+  for (const t of tickets) {
+    const e = estadoVisual(t, hoyUy);
+    if (t.partidoId && e) r[`${t.partidoId}:${t.jugadorId}`] = e;
+  }
+  return r;
+}
