@@ -2774,6 +2774,7 @@ F–H → I (con migración). Cada ítem cerrado se documenta en §4.
 | Meter `git stash` en un comando de diagnóstico (Sesión 15, 2026-09-30) | Guardó en el stash un cambio sin commitear; se recuperó con `git stash pop` | Nunca `git stash` en comandos de QA/diagnóstico; si hace falta comparar con HEAD, usar `git diff` o `git worktree` |
 | `npx prettier --write` sobre un componente (Sesión 15, 2026-09-30) | El proyecto no tiene config de Prettier: lo reformateó entero con los defaults (comillas dobles, 80 columnas) → diff de 110 líneas | No correr Prettier; indentar a mano (script `.cjs` que agregue espacios) y verificar con `git diff -w --stat` |
 | Insertar texto con `s.replace(a, textoNuevo)` de JS cuando el texto trae SQL con `$$` (Sesión 15, 2026-09-30) | En el reemplazo de `String.replace`, `$$` significa "un $": la función plpgsql quedó con `as $` → syntax error 42601 | Reemplazar con `s.split(a).join(b)` (no interpreta $), o pasar una función: `s.replace(a, () => b)` |
+| `sed 's/\`/`/g'` para sacar barras antes de backticks (Sesión 15, 2026-09-30) | En GNU sed/grep, barra+backtick es el ANCLA de inicio: agregó un backtick al comienzo de cada línea del archivo | Para texto con backticks o barras: Edit, o node con `split/join` sobre el texto literal |
 
 ## 11. Dudas abiertas (de `contexto.md` §12)
 

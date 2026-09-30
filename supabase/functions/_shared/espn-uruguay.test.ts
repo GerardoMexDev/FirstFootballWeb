@@ -1,41 +1,12 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  EQUIPOS_URUGUAY, URUGUAY_ESPN_ID, tareasDeSync, claveCompetencia, jugadoresPorClub, mapaCarteraEspn, zonaDeSede,
+  EQUIPOS_URUGUAY, EQUIPOS_COPAS_MD, EQUIPOS_ESPN, URUGUAY_ESPN_ID, tareasDeSync, claveCompetencia, jugadoresPorClub, mapaCarteraEspn, zonaDeSede,
   vinculosSobrantes, estadoDeCorrida,
 } from './espn-uruguay.ts';
 
-test('tareasDeSync: Peñarol y Nacional × 3 ligas + Uruguay × 4 = 10 tareas', () => {
-  const t = tareasDeSync();
-  assert.equal(t.length, 10);
-  assert.deepEqual(
-    t.filter((x) => x.equipo.clave === 'uruguay').map((x) => x.slug),
-    ['fifa.friendly', 'fifa.worldq.conmebol', 'conmebol.america', 'fifa.world'],
-  );
-  assert.deepEqual(t.find((x) => x.equipo.clave === 'penarol' && x.slug === 'conmebol.libertadores')?.competencia, { proveedor: 'api-football', idExterno: '13' });
-  assert.equal(EQUIPOS_URUGUAY.find((e) => e.esSeleccion)?.espnTeamId, URUGUAY_ESPN_ID);
-});
-
 test('claveCompetencia', () => {
   assert.equal(claveCompetencia({ proveedor: 'espn', idExterno: 'uru.1' }), 'espn:uru.1');
-});
-
-test('jugadoresPorClub: solo activos, solo-Contenido, del club pedido', () => {
-  const base = { activo: true, servicio_match_day: false, servicio_contenido: true };
-  const m = jugadoresPorClub(
-    [
-      { ...base, id: 'abel', club_actual_id: 'PEN' },
-      { ...base, id: 'franco', club_actual_id: 'PEN' },
-      { ...base, id: 'silvera', club_actual_id: 'NAC' },
-      { ...base, id: 'md', club_actual_id: 'PEN', servicio_match_day: true },
-      { ...base, id: 'baja', club_actual_id: 'PEN', activo: false },
-      { ...base, id: 'seFue', club_actual_id: 'BOCA' }, // cambió de club: ya no se vincula
-    ],
-    ['PEN', 'NAC'],
-  );
-  assert.deepEqual(m.get('PEN'), ['abel', 'franco']);
-  assert.deepEqual(m.get('NAC'), ['silvera']);
-  assert.equal(m.has('BOCA'), false);
 });
 
 test('mapaCarteraEspn: clásico — cada club ESPN apunta a nuestro uuid (no se crea un rival duplicado)', () => {
@@ -68,4 +39,51 @@ test('estadoDeCorrida: un evento suelto que falla no prende el aviso; una liga c
   assert.equal(estadoDeCorrida({ falloGeneral: false, ligasFallidas: 10, guardados: 0 }), 'error');
   assert.equal(estadoDeCorrida({ falloGeneral: true, ligasFallidas: 0, guardados: 0 }), 'error');
   assert.equal(estadoDeCorrida({ falloGeneral: true, ligasFallidas: 0, guardados: 3 }), 'parcial');
+});
+
+test('tareasDeSync: Uruguay (10) + copas de los 6 clubes de Match Day (40) = 50', () => {
+  const t = tareasDeSync();
+  assert.equal(t.length, 50);
+  assert.deepEqual(
+    t.filter((x) => x.equipo.clave === 'uruguay').map((x) => x.slug),
+    ['fifa.friendly', 'fifa.worldq.conmebol', 'conmebol.america', 'fifa.world'],
+  );
+  assert.deepEqual(t.find((x) => x.equipo.clave === 'penarol' && x.slug === 'conmebol.libertadores')?.competencia, { proveedor: 'api-football', idExterno: '13' });
+  assert.deepEqual(t.find((x) => x.equipo.clave === 'colo-colo' && x.slug === 'chi.copa_chi')?.competencia, { proveedor: 'api-football', idExterno: '267' });
+  assert.deepEqual(t.find((x) => x.equipo.clave === 'genk' && x.slug === 'uefa.europa_qual')?.competencia, { proveedor: 'api-football', idExterno: '3' });
+  assert.deepEqual(t.find((x) => x.equipo.clave === 'al-qadisiyah' && x.slug === 'afc.champions')?.competencia, { proveedor: 'api-football', idExterno: '17' });
+  assert.deepEqual(t.find((x) => x.equipo.clave === 'bragantino' && x.slug === 'bra.camp.paulista')?.competencia, { proveedor: 'espn', idExterno: 'bra.camp.paulista' });
+  // Ninguna liga doméstica de los 6 clubes (esas son de SportMonks).
+  const ligas = new Set(['mex.1', 'bra.1', 'chi.1', 'bel.1', 'ksa.1']);
+  assert.equal(t.filter((x) => ligas.has(x.slug)).length, 0);
+  assert.equal(EQUIPOS_URUGUAY.find((e) => e.esSeleccion)?.espnTeamId, URUGUAY_ESPN_ID);
+  assert.equal(EQUIPOS_COPAS_MD.every((e) => e.servicio === 'matchday'), true);
+  assert.equal(EQUIPOS_ESPN.length, 9);
+});
+
+test('jugadoresPorClub: Contenido → solo-Contenido; Match Day → de Match Day; activos y del club', () => {
+  const j = (id: string, club: string, md: boolean, co: boolean, activo = true) =>
+    ({ id, club_actual_id: club, activo, servicio_match_day: md, servicio_contenido: co });
+  const m = jugadoresPorClub(
+    [
+      j('abel', 'PEN', false, true),
+      j('franco', 'PEN', false, true),
+      j('mdEnPen', 'PEN', true, true), // de Match Day en un club de Contenido: no
+      j('javi', 'COL', true, true),
+      j('soloCoEnCol', 'COL', false, true), // solo-Contenido en un club de Match Day: no
+      j('baja', 'COL', true, true, false),
+      j('seFue', 'BOCA', false, true),
+    ],
+    new Map([['PEN', 'contenido'], ['COL', 'matchday']]),
+  );
+  assert.deepEqual(m.get('PEN'), ['abel', 'franco']);
+  assert.deepEqual(m.get('COL'), ['javi']);
+  assert.equal(m.has('BOCA'), false);
+});
+
+test('mapaCarteraEspn: Toluca vs Atlante (Leagues Cup) → cada id ESPN apunta a nuestro club', () => {
+  const m = mapaCarteraEspn(new Map([['2281', 'uuid-tol'], ['2312', 'uuid-atl'], ['2348', 'uuid-pen']]));
+  assert.equal(m.get('223'), 'uuid-tol');
+  assert.equal(m.get('226'), 'uuid-atl');
+  assert.equal(m.get('2683'), 'uuid-pen');
 });
