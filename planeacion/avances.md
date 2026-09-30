@@ -1335,6 +1335,11 @@ Charla con Gerardo (no se codeó nada): tres preguntas de la agencia / de él.
      partidos o solo los de la ventana cercana)? ¿qué pasa con los tickets de partido que ya se
      crean a mano hoy (se elimina el botón "Crear" del partido)? ¿partido tentativo (> 90 días)
      también genera ticket? ¿partido cancelado/reprogramado?
+   - **Respuestas de Gerardo (2026-09-30) a los puntos 1, 2 y 5:**
+     - Colores: **rojo = pendiente**, **verde = terminado**, **amarillo = vencido**.
+     - **Un ticket por jugador** (si en un partido juegan 2 representados, son 2).
+     - El Diseñador sube el diseño a Dropbox y marca **Completado**; **no hace falta pegar el link**.
+     - **Las fechas de Contenido también nacen como ticket automático**, igual que los partidos.
 3. **Ticket de partido: botón "Copiar" los datos clave.** Copia al portapapeles SOLO el texto
    crítico — horario local, horario de Uruguay, estadio y los equipos — para que el Diseñador lo
    pegue directo en Photoshop sin tipear. Botón con el ícono estándar de copiar (dos hojas
