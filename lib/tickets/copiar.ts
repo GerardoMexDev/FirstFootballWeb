@@ -13,13 +13,17 @@ export function textoCopiarPartido(p: {
 }): string {
   const lineas = [`${p.local ?? '?'} vs ${p.visitante ?? '?'}`];
   if (p.inicioUtc) {
-    const enSede = DateTime.fromISO(p.inicioUtc, { zone: 'utc' }).setZone(p.zona ?? UY).setLocale('es');
-    const enUy = DateTime.fromISO(p.inicioUtc, { zone: 'utc' }).setZone(UY);
-    const fecha = enSede.toFormat("cccc d 'de' LLLL");
+    const enUy = DateTime.fromISO(p.inicioUtc, { zone: 'utc' }).setZone(UY).setLocale('es');
+    // Sin zona de la sede (o una que Luxon no reconoce) no se sabe la hora local: solo Uruguay.
+    const sede = p.zona ? DateTime.fromISO(p.inicioUtc, { zone: 'utc' }).setZone(p.zona).setLocale('es') : null;
+    const enSede = sede?.isValid ? sede : null;
+    const fecha = (enSede ?? enUy).toFormat("cccc d 'de' LLLL");
     lineas.push(fecha.charAt(0).toUpperCase() + fecha.slice(1));
-    const hl = enSede.toFormat('HH:mm');
     const hu = enUy.toFormat('HH:mm');
-    lineas.push(hl === hu ? `${hu} hora de Uruguay (misma hora local)` : `${hl} hora local · ${hu} hora de Uruguay`);
+    const hl = enSede?.toFormat('HH:mm');
+    lineas.push(
+      !hl ? `${hu} hora de Uruguay` : hl === hu ? `${hu} hora de Uruguay (misma hora local)` : `${hl} hora local · ${hu} hora de Uruguay`,
+    );
   } else {
     lineas.push('Fecha a confirmar');
   }

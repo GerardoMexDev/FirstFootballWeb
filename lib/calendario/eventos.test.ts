@@ -96,3 +96,15 @@ test('unirEventos + filtrarCalendario: sin duplicados; Match Day solo partidos M
   assert.deepEqual(filtrarCalendario(todos, 'contenido').map((e) => e.refId).sort(), ['j1', 'p9']);
   assert.equal(filtrarCalendario(todos, 'todos').length, 3);
 });
+
+test('unirEventos: la fecha fija de un jugador solo de Match Day no se pierde y va a Contenido', () => {
+  const md = [
+    ev({ fuente: 'cumpleanos', refId: 'j1', diaUy: '2026-10-01', grupo: 'matchday' }), // también en Contenido
+    ev({ fuente: 'cumpleanos', refId: 'j2', diaUy: '2026-10-02', grupo: 'matchday' }), // solo Match Day
+  ];
+  const co = [ev({ fuente: 'cumpleanos', refId: 'j1', diaUy: '2026-10-01', grupo: 'contenido' })];
+  const todos = unirEventos(md, co);
+  assert.deepEqual(todos.map((e) => e.refId).sort(), ['j1', 'j2']);
+  assert.deepEqual(filtrarCalendario(todos, 'contenido').map((e) => e.refId).sort(), ['j1', 'j2']);
+  assert.deepEqual(filtrarCalendario(todos, 'matchday'), []);
+});

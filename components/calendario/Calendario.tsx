@@ -204,6 +204,8 @@ export function Calendario({
                         </small>
                       )}
                       <b>{etiqueta}</b>
+                      {/* Símbolo además del color (WCAG 1.4.1), fuera del <b> que en celular se oculta. */}
+                      {sem && <span className={`ev__sem ev__sem--${sem}`} aria-hidden="true">{META_VISUAL[sem].simbolo}</span>}
                       {texto}
                       {sem && <span className="solo-lector"> — diseño {META_VISUAL[sem].etiqueta.toLowerCase()}</span>}
                     </button>

@@ -37,12 +37,26 @@ function urgenciaSimple(t: ResumenTicket, hoyUy: string): keyof typeof TEXTO_ALE
  * Tickets sin partido, completados o al día no alertan.
  */
 export function alertasPorPartido(pendientes: ResumenTicket[], hoyUy: string): Record<string, string> {
+  return alertasPorClave(pendientes, hoyUy, (t) => t.partidoId!);
+}
+
+/**
+ * Igual que `alertasPorPartido` pero con clave `partidoId:jugadorId`: cada tarjeta de /partidos
+ * es de un jugador, y con dos representados en el mismo partido la alerta de uno no va en la
+ * tarjeta del otro (revisión final 0030).
+ */
+export function alertasPorTarjeta(pendientes: ResumenTicket[], hoyUy: string): Record<string, string> {
+  return alertasPorClave(pendientes, hoyUy, (t) => `${t.partidoId}:${t.jugadorId}`);
+}
+
+function alertasPorClave(pendientes: ResumenTicket[], hoyUy: string, clave: (t: ResumenTicket) => string): Record<string, string> {
   const alertas: Record<string, string> = {};
   for (const t of pendientes) {
     if (!t.partidoId) continue;
     const u = urgenciaSimple(t, hoyUy);
     if (!u) continue;
-    if (u === 'vencido' || !alertas[t.partidoId]) alertas[t.partidoId] = TEXTO_ALERTA[u];
+    const k = clave(t);
+    if (u === 'vencido' || !alertas[k]) alertas[k] = TEXTO_ALERTA[u];
   }
   return alertas;
 }

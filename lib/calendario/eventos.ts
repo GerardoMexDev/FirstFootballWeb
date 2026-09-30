@@ -133,14 +133,16 @@ export function celdasDelMes(anio: number, mes: number, hoyUy: string): CeldaCal
 const FUENTES_MATCH_DAY = new Set<FuenteAgenda>(['partido', 'convocatoria', 'hito']);
 
 /**
- * Calendario unificado (2026-09-30): de `agenda_anual` (Match Day) toma partidos, convocatorias
- * e hitos; las fechas fijas (cumpleaños, aniversarios) vienen de Contenido, que ya incluye a los
- * jugadores de Match Day. Lo que se repite (misma fuente, ref y día) queda una sola vez.
+ * Calendario unificado (2026-09-30): de `agenda_anual` (Match Day) quedan en el grupo Match Day
+ * los partidos, convocatorias e hitos; sus fechas fijas (cumpleaños, aniversarios) pasan al grupo
+ * Contenido — así no se pierden las de un jugador que sea solo de Match Day. Lo que se repite
+ * (misma fuente, ref y día) queda una sola vez.
  */
 export function unirEventos(matchday: EventoCalendario[], contenido: EventoCalendario[]): EventoCalendario[] {
   const vistos = new Set<string>();
   const salida: EventoCalendario[] = [];
-  for (const e of [...matchday.filter((x) => FUENTES_MATCH_DAY.has(x.fuente)), ...contenido]) {
+  const md = matchday.map((x) => (FUENTES_MATCH_DAY.has(x.fuente) ? x : { ...x, grupo: 'contenido' as const }));
+  for (const e of [...md, ...contenido]) {
     const clave = `${e.fuente}|${e.refId ?? e.titulo}|${e.diaUy}`;
     if (vistos.has(clave)) continue;
     vistos.add(clave);

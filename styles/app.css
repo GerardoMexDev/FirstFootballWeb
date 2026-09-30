@@ -542,4 +542,8 @@ html { overflow-x: clip; }
 .ev.ev--sem-completado { border-left: 3px solid var(--tk-verde-borde); background: var(--tk-verde-bg); }
 .ev.ev--sem-vencido { border-left: 3px solid var(--tk-amarillo-borde); background: var(--tk-amarillo-bg); }
 .ev.ev--sem-pendiente, .ev.ev--sem-completado, .ev.ev--sem-vencido { opacity: 1; }
+.ev__sem { display: inline-block; min-width: 1em; margin-right: 4px; font-weight: 800; }
+.ev__sem--pendiente { color: var(--tk-rojo); }
+.ev__sem--completado { color: var(--tk-verde); }
+.ev__sem--vencido { color: var(--tk-amarillo); }
 #filtros-calendario { margin-bottom: 18px; }

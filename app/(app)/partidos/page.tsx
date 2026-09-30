@@ -23,7 +23,7 @@ import { hastaFechas } from '@/lib/partidos/fechas-contenido';
 import { pendientesDeSesion } from '@/lib/tickets/pendientes-de-sesion';
 import { RepositorioTicketsSupabase, type TicketAutomatico } from '@/lib/repositorios/repositorio-tickets';
 import { estadosPorPartidoJugador } from '@/lib/tickets/semaforo';
-import { alertasPorPartido } from '@/lib/tickets/estados';
+import { alertasPorTarjeta } from '@/lib/tickets/estados';
 
 export default async function PaginaPartidos() {
   // Fecha de hoy en hora de Uruguay (lo que la demo pone en #fecha-hoy).
@@ -93,7 +93,7 @@ export default async function PaginaPartidos() {
         linksDropbox={linksDropbox}
         fechas={fechasContenido}
         hoyUy={hoyUy}
-        alertasTicket={alertasPorPartido(pendientes, hoyUy)}
+        alertasTicket={alertasPorTarjeta(pendientes, hoyUy)}
         estadosDiseno={estadosPorPartidoJugador(matchDay, hoyUy)}
       />
     </section>

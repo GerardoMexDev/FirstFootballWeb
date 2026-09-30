@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { estadoMasUrgente, resumirPorPartido, META_ESTADO, TEXTO_ALERTA, alertasPorPartido, ticketsPorDia, alertasPorTicket, alertaDe } from './estados.ts';
+import { estadoMasUrgente, resumirPorPartido, META_ESTADO, TEXTO_ALERTA, alertasPorPartido, alertasPorTarjeta, ticketsPorDia, alertasPorTicket, alertaDe } from './estados.ts';
 import type { ResumenTicket } from './tipos.ts';
 
 const t = (id: string, partidoId: string | null, estado: ResumenTicket['estado']): ResumenTicket => ({
@@ -91,4 +91,13 @@ test('alertaDe: texto de la lucecita para un ticket (vencido / vence pronto / na
   assert.equal(alertaDe({ ...t('a', 'p1', 'pendiente'), fechaLimite: '2026-10-07' }, HOY), 'Vence pronto');
   assert.equal(alertaDe({ ...t('a', 'p1', 'pendiente'), fechaLimite: '2026-10-20' }, HOY), undefined);
   assert.equal(alertaDe({ ...t('a', 'p1', 'publicado'), fechaLimite: '2026-10-01' }, HOY), undefined);
+});
+
+test('alertasPorTarjeta: con dos jugadores en el partido, la alerta es de cada uno', () => {
+  const HOY = '2026-10-05';
+  const a = alertasPorTarjeta([
+    { ...t('a', 'p1', 'publicado'), jugadorId: 'jA', fechaLimite: '2026-10-01' },
+    { ...t('b', 'p1', 'pendiente'), jugadorId: 'jB', fechaLimite: '2026-10-01' },
+  ], HOY);
+  assert.deepEqual(a, { 'p1:jB': 'Vencido' });
 });

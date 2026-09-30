@@ -19,3 +19,12 @@ test('textoCopiarPartido: misma hora que Uruguay; sin estadio ni hora', () => {
     'Genk vs ?\nFecha a confirmar\nCegeka Arena, Genk',
   );
 });
+
+test('textoCopiarPartido: sin zona de la sede (o inválida) no inventa "misma hora local"', () => {
+  for (const zona of [null, 'Zona/Inexistente']) {
+    assert.equal(
+      textoCopiarPartido({ local: 'Genk', visitante: 'Gent', inicioUtc: '2026-10-05T21:30:00Z', zona, estadio: null, ciudad: null }),
+      'Genk vs Gent\nLunes 5 de octubre\n18:30 hora de Uruguay',
+    );
+  }
+});

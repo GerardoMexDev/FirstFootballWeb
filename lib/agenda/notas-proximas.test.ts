@@ -6,7 +6,7 @@
  */
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { notasProximas, type EventoAgenda } from './notas-proximas.ts';
+import { notasProximas, unirNotas, type EventoAgenda } from './notas-proximas.ts';
 
 const HOY = '2026-09-05';
 
@@ -61,4 +61,10 @@ test('ordena de la más cercana a la más lejana, y por título a igualdad de d�
 test('la ventana es configurable', () => {
   assert.equal(notasProximas([ev('2026-09-20')], HOY, { dias: 15 }).length, 1);
   assert.equal(notasProximas([ev('2026-09-09')], HOY, { urgenteDias: 3 })[0].urgente, false);
+});
+
+test('unirNotas: junta Contenido y Match Day sin repetir la misma fecha', () => {
+  const co = [ev('2026-09-10', 'cumpleanos', 'Cumple Nacho')];
+  const md = [ev('2026-09-10', 'cumpleanos', 'Cumple Nacho'), ev('2026-09-12', 'cumpleanos', 'Cumple Nuevo')];
+  assert.deepEqual(unirNotas(co, md).map((e) => e.titulo), ['Cumple Nacho', 'Cumple Nuevo']);
 });

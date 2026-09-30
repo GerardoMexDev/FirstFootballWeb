@@ -94,6 +94,20 @@ export function notasProximas(
     .sort((a, b) => a.diasFalta - b.diasFalta || a.titulo.localeCompare(b.titulo, 'es'));
 }
 
+/**
+ * Junta las fechas de dos agendas (Contenido + Match Day, calendario unificado 2026-09-30) sin
+ * repetir la misma (fuente, título y día): un jugador de los dos servicios aparece una sola vez.
+ */
+export function unirNotas<T extends EventoAgenda>(...listas: T[][]): T[] {
+  const vistos = new Set<string>();
+  return listas.flat().filter((e) => {
+    const clave = `${e.fuente}|${e.titulo}|${e.diaUy}`;
+    if (vistos.has(clave)) return false;
+    vistos.add(clave);
+    return true;
+  });
+}
+
 /** Etiqueta legible del tipo de fecha, para el pie de la nota. */
 export function textoFuente(fuente: FuenteAgenda): string {
   switch (fuente) {

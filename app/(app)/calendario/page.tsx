@@ -14,7 +14,7 @@
 import { DateTime } from 'luxon';
 import { NotasAgenda } from '@/components/agenda/NotasAgenda';
 import { Calendario } from '@/components/calendario/Calendario';
-import { FUENTES_CONTENIDO, notasProximas } from '@/lib/agenda/notas-proximas';
+import { FUENTES_CONTENIDO, notasProximas, unirNotas } from '@/lib/agenda/notas-proximas';
 import { filtrarCalendario, unirEventos, type FiltroCalendario } from '@/lib/calendario/eventos';
 import { RepositorioAgendaSupabase } from '@/lib/repositorios/repositorio-agenda';
 import { RepositorioTicketsSupabase } from '@/lib/repositorios/repositorio-tickets';
@@ -59,7 +59,7 @@ export default async function PaginaCalendario({ searchParams }: { searchParams:
   const notas =
     filtro === 'matchday'
       ? notasProximas(notasMd, hoyUy)
-      : notasProximas(notasCo, hoyUy, { fuentes: FUENTES_CONTENIDO });
+      : notasProximas(unirNotas(notasCo, notasMd), hoyUy, { fuentes: FUENTES_CONTENIDO });
 
   // Semáforo por partido: el peor estado entre sus jugadores (vencido > pendiente > completado).
   const porPartido: Record<string, (EstadoVisual | null)[]> = {};

@@ -26,7 +26,7 @@ export function ListaPartidos({
   estadosDiseno = {},
 }: {
   partidos: PartidoProximo[];
-  /** `{ partidoId: texto }` de la lucecita de ticket (`alertasPorPartido`). */
+  /** `{ 'partidoId:jugadorId': texto }` de la lucecita de ticket (`alertasPorTarjeta`). */
   alertasTicket?: Record<string, string>;
   /** `{ '<partido>:<jugador>': estado }` del semáforo de diseño (0030). */
   estadosDiseno?: Record<string, EstadoVisual>;
@@ -64,7 +64,7 @@ export function ListaPartidos({
                   tieneHito={partidosConHito.has(p.partidoId)}
                   onAbrir={onAbrirPartido ? () => onAbrirPartido(p.partidoId) : undefined}
                   linksDropbox={linksDropbox ? (linksDropbox[p.jugadorId] ?? SIN_LINKS) : undefined}
-                  alertaTicket={alertasTicket[p.partidoId]}
+                  alertaTicket={alertasTicket[`${p.partidoId}:${p.jugadorId}`]}
                   estadoDiseno={estadosDiseno[`${p.partidoId}:${p.jugadorId}`]}
                 />
               ))}
