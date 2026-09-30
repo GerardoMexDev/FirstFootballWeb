@@ -897,4 +897,110 @@ test('0028: la vista sigue sin leerse sin sesión y la función no la ejecuta an
     await cl.query('rollback to savepoint s');
   }));
 
+// ═════════════ 0030: Match Day automático + tickets simplificados ═════════════
+const MIGRACION_0030 = readFileSync(new URL('../supabase/migrations/0030_match_day_automatico.sql', import.meta.url), 'utf8')
+  .replace(/^\s*begin;\s*$/m, '')
+  .replace(/^\s*commit;\s*$/m, '');
+let aplicada0030 = false;
+before(async () => {
+  const { rows } = await c.query(`select to_regprocedure('public.diseno_partido_marcar(uuid,uuid,boolean)') is not null as ok`);
+  aplicada0030 = rows[0].ok;
+});
+async function enTransaccion0030(fn) {
+  await c.query('begin');
+  try {
+    if (!aplicada) await c.query(MIGRACION);
+    if (!aplicada0030) await c.query(MIGRACION_0030);
+    await fn(c);
+  } finally {
+    await c.query('rollback');
+  }
+}
+const HOY = `(now() at time zone 'America/Montevideo')::date`;
+/** Partido de prueba a `dias` de hoy (hora 20:00 UY), con el jugador de Match Day. */
+async function partidoEnDias(cl, dias) {
+  const { rows } = await cl.query(`select ((${HOY} + $1::int)::text || 'T23:00:00Z') as iso`, [dias]);
+  return partidoDePrueba(cl, ids.jugadorMd, rows[0].iso);
+}
+async function estadoMd(cl, partido) {
+  await como(cl, ids.felipe);
+  const { rows } = await cl.query(`select estado, fecha_limite from tickets_match_day where partido_id = $1 and jugador_id = $2`, [partido, ids.jugadorMd]);
+  return rows[0];
+}
+
+test('0030: partido futuro sin marca → pendiente; con marca del Diseñador → completado; desmarcar vuelve', () =>
+  enTransaccion0030(async (cl) => {
+    const p = await partidoDePrueba(cl, ids.jugadorMd) // 2030: sin partidos reales ese día (la vista deja 1 por jugador y día);
+    assert.equal((await estadoMd(cl, p)).estado, 'pendiente');
+    await como(cl, ids.maxi);
+    await cl.query(`select diseno_partido_marcar($1, $2, true)`, [p, ids.jugadorMd]);
+    await cl.query(`select diseno_partido_marcar($1, $2, true)`, [p, ids.jugadorMd]); // idempotente
+    assert.equal((await estadoMd(cl, p)).estado, 'completado');
+    await como(cl, ids.maxi);
+    await cl.query(`select diseno_partido_marcar($1, $2, false)`, [p, ids.jugadorMd]);
+    assert.equal((await estadoMd(cl, p)).estado, 'pendiente');
+  }));
+
+test('0030: pasado el límite y sin marca → vencido; anterior a match_day_desde → sin estado', () =>
+  enTransaccion0030(async (cl) => {
+    const manana = await partidoEnDias(cl, 1); // límite = ayer
+    assert.equal((await estadoMd(cl, manana)).estado, 'vencido');
+    await comoDueno(cl);
+    const { rows } = await cl.query(`select (match_day_desde() - 3) as d`);
+    const viejo = await partidoDePrueba(cl, ids.jugadorMd, `${rows[0].d.toISOString().slice(0, 10)}T23:00:00Z`);
+    assert.equal((await estadoMd(cl, viejo)).estado, null);
+  }));
+
+test('0030: la fecha límite sigue al partido si se reprograma', () =>
+  enTransaccion0030(async (cl) => {
+    const p = await partidoDePrueba(cl, ids.jugadorMd);
+    const antes = (await estadoMd(cl, p)).fecha_limite;
+    await comoDueno(cl);
+    await cl.query(`update partidos set inicio_utc = inicio_utc + interval '5 days' where id = $1`, [p]);
+    const despues = (await estadoMd(cl, p)).fecha_limite;
+    assert.equal(Math.round((despues - antes) / 86400000), 5);
+  }));
+
+test('0030: solo el Diseñador marca; par partido-jugador inexistente → error', () =>
+  enTransaccion0030(async (cl) => {
+    const p = await partidoEnDias(cl, 10);
+    for (const quien of [ids.felipe, ids.pedro, ids.alexis]) {
+      await como(cl, quien);
+      const e = await debeFallar(cl, `select diseno_partido_marcar($1, $2, true)`, [p, ids.jugadorMd], /Solo el Diseñador puede hacer esto\./);
+      assert.equal(e.code, '42501');
+    }
+    await como(cl, ids.maxi);
+    await debeFallar(cl, `select diseno_partido_marcar($1, $2, true)`, [p, ids.felipe], /Ese jugador no figura en ese partido de Match Day\./);
+    await comoAnon(cl);
+    await debeFallar(cl, `select diseno_partido_marcar($1, $2, true)`, [p, ids.jugadorMd], /permission denied/);
+  }));
+
+test('0030: ticket manual pendiente → completar (Diseñador) → reabrir; cancelar sigue siendo del creador/Admin', () =>
+  enTransaccion0030(async (cl) => {
+    const p = await partidoEnDias(cl, 10);
+    await como(cl, ids.pedro);
+    const t = (await cl.query(`select ticket_crear($1, $2, 'pieza puntual') id`, [p, ids.jugadorMd])).rows[0].id;
+    await como(cl, ids.felipe);
+    await debeFallar(cl, `select ticket_completar($1)`, [t], /Solo el Diseñador puede hacer esto\./);
+    await como(cl, ids.maxi);
+    await cl.query(`select ticket_completar($1)`, [t]);
+    let v = await cl.query(`select estado from tickets where id = $1`, [t]);
+    assert.equal(v.rows[0].estado, 'publicado');
+    await cl.query(`select ticket_reabrir($1, 'faltó una versión')`, [t]);
+    v = await cl.query(`select estado from tickets where id = $1`, [t]);
+    assert.equal(v.rows[0].estado, 'pendiente');
+    const h = await cl.query(`select tipo from tickets_historial where ticket_id = $1 order by id`, [t]);
+    assert.deepEqual(h.rows.map((x) => x.tipo), ['creado', 'publicado', 'devuelto']);
+    await como(cl, ids.pedro);
+    await cl.query(`select ticket_cancelar($1, 'ya no va')`, [t]);
+  }));
+
+test('0030: la migración pasa en_revision/aprobado a completado (publicado) con evento sistema', () =>
+  enTransaccion0030(async (cl) => {
+    // Con 0030 ya aplicada no quedan tickets en esos estados.
+    await comoDueno(cl);
+    const { rows } = await cl.query(`select count(*)::int n from tickets where estado in ('en_revision','aprobado')`);
+    assert.equal(rows[0].n, 0);
+  }));
+
 export { enTransaccion, como, comoAnon, comoServicio, comoDueno, debeFallar, partidoDePrueba };
