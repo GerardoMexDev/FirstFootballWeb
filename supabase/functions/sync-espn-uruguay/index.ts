@@ -4,6 +4,12 @@
  * (amistosos, Eliminatorias, Copa América, Mundial), desde el core API de ESPN (gratis).
  * Puntos 4 y 9 de la agencia (spec planeacion/specs/2026-09-30-espn-uruguay.md).
  *
+ * Desde 2026-09-30 también las COPAS de los 6 clubes de Match Day (lista de torneos de Gerardo;
+ * spec planeacion/specs/2026-09-30-copas-espn-y-estadios.md): llegan meses antes que por
+ * API-Football, así el ticket automático nace a tiempo. Se vinculan a los jugadores de Match Day
+ * del club (`servicio` de cada equipo en la config). El nombre de la función quedó por el deploy
+ * y el cron ya hechos.
+ *
  * Mismo esquema que `sync-fixtures-espn` (apagada desde 0016): upsert por
  * (proveedor_externo='espn', id_externo=<eventId>), ventana −3/+300 días, un evento o una liga
  * que falla se anota y se sigue. Los partidos de la selección van sin `partidos_jugadores`
@@ -22,7 +28,7 @@ import {
 } from '../_shared/espn-api.ts';
 import { mapearEstadoEspn, normalizarEvento, type EventoEspnCrudo } from '../_shared/espn-partido.ts';
 import {
-  EQUIPOS_URUGUAY,
+  EQUIPOS_ESPN,
   URUGUAY_ESPN_ID,
   claveCompetencia,
   jugadoresPorClub,
@@ -59,7 +65,7 @@ Deno.serve(async (req: Request) => {
 
   try {
     // 1) Nuestros clubes (Peñarol, Nacional) por id de API-Football, y el "club" Uruguay.
-    const afIds = EQUIPOS_URUGUAY.map((e) => e.clubAfId).filter((x): x is string => x !== null);
+    const afIds = EQUIPOS_ESPN.map((e) => e.clubAfId).filter((x): x is string => x !== null);
     const { data: clubes, error: errClubes } = await supabase
       .from('clubes').select('id, id_externo').eq('proveedor_externo', 'api-football').in('id_externo', afIds);
     if (errClubes) throw errClubes;
@@ -74,7 +80,13 @@ Deno.serve(async (req: Request) => {
     const { data: jugadores, error: errJug } = await supabase
       .from('jugadores').select('id, club_actual_id, activo, servicio_match_day, servicio_contenido');
     if (errJug) throw errJug;
-    const vinculos = jugadoresPorClub((jugadores ?? []) as JugadorSync[], [...clubIdPorAf.values()]);
+    // Servicio de cada club nuestro: Peñarol/Nacional → Contenido; los 6 de Match Day → Match Day.
+    const servicioPorClub = new Map<string, 'contenido' | 'matchday'>();
+    for (const e of EQUIPOS_ESPN) {
+      const uuid = e.clubAfId ? clubIdPorAf.get(e.clubAfId) : undefined;
+      if (uuid) servicioPorClub.set(uuid, e.servicio);
+    }
+    const vinculos = jugadoresPorClub((jugadores ?? []) as JugadorSync[], servicioPorClub);
 
     // 3) Competencias por (proveedor, id_externo).
     const { data: comps, error: errComps } = await supabase.from('competencias').select('id, proveedor_externo, id_externo');
