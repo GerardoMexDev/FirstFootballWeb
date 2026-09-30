@@ -22,7 +22,8 @@ import { CrearTicket } from '@/components/tickets/CrearTicket';
 import { PastillaEstado } from '@/components/tickets/PastillaEstado';
 import { AlertaTicket } from '@/components/tickets/AlertaTicket';
 import { debeActuar, puedeCrear } from '@/lib/tickets/permisos';
-import { TEXTO_ALERTA } from '@/lib/tickets/estados';
+import { alertaDe } from '@/lib/tickets/estados';
+import { esUrgenteHoy } from '@/lib/tickets/pantalla';
 import { SIN_LINKS } from '@/lib/jugadores/links-dropbox';
 import { EstadoSinDatos } from '@/components/comunes/EstadoSinDatos';
 import { usePanel } from '@/lib/paneles/use-panel';
@@ -194,7 +195,7 @@ export function PanelPartido({ bundle }: { bundle: DetallePartidoBundle }) {
                   .map((t) => {
                     // Lucecita si el ticket espera algo de quien mira (mismo criterio que la barra).
                     const alerta =
-                      bundle.usuario && debeActuar(bundle.usuario.cargo, bundle.usuario.id, t) ? TEXTO_ALERTA[t.estado] : undefined;
+                      bundle.usuario && debeActuar(bundle.usuario.cargo, bundle.usuario.id, t, esUrgenteHoy(bundle.hoyUy)) ? alertaDe(t, bundle.hoyUy) : undefined;
                     return (
                       <button
                         key={t.id}

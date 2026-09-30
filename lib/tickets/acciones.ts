@@ -43,11 +43,26 @@ export async function crearTicketEvento(
   return { ok: true, valor: data as string };
 }
 
+/** Tilda o destilda "Completado" de un partido de Match Day para un jugador (solo Diseñador, 0030). */
+export async function marcarDiseno(
+  supabase: Cliente,
+  partidoId: string,
+  jugadorId: string,
+  completado: boolean,
+): Promise<Resultado<null>> {
+  const { error } = await supabase.rpc('diseno_partido_marcar', {
+    p_partido: partidoId,
+    p_jugador: jugadorId,
+    p_completado: completado,
+  });
+  if (error) return { ok: false, mensaje: mensajeError(error) };
+  return { ok: true, valor: null };
+}
+
+// 0030: recorrido simple. Las RPC viejas (entregar, aprobar, devolver, publicar) quedan en la base.
 const FUNCION: Record<Accion, string> = {
-  entregar: 'ticket_entregar',
-  aprobar: 'ticket_aprobar',
-  devolver: 'ticket_devolver',
-  publicar: 'ticket_publicar',
+  completar: 'ticket_completar',
+  reabrir: 'ticket_reabrir',
   cancelar: 'ticket_cancelar',
   comentar: 'ticket_comentar',
 };
@@ -56,10 +71,9 @@ export async function ejecutarAccion(
   supabase: Cliente,
   accion: Accion,
   ticketId: string,
-  datos: { texto?: string; link?: string },
+  datos: { texto?: string },
 ): Promise<Resultado<null>> {
   const args: Record<string, string | null> = { p_ticket: ticketId, p_texto: datos.texto ?? null };
-  if (accion === 'entregar') args.p_link = datos.link ?? '';
   const { error } = await supabase.rpc(FUNCION[accion], args);
   if (error) return { ok: false, mensaje: mensajeError(error) };
   return { ok: true, valor: null };

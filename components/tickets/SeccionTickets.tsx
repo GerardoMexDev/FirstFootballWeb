@@ -14,8 +14,8 @@ import { FilaTicket } from '@/components/tickets/FilaTicket';
 import { EstadoSinDatos } from '@/components/comunes/EstadoSinDatos';
 import { usePanel } from '@/lib/paneles/use-panel';
 import { debeActuar } from '@/lib/tickets/permisos';
-import { TEXTO_ALERTA } from '@/lib/tickets/estados';
-import { contarUrgencias, filtrarPantalla, type FiltroEstado, type Urgencia } from '@/lib/tickets/pantalla';
+import { alertaDe } from '@/lib/tickets/estados';
+import { contarUrgencias, esUrgenteHoy, filtrarPantalla, type FiltroEstado, type Urgencia } from '@/lib/tickets/pantalla';
 import type { ResumenTicket } from '@/lib/tickets/tipos';
 
 const CONTADORES: { u: Urgencia; etiqueta: string; vacio: string }[] = [
@@ -26,7 +26,7 @@ const CONTADORES: { u: Urgencia; etiqueta: string; vacio: string }[] = [
 
 const ESTADOS: { e: FiltroEstado; etiqueta: string; vacio: string }[] = [
   { e: 'abiertos', etiqueta: 'Abiertos', vacio: 'No hay tickets abiertos.' },
-  { e: 'cerrados', etiqueta: 'Cerrados', vacio: 'Todavía no hay tickets cerrados.' },
+  { e: 'completados', etiqueta: 'Completados', vacio: 'Todavía no hay tickets completados.' },
   { e: 'todos', etiqueta: 'Todos', vacio: 'Todavía no hay tickets.' },
 ];
 
@@ -114,7 +114,7 @@ export function SeccionTickets({
               ticket={t}
               hoyUy={hoyUy}
               ahoraIso={ahoraIso}
-              alerta={debeActuar(cargo, usuarioId, t) ? TEXTO_ALERTA[t.estado] : undefined}
+              alerta={debeActuar(cargo, usuarioId, t, esUrgenteHoy(hoyUy)) ? alertaDe(t, hoyUy) : undefined}
               onAbrir={() => abrir('ticket', t.id)}
             />
           ))}

@@ -69,6 +69,51 @@ function aResumen(f: FilaResumen): ResumenTicket {
   };
 }
 
+/** Fila de `tickets_match_day` (0030). */
+type FilaMd = {
+  partido_id: string;
+  jugador_id: string;
+  jugador_nombre: string;
+  titulo: string;
+  dia_uy: string | null;
+  inicio_utc: string | null;
+  fecha_limite: string | null;
+  estado: 'pendiente' | 'completado' | 'vencido' | null;
+  completado_por_nombre: string | null;
+  completado_en: string | null;
+};
+const CAMPOS_MD =
+  'partido_id, jugador_id, jugador_nombre, titulo, dia_uy, inicio_utc, fecha_limite, estado, completado_por_nombre, completado_en';
+
+export type TicketAutomatico = ResumenTicket & { completadoPorNombre: string | null };
+
+/**
+ * Ticket automático de Match Day como `ResumenTicket` (0030), para que la pantalla Tickets, el
+ * globito y el calendario lo traten igual que a un manual. `null` si el partido es anterior al
+ * arranque (`match_day_desde`): sin estado.
+ */
+export function aResumenAutomatico(f: FilaMd): TicketAutomatico | null {
+  if (f.estado === null) return null;
+  return {
+    id: `md:${f.partido_id}:${f.jugador_id}`,
+    partidoId: f.partido_id,
+    jugadorId: f.jugador_id,
+    jugadorNombre: f.jugador_nombre,
+    titulo: f.titulo,
+    estado: f.estado === 'completado' ? 'publicado' : 'pendiente',
+    creadoPor: '',
+    creadoPorNombre: null,
+    inicioUtc: f.inicio_utc,
+    fechaLimite: f.fecha_limite,
+    partidoEliminado: false,
+    creadoEn: f.completado_en ?? f.inicio_utc ?? '',
+    fechaEvento: null,
+    motivo: null,
+    automatico: true,
+    completadoPorNombre: f.completado_por_nombre,
+  };
+}
+
 export class RepositorioTicketsSupabase {
   constructor(private readonly supabase: ClienteSupabase) {}
 
@@ -138,6 +183,30 @@ export class RepositorioTicketsSupabase {
       .returns<FilaResumen[]>();
     if (error) throw new Error(`No se pudo leer los tickets del jugador: ${error.message}`);
     return (data ?? []).map(aResumen);
+  }
+
+  /** Tickets automáticos de Match Day con el partido entre dos días (yyyy-mm-dd, Uruguay) — 0030. */
+  async listarMatchDay(desdeIso: string, hastaIso: string): Promise<TicketAutomatico[]> {
+    const { data, error } = await this.supabase
+      .from('tickets_match_day')
+      .select(CAMPOS_MD)
+      .gte('dia_uy', desdeIso)
+      .lte('dia_uy', hastaIso)
+      .order('dia_uy', { ascending: true })
+      .returns<FilaMd[]>();
+    if (error) throw new Error(`No se pudo leer los tickets de Match Day: ${error.message}`);
+    return (data ?? []).map(aResumenAutomatico).filter((t): t is TicketAutomatico => t !== null);
+  }
+
+  /** Tickets automáticos de un partido (uno por jugador) — panel del partido (0030). */
+  async listarMatchDayDePartido(partidoId: string): Promise<TicketAutomatico[]> {
+    const { data, error } = await this.supabase
+      .from('tickets_match_day')
+      .select(CAMPOS_MD)
+      .eq('partido_id', partidoId)
+      .returns<FilaMd[]>();
+    if (error) throw new Error(`No se pudo leer el estado del partido: ${error.message}`);
+    return (data ?? []).map(aResumenAutomatico).filter((t): t is TicketAutomatico => t !== null);
   }
 
   /** Tickets de fecha no cancelados con el evento entre dos días (Calendario general, 0028). */

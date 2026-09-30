@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { contarUrgencias, esAbierto, filtrarPantalla, haceCuanto, textoCreado, urgencia, visiblesPara } from './pantalla.ts';
+import { contarUrgencias, esAbierto, esUrgenteHoy, filtrarPantalla, haceCuanto, textoCreado, urgencia, visiblesPara } from './pantalla.ts';
 import type { ResumenTicket } from './tipos.ts';
 
 const HOY = '2026-09-29';
@@ -9,31 +9,28 @@ const tk = (id: string, estado: ResumenTicket['estado'], fechaLimite: string | n
   creadoPorNombre: 'Felipe', inicioUtc: null, fechaLimite, partidoEliminado: false, creadoEn: '2026-09-28T12:00:00Z', fechaEvento: null, motivo: null,
 });
 
-test('esAbierto: pendiente, en revisión y aprobado; publicado y cancelado no', () => {
+test('esAbierto: solo pendiente (0030: completado = publicado)', () => {
   assert.equal(esAbierto('pendiente'), true);
-  assert.equal(esAbierto('en_revision'), true);
-  assert.equal(esAbierto('aprobado'), true);
   assert.equal(esAbierto('publicado'), false);
   assert.equal(esAbierto('cancelado'), false);
 });
 
-test('visiblesPara: Admin y Diseñador todos; CM los suyos; Prueba nada', () => {
-  const l = [tk('a', 'pendiente', null, 'felipe'), tk('b', 'pendiente', null, 'pedro')];
-  assert.deepEqual(visiblesPara('Administrador', 'felipe', l).map((t) => t.id), ['a', 'b']);
-  assert.deepEqual(visiblesPara('Diseñador', 'maxi', l).map((t) => t.id), ['a', 'b']);
-  assert.deepEqual(visiblesPara('Community Manager', 'pedro', l).map((t) => t.id), ['b']);
+test('visiblesPara: Admin y Diseñador todos; CM los suyos y los automáticos; Prueba nada', () => {
+  const l = [tk('a', 'pendiente', null, 'felipe'), tk('b', 'pendiente', null, 'pedro'), { ...tk('md', 'pendiente', null, ''), automatico: true }];
+  assert.deepEqual(visiblesPara('Administrador', 'felipe', l).map((t) => t.id), ['a', 'b', 'md']);
+  assert.deepEqual(visiblesPara('Diseñador', 'maxi', l).map((t) => t.id), ['a', 'b', 'md']);
+  assert.deepEqual(visiblesPara('Community Manager', 'pedro', l).map((t) => t.id), ['b', 'md']);
   assert.deepEqual(visiblesPara('Prueba', 'alexis', l), []);
 });
 
 test('urgencia: bordes de "por vencer" (0, 1, 2 días) y vencido (-1)', () => {
   assert.equal(urgencia(tk('a', 'pendiente', '2026-09-28'), HOY), 'vencido');
   assert.equal(urgencia(tk('a', 'pendiente', '2026-09-29'), HOY), 'por_vencer');
-  assert.equal(urgencia(tk('a', 'en_revision', '2026-10-01'), HOY), 'por_vencer');
+  assert.equal(urgencia(tk('a', 'pendiente', '2026-10-01'), HOY), 'por_vencer');
   assert.equal(urgencia(tk('a', 'pendiente', '2026-10-02'), HOY), 'al_dia');
 });
 
-test('urgencia: aprobado o sin fecha → al día; cerrados → null', () => {
-  assert.equal(urgencia(tk('a', 'aprobado', '2026-09-01'), HOY), 'al_dia');
+test('urgencia: sin fecha → al día; completados y cancelados → null', () => {
   assert.equal(urgencia(tk('a', 'pendiente', null), HOY), 'al_dia');
   assert.equal(urgencia(tk('a', 'publicado', '2026-09-01'), HOY), null);
   assert.equal(urgencia(tk('a', 'cancelado', '2026-09-01'), HOY), null);
@@ -42,18 +39,26 @@ test('urgencia: aprobado o sin fecha → al día; cerrados → null', () => {
 test('contarUrgencias: solo abiertos', () => {
   const l = [
     tk('v', 'pendiente', '2026-09-20'),
-    tk('p', 'en_revision', '2026-09-30'),
-    tk('d', 'aprobado', null),
+    tk('p', 'pendiente', '2026-09-30'),
+    tk('d', 'pendiente', null),
     tk('c', 'publicado', '2026-09-20'),
   ];
   assert.deepEqual(contarUrgencias(l, HOY), { vencido: 1, por_vencer: 1, al_dia: 1 });
 });
 
-test('filtrarPantalla: estado abiertos / cerrados / todos, respetando el orden', () => {
-  const l = [tk('a', 'pendiente', null), tk('b', 'publicado', null), tk('c', 'cancelado', null), tk('d', 'aprobado', null)];
-  assert.deepEqual(filtrarPantalla(l, { estado: 'abiertos', urgencia: null }, HOY).map((t) => t.id), ['a', 'd']);
-  assert.deepEqual(filtrarPantalla(l, { estado: 'cerrados', urgencia: null }, HOY).map((t) => t.id), ['b', 'c']);
-  assert.deepEqual(filtrarPantalla(l, { estado: 'todos', urgencia: null }, HOY).map((t) => t.id), ['a', 'b', 'c', 'd']);
+test('filtrarPantalla: abiertos (pendientes) / completados / todos, respetando el orden', () => {
+  const l = [tk('a', 'pendiente', null), tk('b', 'publicado', null), tk('c', 'cancelado', null)];
+  assert.deepEqual(filtrarPantalla(l, { estado: 'abiertos', urgencia: null }, HOY).map((t) => t.id), ['a']);
+  assert.deepEqual(filtrarPantalla(l, { estado: 'completados', urgencia: null }, HOY).map((t) => t.id), ['b']);
+  assert.deepEqual(filtrarPantalla(l, { estado: 'todos', urgencia: null }, HOY).map((t) => t.id), ['a', 'b', 'c']);
+});
+
+test('esUrgenteHoy: vencido o por vencer', () => {
+  const u = esUrgenteHoy(HOY);
+  assert.equal(u(tk('a', 'pendiente', '2026-09-28')), true);
+  assert.equal(u(tk('a', 'pendiente', '2026-10-01')), true);
+  assert.equal(u(tk('a', 'pendiente', '2026-10-10')), false);
+  assert.equal(u(tk('a', 'publicado', '2026-09-28')), false);
 });
 
 test('filtrarPantalla: con urgencia solo entran abiertos de esa urgencia (un cerrado vencido no)', () => {

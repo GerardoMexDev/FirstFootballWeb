@@ -237,6 +237,91 @@ export type Database = {
             referencedRelation: "proximos_partidos_contenido"
             referencedColumns: ["partido_id"]
           },
+          {
+            foreignKeyName: "convocatorias_partido_id_fkey"
+            columns: ["partido_id"]
+            isOneToOne: false
+            referencedRelation: "tickets_match_day"
+            referencedColumns: ["partido_id"]
+          },
+        ]
+      }
+      disenos_partido: {
+        Row: {
+          completado_en: string
+          completado_por: string
+          jugador_id: string
+          partido_id: string
+        }
+        Insert: {
+          completado_en?: string
+          completado_por: string
+          jugador_id: string
+          partido_id: string
+        }
+        Update: {
+          completado_en?: string
+          completado_por?: string
+          jugador_id?: string
+          partido_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "disenos_partido_completado_por_fkey"
+            columns: ["completado_por"]
+            isOneToOne: false
+            referencedRelation: "perfiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "disenos_partido_completado_por_fkey"
+            columns: ["completado_por"]
+            isOneToOne: false
+            referencedRelation: "perfiles_publicos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "disenos_partido_jugador_id_fkey"
+            columns: ["jugador_id"]
+            isOneToOne: false
+            referencedRelation: "jugadores"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "disenos_partido_jugador_id_fkey"
+            columns: ["jugador_id"]
+            isOneToOne: false
+            referencedRelation: "totales_jugador"
+            referencedColumns: ["jugador_id"]
+          },
+          {
+            foreignKeyName: "disenos_partido_partido_id_fkey"
+            columns: ["partido_id"]
+            isOneToOne: false
+            referencedRelation: "partidos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "disenos_partido_partido_id_fkey"
+            columns: ["partido_id"]
+            isOneToOne: false
+            referencedRelation: "proximos_partidos"
+            referencedColumns: ["partido_id"]
+          },
+          {
+            foreignKeyName: "disenos_partido_partido_id_fkey"
+            columns: ["partido_id"]
+            isOneToOne: false
+            referencedRelation: "proximos_partidos_contenido"
+            referencedColumns: ["partido_id"]
+          },
+          {
+            foreignKeyName: "disenos_partido_partido_id_fkey"
+            columns: ["partido_id"]
+            isOneToOne: false
+            referencedRelation: "tickets_match_day"
+            referencedColumns: ["partido_id"]
+          },
         ]
       }
       escalas_hito: {
@@ -364,6 +449,13 @@ export type Database = {
             columns: ["partido_id"]
             isOneToOne: false
             referencedRelation: "proximos_partidos_contenido"
+            referencedColumns: ["partido_id"]
+          },
+          {
+            foreignKeyName: "estadisticas_partido_partido_id_fkey"
+            columns: ["partido_id"]
+            isOneToOne: false
+            referencedRelation: "tickets_match_day"
             referencedColumns: ["partido_id"]
           },
         ]
@@ -884,6 +976,13 @@ export type Database = {
             referencedRelation: "proximos_partidos_contenido"
             referencedColumns: ["partido_id"]
           },
+          {
+            foreignKeyName: "partidos_jugadores_partido_id_fkey"
+            columns: ["partido_id"]
+            isOneToOne: false
+            referencedRelation: "tickets_match_day"
+            referencedColumns: ["partido_id"]
+          },
         ]
       }
       perfiles: {
@@ -1279,6 +1378,13 @@ export type Database = {
             referencedRelation: "proximos_partidos_contenido"
             referencedColumns: ["partido_id"]
           },
+          {
+            foreignKeyName: "tickets_partido_id_fkey"
+            columns: ["partido_id"]
+            isOneToOne: false
+            referencedRelation: "tickets_match_day"
+            referencedColumns: ["partido_id"]
+          },
         ]
       }
       tickets_historial: {
@@ -1587,6 +1693,36 @@ export type Database = {
           },
         ]
       }
+      tickets_match_day: {
+        Row: {
+          completado_en: string | null
+          completado_por_nombre: string | null
+          dia_uy: string | null
+          estado: string | null
+          fecha_limite: string | null
+          inicio_utc: string | null
+          jugador_id: string | null
+          jugador_nombre: string | null
+          partido_id: string | null
+          titulo: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "partidos_jugadores_jugador_id_fkey"
+            columns: ["jugador_id"]
+            isOneToOne: false
+            referencedRelation: "jugadores"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "partidos_jugadores_jugador_id_fkey"
+            columns: ["jugador_id"]
+            isOneToOne: false
+            referencedRelation: "totales_jugador"
+            referencedColumns: ["jugador_id"]
+          },
+        ]
+      }
       tickets_vista: {
         Row: {
           actualizado_en: string | null
@@ -1659,6 +1795,13 @@ export type Database = {
             referencedRelation: "proximos_partidos_contenido"
             referencedColumns: ["partido_id"]
           },
+          {
+            foreignKeyName: "tickets_partido_id_fkey"
+            columns: ["partido_id"]
+            isOneToOne: false
+            referencedRelation: "tickets_match_day"
+            referencedColumns: ["partido_id"]
+          },
         ]
       }
       totales_jugador: {
@@ -1682,7 +1825,12 @@ export type Database = {
           texto: string
         }[]
       }
+      diseno_partido_marcar: {
+        Args: { p_completado: boolean; p_jugador: string; p_partido: string }
+        Returns: undefined
+      }
       es_usuario_activo: { Args: never; Returns: boolean }
+      match_day_desde: { Args: never; Returns: string }
       ticket__bloquear: {
         Args: { p_ticket: string }
         Returns: {
@@ -1738,6 +1886,10 @@ export type Database = {
         Args: { p_texto: string; p_ticket: string }
         Returns: undefined
       }
+      ticket_completar: {
+        Args: { p_texto?: string; p_ticket: string }
+        Returns: undefined
+      }
       ticket_crear: {
         Args: { p_jugador: string; p_nota: string; p_partido: string }
         Returns: string
@@ -1761,6 +1913,10 @@ export type Database = {
         Returns: undefined
       }
       ticket_publicar: {
+        Args: { p_texto?: string; p_ticket: string }
+        Returns: undefined
+      }
+      ticket_reabrir: {
         Args: { p_texto?: string; p_ticket: string }
         Returns: undefined
       }

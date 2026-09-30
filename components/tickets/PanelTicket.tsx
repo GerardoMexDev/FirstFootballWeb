@@ -22,27 +22,22 @@ import { fechaHoraCortaUy, textoEvento, textoVencimiento } from '@/lib/tickets/v
 import type { DetalleTicketBundle } from '@/lib/tickets/cargar-detalle-ticket';
 import type { Accion, EventoHistorial } from '@/lib/tickets/tipos';
 
-/** Acciones que abren un campo obligatorio antes de confirmar. */
+/** Acciones que abren un campo obligatorio antes de confirmar (0030: solo cancelar). */
 const CON_CAMPO: Partial<Record<Accion, { etiqueta: string; placeholder: string; boton: string; esLink?: boolean }>> = {
-  entregar: { etiqueta: 'Link de Dropbox del diseño', placeholder: 'https://www.dropbox.com/…', boton: 'Entregar para revisión', esLink: true },
-  devolver: { etiqueta: 'Qué hay que corregir', placeholder: 'Ej.: cambiá el fondo por el de local', boton: 'Devolver al Diseñador' },
   cancelar: { etiqueta: 'Por qué se cancela', placeholder: 'Ej.: el partido no se cubre', boton: 'Cancelar ticket' },
 };
 
+/** Recorrido simple (0030): el Diseñador completa o reabre; creador o Admin cancelan. */
 const BOTON: Record<Exclude<Accion, 'comentar'>, { texto: string; clase: string }> = {
-  entregar: { texto: 'Entregar', clase: 'btn btn--a' },
-  aprobar: { texto: 'Aprobar', clase: 'btn btn--a' },
-  devolver: { texto: 'Devolver', clase: 'btn btn--g' },
-  publicar: { texto: 'Marcar publicado', clase: 'btn btn--a' },
+  completar: { texto: 'Completar', clase: 'btn btn--a' },
+  reabrir: { texto: 'Reabrir', clase: 'btn btn--g' },
   cancelar: { texto: 'Cancelar ticket', clase: 'btn btn--g' },
 };
 
 /** Aviso para lector de pantalla después de cada acción exitosa. */
 const AVISO_OK: Record<Accion, string> = {
-  entregar: 'Listo: diseño entregado para revisión.',
-  aprobar: 'Listo: ticket aprobado.',
-  devolver: 'Listo: ticket devuelto al Diseñador.',
-  publicar: 'Listo: ticket marcado como publicado.',
+  completar: 'Listo: ticket completado.',
+  reabrir: 'Listo: ticket reabierto.',
   cancelar: 'Listo: ticket cancelado.',
   comentar: 'Comentario agregado.',
 };
@@ -52,8 +47,8 @@ const TITULO_EVENTO: Record<EventoHistorial['tipo'], string> = {
   comentario: 'comentó',
   entrega: 'entregó el diseño',
   aprobado: 'aprobó',
-  devuelto: 'lo devolvió con correcciones',
-  publicado: 'lo marcó como publicado',
+  devuelto: 'lo reabrió',
+  publicado: 'lo marcó como completado',
   cancelado: 'lo canceló',
   sistema: 'Aviso del sistema',
 };
@@ -77,7 +72,7 @@ export function PanelTicket({ bundle, onActualizar }: { bundle: DetalleTicketBun
   const [aviso, setAviso] = useState('');
   const tituloRef = useRef<HTMLHeadingElement>(null);
 
-  async function correr(accion: Accion, datos: { texto?: string; link?: string }) {
+  async function correr(accion: Accion, datos: { texto?: string }) {
     setEnviando(true);
     setError(null);
     const r = await ejecutarAccion(crearClienteNavegador(), accion, ticket.id, datos);
@@ -194,7 +189,7 @@ export function PanelTicket({ bundle, onActualizar }: { bundle: DetalleTicketBun
               type="button"
               className="btn btn--a"
               disabled={enviando || !campo.trim()}
-              onClick={() => correr(abierta, formulario.esLink ? { link: campo } : { texto: campo })}
+              onClick={() => correr(abierta, { texto: campo })}
             >
               {enviando ? 'Guardando…' : formulario.boton}
             </button>

@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { estadoMasUrgente, resumirPorPartido, META_ESTADO, TEXTO_ALERTA, alertasPorPartido, ticketsPorDia, alertasPorTicket } from './estados.ts';
+import { estadoMasUrgente, resumirPorPartido, META_ESTADO, TEXTO_ALERTA, alertasPorPartido, ticketsPorDia, alertasPorTicket, alertaDe } from './estados.ts';
 import type { ResumenTicket } from './tipos.ts';
 
 const t = (id: string, partidoId: string | null, estado: ResumenTicket['estado']): ResumenTicket => ({
@@ -48,18 +48,20 @@ test('META_ESTADO: cada estado tiene etiqueta, versión corta y símbolo (no sol
   }
 });
 
-test('alertasPorPartido: un texto por partido según lo que hay que hacer', () => {
-  const a = alertasPorPartido([t('a', 'p1', 'pendiente'), t('b', 'p2', 'en_revision'), t('c', 'p3', 'aprobado')]);
-  assert.deepEqual(a, { p1: 'Ticket pendiente', p2: 'Para revisar', p3: 'Para publicar' });
+test('alertasPorPartido: "Vencido" le gana a "Vence pronto" en el mismo partido; completados no', () => {
+  const HOY = '2026-10-05';
+  const a = alertasPorPartido([
+    { ...t('a', 'p1', 'pendiente'), fechaLimite: '2026-10-06' },
+    { ...t('b', 'p1', 'pendiente'), fechaLimite: '2026-10-01' },
+    { ...t('c', 'p2', 'pendiente'), fechaLimite: '2026-10-07' },
+    { ...t('d', 'p3', 'publicado'), fechaLimite: '2026-10-01' },
+    { ...t('e', 'p4', 'pendiente'), fechaLimite: '2026-10-20' },
+  ], HOY);
+  assert.deepEqual(a, { p1: 'Vencido', p2: 'Vence pronto' });
 });
 
-test('alertasPorPartido: con dos tickets en un partido manda el más urgente; sin partido no alerta', () => {
-  assert.equal(alertasPorPartido([t('a', 'p1', 'aprobado'), t('b', 'p1', 'pendiente')]).p1, 'Ticket pendiente');
-  assert.deepEqual(alertasPorPartido([t('a', null, 'pendiente')]), {});
-});
-
-test('TEXTO_ALERTA: solo los estados en los que alguien tiene que actuar', () => {
-  assert.deepEqual(Object.keys(TEXTO_ALERTA).sort(), ['aprobado', 'en_revision', 'pendiente']);
+test('TEXTO_ALERTA: vencido y por vencer', () => {
+  assert.deepEqual(TEXTO_ALERTA, { vencido: 'Vencido', por_vencer: 'Vence pronto' });
 });
 
 const ev = (id: string, fechaEvento: string | null, estado: ResumenTicket['estado']): ResumenTicket => ({
@@ -72,9 +74,21 @@ test('ticketsPorDia: agrupa por fecha del evento; sin fecha o cancelados no entr
   assert.deepEqual(r['2026-10-01'].map((x) => x.id), ['a', 'b']);
 });
 
-test('alertasPorTicket: texto por id, solo tickets de fecha', () => {
-  assert.deepEqual(alertasPorTicket([ev('a', '2026-10-01', 'pendiente'), ev('b', '2026-10-02', 'en_revision'), t('c', 'p1', 'pendiente')]), {
-    a: 'Ticket pendiente',
-    b: 'Para revisar',
-  });
+test('alertasPorTicket: texto por id, solo tickets de fecha pendientes y urgentes', () => {
+  const HOY = '2026-10-05';
+  const a = alertasPorTicket([
+    { ...ev('a', '2026-10-03', 'pendiente'), fechaLimite: '2026-10-01' },
+    { ...ev('b', '2026-10-08', 'pendiente'), fechaLimite: '2026-10-06' },
+    { ...ev('c', '2026-10-03', 'publicado'), fechaLimite: '2026-10-01' },
+    { ...t('d', 'p1', 'pendiente'), fechaLimite: '2026-10-01' },
+  ], HOY);
+  assert.deepEqual(a, { a: 'Vencido', b: 'Vence pronto' });
+});
+
+test('alertaDe: texto de la lucecita para un ticket (vencido / vence pronto / nada)', () => {
+  const HOY = '2026-10-05';
+  assert.equal(alertaDe({ ...t('a', 'p1', 'pendiente'), fechaLimite: '2026-10-01' }, HOY), 'Vencido');
+  assert.equal(alertaDe({ ...t('a', 'p1', 'pendiente'), fechaLimite: '2026-10-07' }, HOY), 'Vence pronto');
+  assert.equal(alertaDe({ ...t('a', 'p1', 'pendiente'), fechaLimite: '2026-10-20' }, HOY), undefined);
+  assert.equal(alertaDe({ ...t('a', 'p1', 'publicado'), fechaLimite: '2026-10-01' }, HOY), undefined);
 });

@@ -13,7 +13,11 @@ export type TipoEventoTicket =
 /** Valores de `perfiles.cargo`. */
 export type Cargo = 'Administrador' | 'Community Manager' | 'Diseñador' | 'Prueba';
 
-export type Accion = 'entregar' | 'aprobar' | 'devolver' | 'publicar' | 'cancelar' | 'comentar';
+/** Acciones del flujo simple (0030): el Diseñador completa/reabre; creador o Admin cancelan. */
+export type Accion = 'completar' | 'reabrir' | 'cancelar' | 'comentar';
+
+/** Semáforo (0030): rojo pendiente, verde completado, amarillo vencido. */
+export type EstadoVisual = 'pendiente' | 'completado' | 'vencido';
 
 /** Lo que necesitan el calendario, el contador y la pastilla del panel del partido. */
 export interface ResumenTicket {
@@ -35,6 +39,8 @@ export interface ResumenTicket {
   /** Tickets de fecha (0028): yyyy-mm-dd del evento y qué se celebra. `null` en los de partido. */
   fechaEvento: string | null;
   motivo: string | null;
+  /** Ticket automático de Match Day (0030): id 'md:<partido>:<jugador>'; se abre el partido, no un ticket. */
+  automatico?: boolean;
 }
 
 /** La tarjeta del ticket. */

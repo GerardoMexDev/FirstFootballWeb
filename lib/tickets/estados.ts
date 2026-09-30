@@ -4,6 +4,7 @@
  *
  * Football First. Creado 2026-09-28.
  */
+import { DateTime } from 'luxon';
 import type { EstadoTicket, ResumenTicket } from '@/lib/tickets/tipos';
 
 /** El símbolo acompaña al color: el estado se lee aunque no se distingan los colores. */
@@ -11,29 +12,37 @@ export const META_ESTADO: Record<EstadoTicket, { etiqueta: string; corta: string
   pendiente: { etiqueta: 'Pendiente', corta: 'Pendiente', simbolo: '●' },
   en_revision: { etiqueta: 'En revisión', corta: 'Revisión', simbolo: '◐' },
   aprobado: { etiqueta: 'Aprobado', corta: 'Aprobado', simbolo: '✓' },
-  publicado: { etiqueta: 'Publicado', corta: 'Publicado', simbolo: '✓✓' },
+  // 0030: 'publicado' es el estado "Completado" del recorrido simple.
+  publicado: { etiqueta: 'Completado', corta: 'Completado', simbolo: '✓' },
   cancelado: { etiqueta: 'Cancelado', corta: 'Cancelado', simbolo: '○' },
 };
 
 /**
- * Texto de la lucecita roja (2026-09-29) según lo que hay que hacer. Solo en los estados en
- * los que alguien tiene que actuar; a quién le toca lo decide `debeActuar` (permisos.ts).
+ * Texto de la lucecita (0030): solo lo que venció o vence en 2 días o menos. A quién le toca lo
+ * decide `debeActuar` (permisos.ts); acá se vuelve a mirar la fecha para elegir el texto.
  */
-export const TEXTO_ALERTA: Partial<Record<EstadoTicket, string>> = {
-  pendiente: 'Ticket pendiente',
-  en_revision: 'Para revisar',
-  aprobado: 'Para publicar',
-};
+export const TEXTO_ALERTA = { vencido: 'Vencido', por_vencer: 'Vence pronto' } as const;
+
+/** Urgencia de un pendiente por su fecha límite (mismo criterio que pantalla.ts, sin importarlo). */
+function urgenciaSimple(t: ResumenTicket, hoyUy: string): keyof typeof TEXTO_ALERTA | null {
+  if (t.estado !== 'pendiente' || !t.fechaLimite) return null;
+  const dias = Math.round(DateTime.fromISO(t.fechaLimite, { zone: 'utc' }).diff(DateTime.fromISO(hoyUy, { zone: 'utc' }), 'days').days);
+  if (dias < 0) return 'vencido';
+  if (dias <= 2) return 'por_vencer';
+  return null;
+}
 
 /**
- * `{ partidoId: texto }` a partir de los tickets que ya le tocan al usuario (`pendientesDe`).
- * Con varios tickets en un partido manda el más urgente. Tickets sin partido no alertan.
+ * `{ partidoId: texto }` de la lucecita: "Vencido" le gana a "Vence pronto" en el mismo partido.
+ * Tickets sin partido, completados o al día no alertan.
  */
-export function alertasPorPartido(pendientes: ResumenTicket[]): Record<string, string> {
+export function alertasPorPartido(pendientes: ResumenTicket[], hoyUy: string): Record<string, string> {
   const alertas: Record<string, string> = {};
-  for (const [partidoId, r] of Object.entries(resumirPorPartido(pendientes))) {
-    const texto = TEXTO_ALERTA[r.estado];
-    if (texto) alertas[partidoId] = texto;
+  for (const t of pendientes) {
+    if (!t.partidoId) continue;
+    const u = urgenciaSimple(t, hoyUy);
+    if (!u) continue;
+    if (u === 'vencido' || !alertas[t.partidoId]) alertas[t.partidoId] = TEXTO_ALERTA[u];
   }
   return alertas;
 }
@@ -77,12 +86,18 @@ export function ticketsPorDia(tickets: ResumenTicket[]): Record<string, ResumenT
   return porDia;
 }
 
-/** `{ ticketId: texto }` de la lucecita para tickets de fecha que esperan algo de quien mira. */
-export function alertasPorTicket(pendientes: ResumenTicket[]): Record<string, string> {
+/** `{ ticketId: texto }` de la lucecita para tickets de fecha vencidos o por vencer. */
+export function alertasPorTicket(pendientes: ResumenTicket[], hoyUy: string): Record<string, string> {
   const alertas: Record<string, string> = {};
   for (const t of pendientes) {
-    const texto = TEXTO_ALERTA[t.estado];
-    if (t.fechaEvento && texto) alertas[t.id] = texto;
+    const u = urgenciaSimple(t, hoyUy);
+    if (t.fechaEvento && u) alertas[t.id] = TEXTO_ALERTA[u];
   }
   return alertas;
+}
+
+/** Texto de la lucecita para UN ticket (0030): "Vencido", "Vence pronto" o nada. */
+export function alertaDe(t: ResumenTicket, hoyUy: string): string | undefined {
+  const u = urgenciaSimple(t, hoyUy);
+  return u ? TEXTO_ALERTA[u] : undefined;
 }

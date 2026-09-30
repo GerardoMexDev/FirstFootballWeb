@@ -53,7 +53,7 @@ export default async function PaginaCalendario() {
         eventos={eventos}
         hoyUy={hoyUy}
         ticketsPorPartido={resumirPorPartido(tickets)}
-        alertasPorPartido={alertasPorPartido(pendientes)}
+        alertasPorPartido={alertasPorPartido(pendientes, hoyUy)}
       />
     </section>
   );

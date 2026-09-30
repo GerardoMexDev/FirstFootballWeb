@@ -86,7 +86,7 @@ export default async function PaginaPartidos() {
         linksDropbox={linksDropbox}
         fechas={fechasContenido}
         hoyUy={hoyUy}
-        alertasTicket={alertasPorPartido(pendientes)}
+        alertasTicket={alertasPorPartido(pendientes, hoyUy)}
       />
     </section>
   );

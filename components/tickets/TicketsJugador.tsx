@@ -12,7 +12,8 @@ import { AlertaTicket } from '@/components/tickets/AlertaTicket';
 import { CrearTicketEvento } from '@/components/tickets/CrearTicketEvento';
 import { usePanel } from '@/lib/paneles/use-panel';
 import { debeActuar, puedeCrear } from '@/lib/tickets/permisos';
-import { META_ESTADO, TEXTO_ALERTA } from '@/lib/tickets/estados';
+import { META_ESTADO, alertaDe } from '@/lib/tickets/estados';
+import { esUrgenteHoy } from '@/lib/tickets/pantalla';
 import type { TicketsJugadorBundle } from '@/lib/tickets/cargar-tickets-jugador';
 
 export function TicketsJugador({
@@ -35,7 +36,7 @@ export function TicketsJugador({
       {abiertos.length > 0 && (
         <div className="tkj">
           {abiertos.map((t) => {
-            const alerta = usuario && debeActuar(usuario.cargo, usuario.id, t) ? TEXTO_ALERTA[t.estado] : undefined;
+            const alerta = usuario && debeActuar(usuario.cargo, usuario.id, t, esUrgenteHoy(hoyUy)) ? alertaDe(t, hoyUy) : undefined;
             return (
               <button
                 key={t.id}

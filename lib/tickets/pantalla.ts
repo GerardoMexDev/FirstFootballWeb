@@ -9,25 +9,26 @@ import { DateTime } from 'luxon';
 import type { EstadoTicket, ResumenTicket } from '@/lib/tickets/tipos';
 
 export type Urgencia = 'vencido' | 'por_vencer' | 'al_dia';
-export type FiltroEstado = 'abiertos' | 'cerrados' | 'todos';
+export type FiltroEstado = 'abiertos' | 'completados' | 'todos';
 
 /** "Por vencer" = vence hoy, mañana o pasado mañana (decisión de Gerardo 2026-09-29). */
 export const DIAS_POR_VENCER = 2;
 
 const ZONA = 'America/Montevideo';
-const ABIERTOS: EstadoTicket[] = ['pendiente', 'en_revision', 'aprobado'];
+/** 0030: el recorrido es pendiente → completado ('publicado'); solo pendiente está abierto. */
+const ABIERTOS: EstadoTicket[] = ['pendiente'];
 
 export function esAbierto(estado: EstadoTicket): boolean {
   return ABIERTOS.includes(estado);
 }
 
 /**
- * Admin y Diseñador ven todos; el CM, los que creó; el resto, ninguno. Es foco de pantalla,
- * no seguridad: la RLS (0025) ya deja leer tickets a todo usuario activo.
+ * Admin y Diseñador ven todos; el CM, los que creó y todos los automáticos de Match Day (0030); el
+ * resto, ninguno. Es foco de pantalla, no seguridad: la RLS (0025) ya deja leer a todo usuario activo.
  */
 export function visiblesPara(cargo: string, usuarioId: string, tickets: ResumenTicket[]): ResumenTicket[] {
   if (cargo === 'Administrador' || cargo === 'Diseñador') return tickets;
-  if (cargo === 'Community Manager') return tickets.filter((t) => t.creadoPor === usuarioId);
+  if (cargo === 'Community Manager') return tickets.filter((t) => t.automatico || t.creadoPor === usuarioId);
   return [];
 }
 
@@ -37,12 +38,12 @@ function diasHasta(dia: string, hoyUy: string): number {
 }
 
 /**
- * `null` para cerrados (no cuentan). Aprobado o sin fecha límite → al día (ya se entregó, o
- * no hay contra qué vencer). Pendiente / en revisión según la fecha límite.
+ * `null` para completados y cancelados (no cuentan). Pendiente sin fecha límite → al día; si no,
+ * según la fecha límite.
  */
 export function urgencia(t: ResumenTicket, hoyUy: string): Urgencia | null {
   if (!esAbierto(t.estado)) return null;
-  if (t.estado === 'aprobado' || !t.fechaLimite) return 'al_dia';
+  if (!t.fechaLimite) return 'al_dia';
   const dias = diasHasta(t.fechaLimite, hoyUy);
   if (dias < 0) return 'vencido';
   if (dias <= DIAS_POR_VENCER) return 'por_vencer';
@@ -70,9 +71,17 @@ export function filtrarPantalla(
   return tickets.filter((t) => {
     if (f.urgencia) return urgencia(t, hoyUy) === f.urgencia;
     if (f.estado === 'abiertos') return esAbierto(t.estado);
-    if (f.estado === 'cerrados') return !esAbierto(t.estado);
+    if (f.estado === 'completados') return t.estado === 'publicado';
     return true;
   });
+}
+
+/** Criterio de "lo que te toca" (globito, lucecita): vencido o por vencer. */
+export function esUrgenteHoy(hoyUy: string): (t: ResumenTicket) => boolean {
+  return (t) => {
+    const u = urgencia(t, hoyUy);
+    return u === 'vencido' || u === 'por_vencer';
+  };
 }
 
 /** "hoy" / "ayer" / "hace 3 días" / "hace 2 semanas" / "hace 2 meses", por día de Uruguay. */
