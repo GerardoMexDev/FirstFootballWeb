@@ -30,7 +30,8 @@
     "secrets:edge": "node scripts/configurar-secret-edge.mjs",
     "backfill:sportmonks": "node scripts/backfill-historico-sportmonks.mjs",
     "test:avisos": "node --test scripts/avisos.test.mjs",
-    "test:espn-uruguay": "node --test scripts/espn-uruguay.test.mjs"
+    "test:espn-uruguay": "node --test scripts/espn-uruguay.test.mjs",
+    "test:copas-espn": "node --test scripts/copas-espn.test.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.5.2",
