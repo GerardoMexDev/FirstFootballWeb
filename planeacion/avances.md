@@ -19,8 +19,11 @@ En Claude Code **no hay memoria entre sesiones**, así que este protocolo es obl
 3. Rutina de cierre Git: `git add . && git commit -m "Sesión N: ..." && git push`.
 4. La sesión no se cierra hasta que `git push` terminó OK.
 
-**Última actualización:** 2026-09-30 (Sesión 13: tickets de diseño implementados y revisados en
-rama `tickets-diseno` — ver §5 "Tickets de diseño" para integrar/deploy/limpieza.)
+**Última actualización:** 2026-10-01 (Sesión 16: punto 6 — fechas del Excel de la agencia en producción,
+migraciones 0036–0039 aplicadas y verificadas; Abel 6/8; fix de años bisiestos. **Próxima sesión** (después del
+reset del límite semanal de Gerardo, ~2026-10-03): opcional `/code-review low` de los commits del 01/10 (NO la
+revisión con agentes: cara); pendientes chicos de las revisiones del 30/09 (prioridad: partido suspendido → vencido);
+auditorías de cierre. En espera: correo de la agencia (recuperar contraseña + aviso por mail).)
 **Sesión 12 (2026-09-28): login de los 4 usuarios + blindaje de
 seguridad. Primer cambio pedido por la agencia; mañana llega el documento con el resto.
 Registro público de Auth estaba ENCENDIDO en prod — Gerardo lo apagó. Migración `0024`
