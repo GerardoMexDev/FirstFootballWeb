@@ -1450,7 +1450,17 @@ Charla con Gerardo (no se codeó nada): tres preguntas de la agencia / de él.
    - **✅ Decidido por Gerardo (2026-09-30):** se combinan. Si el Excel NO trae un dato que nosotros sí
      tenemos, queda el nuestro junto con los del Excel; si se repite, gana el del Excel de la agencia.
      Consultas (a)–(f) enviadas a la agencia por Gerardo (texto armado 2026-09-30); falta su respuesta.
-   - **▶ RETOMAR AQUÍ (cierre 2026-09-30):** Gerardo dijo NO esperar a la agencia: manda el Excel; lo nuestro queda
+   - **✅ IMPLEMENTADO 2026-10-01 (rama `fechas-agencia`, commit `fc1aa97`) — falta aplicar `0036` (Gerardo,
+     SQL Editor) + verificar + QA + merge/push.** Tabla `fechas_agencia` (99 filas: 16 de First + 83 de jugadores;
+     las otras 15 de @first repiten hojas de jugadores). Las que repiten una fecha nuestra (cumpleaños, debuts,
+     aniversario del club ACTUAL) se guardan con ese tipo y `fecha_agencia()` hace que la vista use la del Excel
+     (en la práctica solo cambia Abel → 6/8; el resto coincide). El resto = fuente nueva `fecha_agencia` en
+     `agenda_contenido`: "Nández · Cumple Matilda (hija)", "First · Día del Diseñador Gráfico"; si varios jugadores
+     comparten la fecha va UN chip ("Aniversario Liverpool" con Martirena, Fede, Kevin y Martín); con año →
+     "(N años)". Sin panel al clic, sin ticket ni color. Bragantino fundación → 1928-01-08. La FICHA de Abel sigue
+     diciendo 8/8 (`jugadores.fecha_nacimiento`): @first del mismo Excel dice 8/8 → esperar respuesta (a) de la agencia.
+     Verificación: `node scripts/_tmp_consulta_fechas.mjs` (temporal, no commitear; borrar después).
+   - **(histórico) RETOMAR AQUÍ (cierre 2026-09-30):** Gerardo dijo NO esperar a la agencia: manda el Excel; lo nuestro queda
      donde el Excel no tiene. Claude propuso diseño (falta el OK de Gerardo, luego spec → plan → implementar):
      1) tabla nueva "fechas de la agencia" cargada por migración (jugador o First, día, mes, año, texto limpio);
         de @first solo lo que NO es de un jugador (días generales + equipo, incl. "cumple chino rochet");
@@ -2808,6 +2818,7 @@ F–H → I (con migración). Cada ítem cerrado se documenta en §4.
 | `npx prettier --write` sobre un componente (Sesión 15, 2026-09-30) | El proyecto no tiene config de Prettier: lo reformateó entero con los defaults (comillas dobles, 80 columnas) → diff de 110 líneas | No correr Prettier; indentar a mano (script `.cjs` que agregue espacios) y verificar con `git diff -w --stat` |
 | Insertar texto con `s.replace(a, textoNuevo)` de JS cuando el texto trae SQL con `$$` (Sesión 15, 2026-09-30) | En el reemplazo de `String.replace`, `$$` significa "un $": la función plpgsql quedó con `as $` → syntax error 42601 | Reemplazar con `s.split(a).join(b)` (no interpreta $), o pasar una función: `s.replace(a, () => b)` |
 | `sed 's/\`/`/g'` para sacar barras antes de backticks (Sesión 15, 2026-09-30) | En GNU sed/grep, barra+backtick es el ANCLA de inicio: agregó un backtick al comienzo de cada línea del archivo | Para texto con backticks o barras: Edit, o node con `split/join` sobre el texto literal |
+| Un `cat > archivo` suelto sin heredoc al inicio de un comando Bash (2026-10-01) | Se queda esperando stdin: el comando se colgó 2 min y pasó a segundo plano | Escribir scripts con Write (o heredoc completo) y nunca dejar un `cat >` sin entrada |
 
 ## 11. Dudas abiertas (de `contexto.md` §12)
 
