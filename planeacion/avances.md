@@ -1453,7 +1453,13 @@ Charla con Gerardo (no se codeó nada): tres preguntas de la agencia / de él.
    - **✅ EN PRODUCCIÓN 2026-10-01** (commit `fc1aa97`; `0036` aplicada por Gerardo; verificado en la base: 99 filas,
      72 fechas_agencia en 2026; QA en prod con `felipe`: Contenido y Todos muestran las fechas, Match Day no, Fechas
      señaladas "Fecha de la agencia", /partidos con las tarjetas, 390 px sin scroll lateral). Pendiente chico: en
-     chips compartidos se mezclan apodos y nombres completos ("Fede, Gastón Martirena, …") — ver si se unifica. Tabla `fechas_agencia` (99 filas: 16 de First + 83 de jugadores;
+     chips compartidos se mezclan apodos y nombres completos ("Fede, Gastón Martirena, …") — ver si se unifica.
+   - **✅ 0037 aplicada y verificada (2026-10-01):** Abel `fecha_nacimiento` = 1990-08-06 (Gerardo: manda el Excel);
+     fechas de la agencia solo desde el año del hecho (0 antes de su año).
+   - **🐞 Pendiente (hallado 2026-10-01, viejo — desde 0001):** la proyección de cumpleaños/aniversarios en
+     `agenda_anual` y `agenda_contenido` suma "días desde el 1/1" → en años bisiestos corre un día todo lo que cae
+     después de febrero (Abel 2028 → 5/8). No afecta 2026–2027. Arreglo: proyectar con
+     `make_date(y, mes, dia)` (29/2 → 1/3) en los 4 bloques de ambas vistas; nueva migración. Tabla `fechas_agencia` (99 filas: 16 de First + 83 de jugadores;
      las otras 15 de @first repiten hojas de jugadores). Las que repiten una fecha nuestra (cumpleaños, debuts,
      aniversario del club ACTUAL) se guardan con ese tipo y `fecha_agencia()` hace que la vista use la del Excel
      (en la práctica solo cambia Abel → 6/8; el resto coincide). El resto = fuente nueva `fecha_agencia` en
