@@ -1456,7 +1456,9 @@ Charla con Gerardo (no se codeó nada): tres preguntas de la agencia / de él.
      chips compartidos se mezclan apodos y nombres completos ("Fede, Gastón Martirena, …") — ver si se unifica.
    - **✅ 0037 aplicada y verificada (2026-10-01):** Abel `fecha_nacimiento` = 1990-08-06 (Gerardo: manda el Excel);
      fechas de la agencia solo desde el año del hecho (0 antes de su año).
-   - **🐞 Pendiente (hallado 2026-10-01, viejo — desde 0001):** la proyección de cumpleaños/aniversarios en
+   - **✅ ARREGLADO con 0038 (aplicada y verificada 2026-10-01):** 196/196 fechas fijas de ambas vistas con el mismo
+     mes/día que la base en 2025–2028; Abel 6/8 también en 2028.
+   - **(histórico) 🐞 Hallado 2026-10-01, viejo — desde 0001:** la proyección de cumpleaños/aniversarios en
      `agenda_anual` y `agenda_contenido` suma "días desde el 1/1" → en años bisiestos corre un día todo lo que cae
      después de febrero (Abel 2028 → 5/8). No afecta 2026–2027. Arreglo: proyectar con
      `make_date(y, mes, dia)` (29/2 → 1/3) en los 4 bloques de ambas vistas; nueva migración. Tabla `fechas_agencia` (99 filas: 16 de First + 83 de jugadores;
