@@ -1452,8 +1452,8 @@ Charla con Gerardo (no se codeó nada): tres preguntas de la agencia / de él.
      Consultas (a)–(f) enviadas a la agencia por Gerardo (texto armado 2026-09-30); falta su respuesta.
    - **✅ EN PRODUCCIÓN 2026-10-01** (commit `fc1aa97`; `0036` aplicada por Gerardo; verificado en la base: 99 filas,
      72 fechas_agencia en 2026; QA en prod con `felipe`: Contenido y Todos muestran las fechas, Match Day no, Fechas
-     señaladas "Fecha de la agencia", /partidos con las tarjetas, 390 px sin scroll lateral). Pendiente chico: en
-     chips compartidos se mezclan apodos y nombres completos ("Fede, Gastón Martirena, …") — ver si se unifica.
+     señaladas "Fecha de la agencia", /partidos con las tarjetas, 390 px sin scroll lateral). Nombres: 0039 (aplicada y
+     verificada) → nombre completo + apodo entre comillas: 'Federico Pereira "Fede", Gastón Martirena · …'.
    - **✅ 0037 aplicada y verificada (2026-10-01):** Abel `fecha_nacimiento` = 1990-08-06 (Gerardo: manda el Excel);
      fechas de la agencia solo desde el año del hecho (0 antes de su año).
    - **✅ ARREGLADO con 0038 (aplicada y verificada 2026-10-01):** 196/196 fechas fijas de ambas vistas con el mismo
