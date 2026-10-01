@@ -21,8 +21,8 @@ En Claude Code **no hay memoria entre sesiones**, así que este protocolo es obl
 
 **Última actualización:** 2026-10-01 (Sesión 16: punto 6 — fechas del Excel de la agencia en producción,
 migraciones 0036–0039 aplicadas y verificadas; Abel 6/8; fix de años bisiestos. **Próxima sesión** (después del
-reset del límite semanal de Gerardo, ~2026-10-03): opcional `/code-review low` de los commits del 01/10 (NO la
-revisión con agentes: cara); pendientes chicos de las revisiones del 30/09 (prioridad: partido suspendido → vencido);
+reset del límite semanal de Gerardo, ~2026-10-03): revisión con agentes → SOLO en las auditorías de cierre
+(decidido por Gerardo 2026-10-01); pendientes chicos de las revisiones del 30/09 (prioridad: partido suspendido → vencido);
 auditorías de cierre. En espera: correo de la agencia (recuperar contraseña + aviso por mail).)
 **Sesión 12 (2026-09-28): login de los 4 usuarios + blindaje de
 seguridad. Primer cambio pedido por la agencia; mañana llega el documento con el resto.
@@ -1915,6 +1915,8 @@ auditoría de SEO es justamente confirmar si eso sigue siendo así o si hay pág
       manejo de auth/sesión, validación de inputs, exposición de secrets/env, cabeceras HTTP,
       dependencias con vulnerabilidades conocidas, Edge Functions (auth entre ellas y
       `SYNC_FUNCTIONS_SECRET`), etc. — **baja, al cierre del proyecto**
+- [ ] **Revisión de código con agentes** (multi-agente) de todo lo hecho — decidido por Gerardo 2026-10-01:
+      se hace acá y no por cambio, para cuidar el límite semanal. — **al cierre del proyecto**
 - [ ] **Auditoría de SEO completa** — Gerardo cree que puede que ya esté resuelta; confirmar
       antes de darla por cerrada (meta tags, sitemap, robots.txt, rendering de páginas públicas
       si las hay). — **baja, al cierre del proyecto**
