@@ -1450,8 +1450,10 @@ Charla con Gerardo (no se codeó nada): tres preguntas de la agencia / de él.
    - **✅ Decidido por Gerardo (2026-09-30):** se combinan. Si el Excel NO trae un dato que nosotros sí
      tenemos, queda el nuestro junto con los del Excel; si se repite, gana el del Excel de la agencia.
      Consultas (a)–(f) enviadas a la agencia por Gerardo (texto armado 2026-09-30); falta su respuesta.
-   - **✅ IMPLEMENTADO 2026-10-01 (rama `fechas-agencia`, commit `fc1aa97`) — falta aplicar `0036` (Gerardo,
-     SQL Editor) + verificar + QA + merge/push.** Tabla `fechas_agencia` (99 filas: 16 de First + 83 de jugadores;
+   - **✅ EN PRODUCCIÓN 2026-10-01** (commit `fc1aa97`; `0036` aplicada por Gerardo; verificado en la base: 99 filas,
+     72 fechas_agencia en 2026; QA en prod con `felipe`: Contenido y Todos muestran las fechas, Match Day no, Fechas
+     señaladas "Fecha de la agencia", /partidos con las tarjetas, 390 px sin scroll lateral). Pendiente chico: en
+     chips compartidos se mezclan apodos y nombres completos ("Fede, Gastón Martirena, …") — ver si se unifica. Tabla `fechas_agencia` (99 filas: 16 de First + 83 de jugadores;
      las otras 15 de @first repiten hojas de jugadores). Las que repiten una fecha nuestra (cumpleaños, debuts,
      aniversario del club ACTUAL) se guardan con ese tipo y `fecha_agencia()` hace que la vista use la del Excel
      (en la práctica solo cambia Abel → 6/8; el resto coincide). El resto = fuente nueva `fecha_agencia` en
@@ -1459,7 +1461,6 @@ Charla con Gerardo (no se codeó nada): tres preguntas de la agencia / de él.
      comparten la fecha va UN chip ("Aniversario Liverpool" con Martirena, Fede, Kevin y Martín); con año →
      "(N años)". Sin panel al clic, sin ticket ni color. Bragantino fundación → 1928-01-08. La FICHA de Abel sigue
      diciendo 8/8 (`jugadores.fecha_nacimiento`): @first del mismo Excel dice 8/8 → esperar respuesta (a) de la agencia.
-     Verificación: `node scripts/_tmp_consulta_fechas.mjs` (temporal, no commitear; borrar después).
    - **(histórico) RETOMAR AQUÍ (cierre 2026-09-30):** Gerardo dijo NO esperar a la agencia: manda el Excel; lo nuestro queda
      donde el Excel no tiene. Claude propuso diseño (falta el OK de Gerardo, luego spec → plan → implementar):
      1) tabla nueva "fechas de la agencia" cargada por migración (jugador o First, día, mes, año, texto limpio);
