@@ -24,7 +24,8 @@ export type FuenteAgenda =
   | 'cumpleanos'
   | 'aniversario_club'
   | 'aniversario_seleccion'
-  | 'aniversario_debut';
+  | 'aniversario_debut'
+  | 'fecha_agencia';
 
 /** Fila mínima de `agenda_anual` que necesita esta lógica. */
 export interface EventoAgenda {
@@ -48,13 +49,14 @@ const FUENTES_NOTA: readonly FuenteAgenda[] = ['cumpleanos', 'aniversario_club',
 
 /**
  * Fuentes de fecha fija del servicio "Contenido" (Calendario General). Suma el aniversario
- * del debut profesional a las tres de `FUENTES_NOTA`.
+ * del debut profesional y las fechas del Excel de la agencia (0036) a las tres de `FUENTES_NOTA`.
  */
 export const FUENTES_CONTENIDO: readonly FuenteAgenda[] = [
   'cumpleanos',
   'aniversario_club',
   'aniversario_seleccion',
   'aniversario_debut',
+  'fecha_agencia',
 ];
 
 /**
@@ -119,6 +121,8 @@ export function textoFuente(fuente: FuenteAgenda): string {
       return 'Aniversario de debut en selección';
     case 'aniversario_debut':
       return 'Aniversario de debut profesional';
+    case 'fecha_agencia':
+      return 'Fecha de la agencia';
     default:
       return 'Fecha señalada';
   }

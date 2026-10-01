@@ -19,6 +19,7 @@ const FUENTES_FECHA_FIJA: FuenteAgenda[] = [
   'aniversario_club',
   'aniversario_seleccion',
   'aniversario_debut',
+  'fecha_agencia',
 ];
 
 // `.returns<T[]>()` fuerza la forma — sin esto la combinación de versiones de

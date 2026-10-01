@@ -6,7 +6,7 @@
  */
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { notasProximas, unirNotas, type EventoAgenda } from './notas-proximas.ts';
+import { FUENTES_CONTENIDO, notasProximas, textoFuente, unirNotas, type EventoAgenda } from './notas-proximas.ts';
 
 const HOY = '2026-09-05';
 
@@ -67,4 +67,12 @@ test('unirNotas: junta Contenido y Match Day sin repetir la misma fecha', () => 
   const co = [ev('2026-09-10', 'cumpleanos', 'Cumple Nacho')];
   const md = [ev('2026-09-10', 'cumpleanos', 'Cumple Nacho'), ev('2026-09-12', 'cumpleanos', 'Cumple Nuevo')];
   assert.deepEqual(unirNotas(co, md).map((e) => e.titulo), ['Cumple Nacho', 'Cumple Nuevo']);
+});
+
+test('fechas de la agencia (0036): avisan en Contenido y no en Match Day', () => {
+  const eventos = [ev('2026-09-10', 'fecha_agencia', 'Nández · Cumple Matilda (hija)')];
+  assert.equal(notasProximas(eventos, HOY).length, 0);
+  const [n] = notasProximas(eventos, HOY, { fuentes: FUENTES_CONTENIDO });
+  assert.equal(n.titulo, 'Nández · Cumple Matilda (hija)');
+  assert.equal(textoFuente(n.fuente), 'Fecha de la agencia');
 });

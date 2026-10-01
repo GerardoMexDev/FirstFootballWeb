@@ -14,11 +14,12 @@ import { Ico } from '@/components/comunes/Ico';
 import { usePanel } from '@/lib/paneles/use-panel';
 import type { FechaContenido, FuenteFecha } from '@/lib/partidos/fechas-contenido';
 
-const META: Record<FuenteFecha, { icono: 'torta' | 'medalla' | 'globo' | 'trofeo'; etiqueta: string }> = {
+const META: Record<FuenteFecha, { icono: 'torta' | 'medalla' | 'globo' | 'trofeo' | 'calendario'; etiqueta: string }> = {
   cumpleanos: { icono: 'torta', etiqueta: 'Cumpleaños' },
   aniversario_debut: { icono: 'medalla', etiqueta: 'Debut profesional' },
   aniversario_seleccion: { icono: 'globo', etiqueta: 'Debut en selección' },
   aniversario_club: { icono: 'trofeo', etiqueta: 'Aniversario de club' },
+  fecha_agencia: { icono: 'calendario', etiqueta: 'Fecha' },
 };
 
 export function TarjetaFecha({ fecha }: { fecha: FechaContenido }) {
@@ -36,7 +37,8 @@ export function TarjetaFecha({ fecha }: { fecha: FechaContenido }) {
     </>
   );
 
-  if (fecha.fuente !== 'aniversario_club' && fecha.refId) {
+  // Aniversario de club y fechas de la agencia (0036): refId no es un jugador → sin panel.
+  if (fecha.fuente !== 'aniversario_club' && fecha.fuente !== 'fecha_agencia' && fecha.refId) {
     const refId = fecha.refId;
     return (
       <button type="button" className="fechac fechac--link" onClick={() => abrir('jugador', refId, fecha.fuente)}>

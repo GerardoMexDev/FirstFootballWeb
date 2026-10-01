@@ -54,6 +54,8 @@ function chipEvento(e: EventoCalendario): { etiqueta: string; texto: string } {
       return { etiqueta: 'Selección', texto: e.titulo };
     case 'aniversario_debut':
       return { etiqueta: 'Debut profesional', texto: e.titulo };
+    case 'fecha_agencia':
+      return { etiqueta: 'Fecha', texto: e.titulo };
     case 'convocatoria':
       return { etiqueta: 'Convocatoria', texto: e.titulo };
     default:

@@ -18,7 +18,7 @@ import { DateTime } from 'luxon';
 import type { FiltroPartidos } from '@/lib/partidos/utilidades';
 import type { PartidoProximo } from '@/lib/repositorios/tipos';
 
-export type FuenteFecha = 'cumpleanos' | 'aniversario_debut' | 'aniversario_seleccion' | 'aniversario_club';
+export type FuenteFecha = 'cumpleanos' | 'aniversario_debut' | 'aniversario_seleccion' | 'aniversario_club' | 'fecha_agencia';
 
 export interface FechaContenido {
   fuente: FuenteFecha;
@@ -35,6 +35,7 @@ const ORDEN_FUENTE: Record<FuenteFecha, number> = {
   aniversario_debut: 1,
   aniversario_seleccion: 2,
   aniversario_club: 3,
+  fecha_agencia: 4,
 };
 
 /** Día del partido: el de la sede, con fallback al de Uruguay (= `diaDePartido`). */
