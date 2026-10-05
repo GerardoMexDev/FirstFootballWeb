@@ -1317,6 +1317,83 @@ Charla con Gerardo (no se codeó nada): tres preguntas de la agencia / de él.
 
 ## 5. Pendiente / próximos pasos
 
+### 🏁 Reunión de cierre con la agencia (2026-10-01, dictado por Gerardo 2026-10-02)
+> La agencia ya está usando la web y hasta ahora no reportó fallas. Estos son los últimos puntos para
+> dar por terminado el proyecto. Regla 0: se acuerda el enfoque de cada uno antes de codear.
+
+1. **Calendario de Contenido: tarjetita flotante con el texto completo.** En algunas celdas el texto
+   se corta y no se lee la fecha completa. Agregar una tarjeta flotante (al pasar el mouse en
+   escritorio / al tocar en celular) con la información completa del evento. — **pendiente**
+2. **Recuperar contraseña en el login** (ya anotado en "🔑 Recuperar contraseña", más abajo): pasa de
+   "en espera" a **entra en el cierre**. Falta definir con Gerardo el correo remitente. — **pendiente**
+3. **Manual de operación.** Documento para la agencia que explique cómo se opera la web y, en
+   particular, **dónde se usa la API de pago (SportMonks) y dónde las gratis (API-Football Free,
+   ESPN)**: qué función/sync usa cada una, para qué datos y qué pasa si una se cae. — **pendiente**
+
+**Pedidos del fin de semana 03–04/10 (dictados por Gerardo 2026-10-05):**
+
+4. **Pregunta: ¿cómo trata SportMonks los amistosos?** El amistoso Monterrey vs Toluca (sáb 3/10, 23:30 UTC)
+   no apareció hasta el mismo sábado. **Investigado 2026-10-05 (solo lectura):**
+   - SportMonks Starter NO los trae: los amistosos de clubes son otra "liga", fuera de las 5 del plan
+     (`/fixtures/between/…/967` no lo tiene; `/leagues/search/friendl` → sin acceso).
+   - Los trajo API-Football ("Friendlies Clubs", liga 667) con su ventana corta de ~3 días: Toluca creado el
+     3/10 03:00 UTC (el mismo día), Genk vs Fortuna Sittard (3/10) creado el 2/10. Ambos con ticket automático
+     que nace vencido; quedan sin competencia, sin estadio y en "programado" (sin resultado).
+   - ESPN (`club.friendly`, gratis) tenía el de Genk pero NO el de Toluca; para las próximas 3 semanas no
+     anuncia ningún amistoso de nuestros clubes. Conclusión: ninguna fuente da amistosos con anticipación
+     (se arreglan con pocos días); a lo sumo ESPN sumaría alguno 1–2 días antes.
+5. **Casilla "Cancelado" en el ticket de Match Day** (pedido del Diseñador): un jugador pidió no hacer el
+   Match Day de un amistoso. Hoy solo existen Pendiente (fija) y Completado (`disenos_partido`, 0030); un
+   ticket así queda pendiente/vencido para siempre. — **pendiente de acordar** (quién la marca, color, dónde).
+   - **Respuestas de Gerardo (2026-10-05):** la marcan **todos** (Admin, CM y Diseñador) y **con nota del
+     motivo** obligatoria; va en **Tickets y en el panel del partido**. Amistosos: SÍ llevan diseño (el de Toluca
+     se hizo) → **señal "de último momento"** en los partidos que aparecen con poca anticipación (a definir:
+     ¿siguen con ticket? Gerardo escribió "sin ticket" — confirmar). **Aclarado:** siguen CON ticket (nunca nacieron sin
+     ticket: nacían vencidos) + señal.
+   - **✅ IMPLEMENTADO 2026-10-05 (sin commitear, falta aplicar 0040):** migración `0040_match_day_cancelado_y_ultimo_momento.sql`
+     (columnas `cancelado` + `motivo_cancelacion` en `disenos_partido`; RPC `diseno_partido_cancelar`; `diseno_partido_marcar`
+     respeta el cancelado; vista `tickets_match_day` con estado 'cancelado', `ultimo_momento` = partido creado después de
+     día − 2, y en ese caso vence el MISMO día del partido). Front: 4° estado del semáforo "Cancelado" (gris, "–", chip
+     tachado en el calendario); casilla Cancelado con campo de motivo en Tickets y en el panel del partido ("Cancelado por
+     X" + "Motivo: …"); señal "⚡ Último momento" en Tickets, panel y tarjetas de /partidos. Tests: 212 unitarios + 50 de
+     base (4 nuevos de 0040, aplicada dentro de transacción con rollback) OK; tsc + lint OK.
+   - **0040 aplicada por Gerardo y verificada** (Toluca y Genk del 3/10 = último momento). Commits `fe7eac4`, `364482d`.
+   - **Feedback de Gerardo probando en prod (2026-10-05) → commits `6261e31`, `6246b3b`:** casillas Completado/Cancelado
+     también en la tarjeta de /partidos (al lado del semáforo); Cancelado en gris más oscuro; bandera de India (y 8 rivales
+     más) — la sync de ESPN creaba rivales sin escudo, ahora lo guarda (`escudoEspn`) + 0041; **opción 1 de amistosos:**
+     `club.friendly` de ESPN para los 6 clubes de Match Day + competencia "Amistoso de clubes" (ESPN y API-Football 667).
+     **Falta:** Gerardo aplica 0041, deploy de `sync-espn-uruguay`, `git push`; Claude verifica.
+   - **0041 aplicada + deploy + push (Gerardo); verificado 2026-10-05:** India con bandera, 2 competencias "Amistoso de
+     clubes", amistoso de Toluca con competencia; disparo manual de `sync-espn-uruguay`: ok, 53 s, 15 partidos, trajo el
+     amistoso de Genk (3/10) desde ESPN. ⚠️ Pendiente chico: si un partido llega primero por API-Football y el Diseñador
+     lo marca, y después lo trae ESPN, `proximos_partidos` prefiere el de ESPN (prioridad 0033) y la marca de
+     `disenos_partido` queda en el otro id → el ticket vuelve a pendiente. Mismo riesgo que ya existía con las copas.
+   - **Commit `5261f4b`:** avisos del sistema → campanita con contador en la barra (solo Admin), ya no cartel arriba de
+     cada vista; cierre de sesión tras **12 h sin uso** (decidido por Gerardo): cookie `ff_actividad` en el middleware,
+     `signOut({ scope: 'local' })`, `/login?motivo=inactividad` con aviso. Probado sin sesión con curl (redirige, borra
+     la marca, aviso solo con el motivo); con sesión real NO probado (sin credenciales) → probar en prod.
+   - **Escudos:** 0042 (escrita, falta aplicar) = 12 clubes de API-Football desde su CDN (verificados 200). Gerardo busca
+     los 5 de ESPN sin escudo: Al Gharafa, Al Shamal, Neftchi Fergana, Pakhtakor Tashkent, Shabab Al-Ahli.
+   - **Abiertos (preguntas a Gerardo):** sesión que sigue abierta a los 3 días en el celular (Supabase no vence la sesión
+     por defecto; propuesta: cierre por inactividad en el middleware, falta definir horas); carteles de avisos en celular
+     (son del Administrador y se van solos cuando vuelva API-Football); "juegos de Contenido no abren nada en celular"
+     (la tarjeta flotante de `fe7eac4` lo resuelve en el calendario cuando se haga push — confirmar si era eso).
+   - **Tarjeta flotante del calendario (punto 1 del cierre): ✅ IMPLEMENTADA 2026-10-05** (`components/calendario/TarjetaFlotante.tsx`),
+     falta QA en navegador.
+6. **🐞 URGENTE (2026-10-05): cuenta de API-Football SUSPENDIDA desde el 03/10 ~05:00 UTC.** Cartel del
+   Administrador: "partidos de copas y selección no se actualiza desde el 03/10" y "estadísticas … desde el 02/10".
+   Todas las corridas desde entonces: `{"access":"Your account is suspended, check on https://dashboard.api-football.com."}`
+   (también `GET /status` con la clave actual f8fc…). No es un fallo pasajero: reintentar no lo arregla. Causa
+   probable (hipótesis): 2 cuentas gratis (la clave vieja dae1… era de otra cuenta) → API-Sports permite 1 cuenta
+   free por persona. Gerardo revisa el dashboard. Dato: la ventana real del plan free es **hoy + mañana (UTC)**
+   (`dias_omitidos` de cada corrida), la sync corre a las 03:00 UTC = 00:00 UY.
+   - **Soporte de API-Football (2026-10-05):** confirmó motivo 1 (cuenta free duplicada) y riesgo 2 (IPs
+     compartidas de Supabase Edge Functions → puede volver a suspenderse, incluso con plan pago). Gerardo dejó
+     su mail; el equipo de soporte borra la cuenta duplicada y reactiva la actual. **Se mantiene la clave
+     actual (f8fc…)**, no hay que cambiar secrets. Decidido: esperar la reactivación; si se vuelve a suspender →
+     proxy con IP fija (Fixie/QuotaGuard; primero probar que el runtime de Edge Functions acepte proxy) o VPS.
+     Al reactivarse: Claude verifica la corrida siguiente en `sincronizaciones` y que el cartel desaparezca.
+
 ### 📋 Cambios pedidos por la agencia (reunión 2026-09-29, dictados por Gerardo 2026-09-30) — ronda final
 > Se anotan tal cual los dicta Gerardo; NO se codea hasta tener la lista completa y acordar cada punto (Regla 0).
 
@@ -2826,13 +2903,13 @@ F–H → I (con migración). Cada ítem cerrado se documenta en §4.
 | `npm run build` / `next start` de Claude mientras Gerardo tiene `npm run dev` abierto (Sesión 12) | Comparten `.next`: el build pisa la caché del dev → "Cannot find module './260.js'" en el navegador de Gerardo | Antes de compilar, preguntar si hay un `npm run dev` abierto; si lo hay, pedir que lo corte antes (o verificar con el dev de él en vez de compilar). Arreglo: Ctrl+C, borrar `.next`, `npm run dev` |
 | `npm run migracion …0022…` desde Claude (Sesión 12, con OK de Gerardo) | Bloqueado por el auto-mode ("Production Deploy"). Inconsistente: la `0024` pasó ese mismo día | Tratar toda migración como algo que puede bloquearse: dejarla verificada y pasarle a Gerardo el comando (o el SQL Editor); Claude verifica después con una consulta de solo lectura |
 | Verificar que una migración está aplicada con `select('*', { count: 'exact', head: true })` y mirar `r.error` (Sesión 13, 0027) | Falso positivo: con `head: true` la vista inexistente no devolvió `error` en ese campo y el script dijo "aplicada" | Pedir filas reales (`select('col').limit(1)`) y exigir `data` no nulo; el error real es `PGRST205` |
-| `node -e "…"` en Bash con texto que tiene comillas dobles o backticks (Sesión 15, 2026-09-30) | Bash corta el string / interpreta los backticks → "syntax error near unexpected token" y no se aplica nada | Para editar archivos con texto largo: escribir un script `.cjs` en el scratchpad y correrlo con `node archivo.cjs` (o usar Edit/Write) |
+| `node -e "…"` en Bash con texto que tiene comillas dobles o backticks (Sesión 15, 2026-09-30) | Bash corta el string / interpreta los backticks → "syntax error near unexpected token" y no se aplica nada | Para editar archivos con texto largo: escribir un script `.cjs` en el scratchpad y correrlo con `node archivo.cjs` (o usar Edit/Write). **Repetido 2026-10-05** (texto con backticks en `node -e`): si el texto nuevo tiene backticks → Edit, sin excepción |
 | `git push` desde Claude (Sesión 12, 2026-09-28) | Bloqueado por el auto-mode ("Out-of-Place Publication": el push despliega a Vercel) | Dejar los commits hechos y verificados; Gerardo corre `git push` y Claude hace el QA en prod después |
 | Meter `git stash` en un comando de diagnóstico (Sesión 15, 2026-09-30) | Guardó en el stash un cambio sin commitear; se recuperó con `git stash pop` | Nunca `git stash` en comandos de QA/diagnóstico; si hace falta comparar con HEAD, usar `git diff` o `git worktree` |
 | `npx prettier --write` sobre un componente (Sesión 15, 2026-09-30) | El proyecto no tiene config de Prettier: lo reformateó entero con los defaults (comillas dobles, 80 columnas) → diff de 110 líneas | No correr Prettier; indentar a mano (script `.cjs` que agregue espacios) y verificar con `git diff -w --stat` |
 | Insertar texto con `s.replace(a, textoNuevo)` de JS cuando el texto trae SQL con `$$` (Sesión 15, 2026-09-30) | En el reemplazo de `String.replace`, `$$` significa "un $": la función plpgsql quedó con `as $` → syntax error 42601 | Reemplazar con `s.split(a).join(b)` (no interpreta $), o pasar una función: `s.replace(a, () => b)` |
 | `sed 's/\`/`/g'` para sacar barras antes de backticks (Sesión 15, 2026-09-30) | En GNU sed/grep, barra+backtick es el ANCLA de inicio: agregó un backtick al comienzo de cada línea del archivo | Para texto con backticks o barras: Edit, o node con `split/join` sobre el texto literal |
-| Un `cat > archivo` suelto sin heredoc al inicio de un comando Bash (2026-10-01) | Se queda esperando stdin: el comando se colgó 2 min y pasó a segundo plano | Escribir scripts con Write (o heredoc completo) y nunca dejar un `cat >` sin entrada |
+| Un `cat > archivo` suelto sin heredoc al inicio de un comando Bash (2026-10-01) | Se queda esperando stdin: el comando se colgó 2 min y pasó a segundo plano | Escribir scripts con Write (o heredoc completo) y nunca dejar un `cat >` sin entrada. **Repetido 2026-10-05** (un `cat > x` de más ANTES del heredoc): scripts SIEMPRE con Write, nunca heredoc en Bash |
 
 ## 11. Dudas abiertas (de `contexto.md` §12)
 
