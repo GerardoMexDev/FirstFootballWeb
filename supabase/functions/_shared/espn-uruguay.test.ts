@@ -41,9 +41,14 @@ test('estadoDeCorrida: un evento suelto que falla no prende el aviso; una liga c
   assert.equal(estadoDeCorrida({ falloGeneral: true, ligasFallidas: 0, guardados: 3 }), 'parcial');
 });
 
-test('tareasDeSync: Uruguay (10) + copas de los 6 clubes de Match Day (40) = 50', () => {
+test('tareasDeSync: Uruguay (10) + copas y amistosos de los 6 clubes de Match Day (46) = 56', () => {
   const t = tareasDeSync();
-  assert.equal(t.length, 50);
+  assert.equal(t.length, 56);
+  // Amistosos de clubes (2026-10-05): uno por club de Match Day, ninguno para Uruguay.
+  assert.deepEqual(
+    t.filter((x) => x.slug === 'club.friendly').map((x) => x.equipo.clave),
+    EQUIPOS_COPAS_MD.map((e) => e.clave),
+  );
   assert.deepEqual(
     t.filter((x) => x.equipo.clave === 'uruguay').map((x) => x.slug),
     ['fifa.friendly', 'fifa.worldq.conmebol', 'conmebol.america', 'fifa.world'],
@@ -91,7 +96,7 @@ test('mapaCarteraEspn: Toluca vs Atlante (Leagues Cup) → cada id ESPN apunta a
 test('tareasDeSync: primero las copas de Match Day (generan tickets) y después Uruguay', () => {
   const t = tareasDeSync();
   const primeraUruguay = t.findIndex((x) => x.equipo.servicio === 'contenido');
-  assert.equal(t.slice(0, primeraUruguay).length, 40);
+  assert.equal(t.slice(0, primeraUruguay).length, 46);
   assert.equal(t.slice(primeraUruguay).every((x) => x.equipo.servicio === 'contenido'), true);
 });
 

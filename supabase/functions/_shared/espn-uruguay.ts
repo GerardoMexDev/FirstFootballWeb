@@ -58,6 +58,8 @@ const espn = (slug: string): RefCompetencia => ({ proveedor: 'espn', idExterno: 
 const GLOBALES: EquipoUruguay['ligas'] = [
   { slug: 'fifa.cwc', competencia: espn('fifa.cwc') },
   { slug: 'fifa.intercontinental_cup', competencia: espn('fifa.intercontinental_cup') },
+  // Amistosos de clubes (2026-10-05): ESPN a veces los publica antes que API-Football (ventana de 2 días).
+  { slug: 'club.friendly', competencia: espn('club.friendly') },
 ];
 const COPAS_MEXICO: EquipoUruguay['ligas'] = [
   { slug: 'mex.campeon', competencia: espn('mex.campeon') },

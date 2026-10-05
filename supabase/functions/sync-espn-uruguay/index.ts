@@ -244,7 +244,22 @@ Deno.serve(async (req: Request) => {
   });
 });
 
-/** uuid de un club por su id de ESPN: nuestro (cartera/Uruguay), ya creado como espn, o lo crea. */
+/**
+ * Escudo de ESPN por id de equipo (clubes y selecciones usan la misma ruta). `null` si ESPN no
+ * lo tiene (404) o no responde: la tarjeta muestra las iniciales. 2026-10-05: India, Corea del
+ * Sur y otros rivales nuevos quedaban sin bandera.
+ */
+async function escudoEspn(espnId: string): Promise<string | null> {
+  const url = `https://a.espncdn.com/i/teamlogos/soccer/500/${espnId}.png`;
+  try {
+    const r = await fetch(url, { method: 'HEAD' });
+    return r.ok ? url : null;
+  } catch {
+    return null;
+  }
+}
+
+/** uuid de un club por su id de ESPN: nuestro (cartera/Uruguay), ya creado como espn, o lo crea (con escudo). */
 async function asegurarClubEspn(
   // deno-lint-ignore no-explicit-any
   supabase: any,
@@ -255,11 +270,20 @@ async function asegurarClubEspn(
   const nuestro = cartera.get(espnId);
   if (nuestro) return nuestro;
   const { data: existente, error: errBuscar } = await supabase
-    .from('clubes').select('id').eq('proveedor_externo', PROVEEDOR).eq('id_externo', espnId).maybeSingle();
+    .from('clubes').select('id, escudo_url').eq('proveedor_externo', PROVEEDOR).eq('id_externo', espnId).maybeSingle();
   if (errBuscar) throw errBuscar;
-  if (existente) return existente.id;
+  if (existente) {
+    // Rivales creados antes sin escudo: se completa (nunca se pisa uno que ya tiene).
+    if (!existente.escudo_url) {
+      const escudo = await escudoEspn(espnId);
+      if (escudo) await supabase.from('clubes').update({ escudo_url: escudo }).eq('id', existente.id).is('escudo_url', null);
+    }
+    return existente.id;
+  }
   const { data: creado, error: errCrear } = await supabase
-    .from('clubes').insert({ nombre, origen: 'api', proveedor_externo: PROVEEDOR, id_externo: espnId }).select('id').single();
+    .from('clubes')
+    .insert({ nombre, origen: 'api', proveedor_externo: PROVEEDOR, id_externo: espnId, escudo_url: await escudoEspn(espnId) })
+    .select('id').single();
   if (errCrear) throw errCrear;
   return creado.id;
 }
