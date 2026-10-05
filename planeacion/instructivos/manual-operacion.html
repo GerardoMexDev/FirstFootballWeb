@@ -1,0 +1,253 @@
+<title>Manual de operación Football First</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Archivo:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: columna de lectura única (~68ch) con índice arriba; tablas en su propio scroll. Identidad de la web (Anton + Archivo, rojo FF). */
+:root {
+  --bg: #FFFFFF;
+  --surface: #FAF9F8;
+  --surface-2: #F3F1EF;
+  --line: #E6E2DE;
+  --fg: #141110;
+  --fg-2: #5F5954;
+  --accent: #C8371E;
+  --accent-soft: #FDF0ED;
+  --rojo: #B42318; --rojo-bg: #FDECEA;
+  --verde: #1B6B3A; --verde-bg: #E7F5EC;
+  --amarillo: #7A5200; --amarillo-bg: #FFF4D6;
+  --gris: #141110; --gris-bg: #EAE7E4;
+  --display: 'Anton', Impact, 'Arial Narrow', sans-serif;
+  --ui: 'Archivo', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0E0C0B; --surface: #161312; --surface-2: #1F1B19; --line: #2E2825;
+    --fg: #F7F4F2; --fg-2: #B0A8A2; --accent: #FF6E52; --accent-soft: #2A1411;
+    --rojo: #FF8A7A; --rojo-bg: #2E1512; --verde: #6FD69A; --verde-bg: #10261A;
+    --amarillo: #F5C451; --amarillo-bg: #2A220E; --gris: #F7F4F2; --gris-bg: #2A2422;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0E0C0B; --surface: #161312; --surface-2: #1F1B19; --line: #2E2825;
+  --fg: #F7F4F2; --fg-2: #B0A8A2; --accent: #FF6E52; --accent-soft: #2A1411;
+  --rojo: #FF8A7A; --rojo-bg: #2E1512; --verde: #6FD69A; --verde-bg: #10261A;
+  --amarillo: #F5C451; --amarillo-bg: #2A220E; --gris: #F7F4F2; --gris-bg: #2A2422;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--fg); font-family: var(--ui); font-size: 16px; line-height: 1.6; -webkit-font-smoothing: antialiased; }
+.hoja { max-width: 760px; margin: 0 auto; padding-inline: 20px; padding-block: 40px 80px; }
+.borrador { display: inline-block; padding: 4px 10px; border-radius: 999px; background: var(--amarillo-bg); color: var(--amarillo); font-size: 13px; font-weight: 600; }
+.marca { display: flex; align-items: center; gap: 10px; font-family: var(--display); text-transform: uppercase; letter-spacing: .02em; font-size: 18px; margin-bottom: 28px; }
+.marca i { width: 14px; height: 14px; background: var(--accent); transform: rotate(45deg); border-radius: 2px; }
+h1 { font-family: var(--display); font-weight: 400; text-transform: uppercase; font-size: clamp(44px, 9vw, 76px); line-height: .92; letter-spacing: .005em; margin: 14px 0 18px; text-wrap: balance; }
+h1 em { font-style: normal; color: var(--accent); }
+.bajada { font-size: 18px; color: var(--fg-2); max-width: 60ch; margin: 0 0 32px; }
+h2 { font-family: var(--display); font-weight: 400; text-transform: uppercase; font-size: 34px; line-height: 1; letter-spacing: .01em; margin: 64px 0 16px; text-wrap: balance; scroll-margin-top: 16px; }
+h3 { font-size: 18px; font-weight: 700; margin: 32px 0 8px; }
+p, li { max-width: 68ch; }
+p { margin: 0 0 14px; }
+ul, ol { padding-left: 22px; margin: 0 0 16px; }
+li { margin-bottom: 6px; }
+b, strong { font-weight: 700; }
+small, .nota { color: var(--fg-2); font-size: 14px; }
+.indice { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 4px 24px; padding: 18px 20px; background: var(--surface); border-radius: 12px; margin-bottom: 8px; }
+.indice a { color: var(--fg); text-decoration: none; font-weight: 500; padding: 4px 0; display: flex; gap: 10px; }
+.indice a span { color: var(--accent); font-variant-numeric: tabular-nums; font-weight: 700; min-width: 1.4em; }
+.indice a:hover { color: var(--accent); }
+a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
+.rutina { background: var(--accent-soft); border-radius: 14px; padding: 22px 22px 8px; margin: 8px 0 20px; }
+.rutina h3 { margin-top: 0; color: var(--accent); text-transform: uppercase; letter-spacing: .06em; font-size: 13px; }
+.rutina ol { counter-reset: paso; list-style: none; padding: 0; }
+.rutina li { counter-increment: paso; display: grid; grid-template-columns: 34px 1fr; gap: 10px; margin-bottom: 14px; }
+.rutina li::before { content: counter(paso); font-family: var(--display); font-size: 26px; line-height: 1; color: var(--accent); }
+.tabla { overflow-x: auto; margin: 10px 0 22px; border: 1px solid var(--line); border-radius: 12px; }
+table { border-collapse: collapse; width: 100%; min-width: 560px; font-size: 14.5px; }
+th, td { text-align: left; vertical-align: top; padding: 11px 14px; border-bottom: 1px solid var(--line); }
+th { background: var(--surface); font-size: 12px; text-transform: uppercase; letter-spacing: .06em; color: var(--fg-2); font-weight: 600; }
+tr:last-child td { border-bottom: 0; }
+td b { white-space: nowrap; }
+.tag { display: inline-block; padding: 2px 9px; border-radius: 999px; font-size: 12.5px; font-weight: 600; white-space: nowrap; }
+.tag--pago { background: var(--accent-soft); color: var(--accent); }
+.tag--gratis { background: var(--surface-2); color: var(--fg-2); }
+.sem { display: inline-flex; gap: 6px; align-items: center; padding: 3px 10px; border-radius: 999px; font-size: 13px; font-weight: 600; white-space: nowrap; }
+.sem--p { background: var(--rojo-bg); color: var(--rojo); }
+.sem--c { background: var(--verde-bg); color: var(--verde); }
+.sem--v { background: var(--amarillo-bg); color: var(--amarillo); }
+.sem--x { background: var(--gris-bg); color: var(--gris); }
+.um { background: var(--accent-soft); color: var(--accent); }
+.estados { display: grid; gap: 10px; margin: 12px 0 20px; }
+.estados div { display: grid; grid-template-columns: 150px 1fr; gap: 12px; align-items: start; }
+.estados p { margin: 0; }
+.caja { border-left: 3px solid var(--accent); padding: 4px 0 4px 16px; margin: 18px 0; }
+.caja p:last-child { margin-bottom: 0; }
+.pie { margin-top: 72px; padding-top: 18px; border-top: 1px solid var(--line); color: var(--fg-2); font-size: 14px; }
+@media (max-width: 520px) {
+  .estados div { grid-template-columns: 1fr; gap: 4px; }
+  h2 { font-size: 30px; }
+}
+</style>
+
+<main class="hoja">
+  <div class="marca"><i></i>Football First</div>
+  <span class="borrador">Borrador preliminar · 5 de octubre de 2026</span>
+  <h1>Manual de <em>operación</em></h1>
+  <p class="bajada">Cómo se usa la web en el día a día, de dónde salen los datos y qué hacer cuando algo no aparece o una fuente deja de actualizarse.</p>
+
+  <nav class="indice" aria-label="Índice">
+    <a href="#rutina"><span>1</span>La rutina de cada mañana</a>
+    <a href="#pantallas"><span>2</span>Qué hay en cada pantalla</a>
+    <a href="#matchday"><span>3</span>Match Day y tickets</a>
+    <a href="#fuentes"><span>4</span>De dónde salen los datos</a>
+    <a href="#amistosos"><span>5</span>Amistosos y último momento</a>
+    <a href="#avisos"><span>6</span>La campanita de avisos</a>
+    <a href="#cuentas"><span>7</span>Cuentas y seguridad</a>
+    <a href="#mazdesign"><span>8</span>Qué pedirle a Mazdesign</a>
+  </nav>
+
+  <h2 id="rutina">1. La rutina de cada mañana</h2>
+  <p>Las fuentes de datos se actualizan solas durante la madrugada. A las <b>04:00 de Uruguay</b> ya corrieron todas, así que lo que se ve al empezar el día es lo más nuevo que hay.</p>
+  <div class="rutina">
+    <h3>Todos los días, al empezar</h3>
+    <ol>
+      <li><span><b>Abrir Partidos y mirar los próximos días.</b> Un partido nuevo con la señal <span class="sem um">⚡ Último momento</span> apareció con poca anticipación (por ejemplo, un amistoso que se publicó la noche anterior).</span></li>
+      <li><span><b>Revisar Tickets.</b> Arriba está lo que vence antes. El contador de la barra superior muestra cuántos te tocan a vos.</span></li>
+      <li><span><b>El Administrador mira la campanita.</b> Si aparece con un número, alguna fuente no se actualizó o se detectó un cambio de club. Ver la sección 6.</span></li>
+    </ol>
+  </div>
+
+  <h2 id="pantallas">2. Qué hay en cada pantalla</h2>
+  <h3>Partidos</h3>
+  <p>Los próximos partidos de los jugadores, agrupados por día, con la hora de Uruguay y la hora local de la sede. Los filtros de arriba separan <b>Match Day</b>, <b>Contenido</b> y <b>Selección</b>, y también Hoy, Esta semana e Internacional. Tocar una tarjeta de Match Day abre el detalle del partido.</p>
+  <h3>Calendario</h3>
+  <p>El mes completo, con los mismos filtros. En <b>Match Day</b> cada partido tiene el color de su diseño (ver sección 3). En <b>Contenido</b> están los partidos de los jugadores de Contenido, sus cumpleaños, aniversarios, debuts y las fechas que mandó la agencia en el Excel, más los días especiales de First. Si el texto de una fecha se corta, se ve completo pasando el mouse por encima o tocándola en el celular.</p>
+  <h3>Jugadores</h3>
+  <p>La ficha de cada jugador: club, datos, estadísticas de la temporada, fechas señaladas y los botones de Fotografías y Match Day que abren sus carpetas de Dropbox. Desde la ficha se crea un ticket para una fecha puntual (un cumpleaños, un aniversario, otra fecha).</p>
+  <h3>Tickets</h3>
+  <p>Todos los diseños pendientes, primero lo que vence antes y al final lo completado y lo cancelado. Están los automáticos de Match Day y los que se crean a mano.</p>
+
+  <h2 id="matchday">3. Match Day y tickets</h2>
+  <h3>Cada partido de Match Day es un ticket automático</h3>
+  <p>Nadie tiene que crearlo: cada partido de un jugador de Match Day nace con su ticket, uno por jugador (si en un partido juegan dos representados, son dos). El diseño <b>vence 2 días antes del partido</b>. Los partidos de último momento vencen el mismo día del partido.</p>
+  <div class="estados">
+    <div><span class="sem sem--p">● Pendiente</span><p>Falta hacer el diseño y todavía está en plazo.</p></div>
+    <div><span class="sem sem--c">✓ Completado</span><p>El Diseñador subió el diseño a Dropbox y tildó Completado.</p></div>
+    <div><span class="sem sem--v">! Vencido</span><p>Pasó la fecha límite sin tildar Completado.</p></div>
+    <div><span class="sem sem--x">– Cancelado</span><p>Se decidió no hacer ese Match Day. Queda el motivo y quién lo canceló.</p></div>
+  </div>
+  <h3>Las casillas</h3>
+  <ul>
+    <li><b>Completado</b>: la tilda solo el Diseñador, cuando el diseño ya está en Dropbox.</li>
+    <li><b>Cancelado</b>: la pueden tildar el Administrador, el Community Manager y el Diseñador. Pide escribir el motivo (por ejemplo, "el jugador pidió no hacerlo"). Si se destilda, el ticket vuelve a estar pendiente.</li>
+  </ul>
+  <p>Las casillas están en la tarjeta del partido (pantalla Partidos), en el detalle del partido y en la pantalla Tickets.</p>
+  <h3>Botón Copiar</h3>
+  <p>Lo ve solo el Diseñador. Copia los equipos, la fecha, la hora de Uruguay, la hora local y el estadio, listos para pegar en el diseño.</p>
+  <h3>Partidos de la selección</h3>
+  <p>Los partidos de Uruguay aparecen en el filtro Selección. Cuando convocan a un representado, el Administrador o el Community Manager tildan "Convocado" en la tarjeta del partido: desde ese momento el partido pasa a Match Day con su ticket automático.</p>
+  <h3>Tickets a mano</h3>
+  <p>Para pedir algo puntual (una pieza extra, una aclaración), el Administrador o el Community Manager crean un ticket desde el partido o desde la ficha del jugador. El Diseñador lo marca como completado; quien lo creó, o el Administrador, lo puede cancelar.</p>
+
+  <h2 id="fuentes">4. De dónde salen los datos</h2>
+  <p>La web junta varias fuentes. Una es paga y da los datos más completos; las otras son gratuitas y tienen límites. Todas se actualizan solas una vez por día, de madrugada.</p>
+  <div class="tabla">
+    <table>
+      <thead>
+        <tr><th>Fuente</th><th>Qué trae</th><th>Con cuánta anticipación</th><th>Hora (Uruguay)</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><b>SportMonks</b><br><span class="tag tag--pago">Paga</span></td>
+          <td>Las 5 ligas de los clubes de Match Day (México, Brasil, Chile, Bélgica, Arabia). Es la única que trae la <b>convocatoria real</b> (titular o suplente, cerca de 1 hora antes) y las <b>estadísticas</b> de cada partido (minutos, goles, asistencias, tarjetas). También revisa cada lunes si algún jugador cambió de club.</td>
+          <td>Toda la temporada.</td>
+          <td>00:30</td>
+        </tr>
+        <tr>
+          <td><b>ESPN</b><br><span class="tag tag--gratis">Gratis</span></td>
+          <td>Las copas de los clubes de Match Day (Libertadores, Concachampions, Copa Chile, AFC Champions y otras), la liga uruguaya y las copas de Peñarol y Nacional, los partidos de la selección uruguaya y algunos amistosos de clubes.</td>
+          <td>Copas y selección: con buena anticipación. Liga uruguaya: unas 2 fechas adelante. Amistosos: pocos días antes, y no todos.</td>
+          <td>04:00</td>
+        </tr>
+        <tr>
+          <td><b>API-Football</b><br><span class="tag tag--gratis">Gratis</span></td>
+          <td>Copas que ESPN no tiene (Copa y Supercopa de Bélgica, Supercopa saudí, Copa del Golfo, Campeonato Árabe), amistosos de clubes y las estadísticas de los partidos de copa.</td>
+          <td><b>Solo hoy y mañana.</b> Por eso lo que trae aparece con muy poco tiempo.</td>
+          <td>00:00</td>
+        </tr>
+        <tr>
+          <td><b>Excel de la agencia</b><br><span class="tag tag--gratis">Manual</span></td>
+          <td>Cumpleaños, aniversarios, debuts, títulos, fechas familiares, días especiales de First, nombres de estadios y fotos de los jugadores. Ninguna API da estos datos.</td>
+          <td>Se cargan una vez; los cambios se piden a Mazdesign.</td>
+          <td>—</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <h3>Qué pasa si una fuente se cae</h3>
+  <ul>
+    <li>Lo que ya estaba cargado <b>no se borra</b>: la web sigue mostrando los partidos que ya conocía.</li>
+    <li>Lo que deja de llegar son los partidos nuevos y los cambios (horarios, resultados, estadísticas) de lo que cubre esa fuente.</li>
+    <li>Si una fuente pasa más de 36 horas sin actualizarse, aparece un aviso en la campanita del Administrador (sección 6).</li>
+    <li>Si cae SportMonks, es lo más importante: avisar a Mazdesign el mismo día.</li>
+  </ul>
+
+  <h2 id="amistosos">5. Amistosos y partidos de último momento</h2>
+  <p>Los amistosos de clubes <b>no vienen en la API paga</b>: SportMonks solo cubre las ligas. Los traen las fuentes gratuitas, que los publican con muy poco tiempo, a veces el mismo día del partido. Por ejemplo, el amistoso Monterrey vs Toluca del 3 de octubre apareció ese mismo sábado.</p>
+  <ul>
+    <li>Todo partido que aparece después de su fecha límite normal lleva la señal <span class="sem um">⚡ Último momento</span> y su diseño vence el mismo día del partido.</li>
+    <li>Por eso es importante la revisión de cada mañana (sección 1).</li>
+    <li>Si el jugador o el club avisan de un amistoso antes de que aparezca en la web, conviene avisarle directamente al Diseñador.</li>
+    <li>Si un Match Day no se va a hacer, se tilda <b>Cancelado</b> con el motivo, para que no quede como vencido.</li>
+  </ul>
+
+  <h2 id="avisos">6. La campanita de avisos</h2>
+  <p>La campanita amarilla de la barra superior la ve <b>solo el Administrador</b>, y solo cuando hay algo para mirar. Si no hay avisos, no aparece.</p>
+  <div class="tabla">
+    <table>
+      <thead><tr><th>Aviso</th><th>Qué significa</th><th>Qué hacer</th></tr></thead>
+      <tbody>
+        <tr><td>"La fuente de partidos de las 5 ligas no se actualiza desde…"</td><td>SportMonks (la API paga) no respondió en más de 36 horas.</td><td>Avisar a Mazdesign el mismo día.</td></tr>
+        <tr><td>"La fuente de partidos de copas y selección no se actualiza desde…" o "…estadísticas de copas y selección…"</td><td>API-Football no respondió en más de 36 horas.</td><td>Avisar a Mazdesign. Mientras tanto, las copas siguen llegando por ESPN.</td></tr>
+        <tr><td>"La fuente de partidos de Uruguay (ESPN) no se actualiza desde…"</td><td>ESPN no respondió en más de 36 horas. Además de Uruguay, ESPN trae las copas y algunos amistosos.</td><td>Avisar a Mazdesign.</td></tr>
+        <tr><td>"La fuente de revisión semanal de traspasos no se actualiza desde…"</td><td>La revisión de cambios de club de los lunes no corrió en más de 8 días.</td><td>Avisar a Mazdesign.</td></tr>
+        <tr><td>"Traspaso detectado: …"</td><td>Un jugador figura en un club distinto al que tiene la web. La web no cambia el club sola.</td><td>Confirmar el traspaso y pedirle a Mazdesign que lo actualice.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h2 id="cuentas">7. Cuentas y seguridad</h2>
+  <div class="tabla">
+    <table>
+      <thead><tr><th>Cargo</th><th>Qué puede hacer</th></tr></thead>
+      <tbody>
+        <tr><td><b>Administrador</b></td><td>Todo lo del Community Manager, ve la campanita de avisos y cancela cualquier ticket.</td></tr>
+        <tr><td><b>Community Manager</b></td><td>Crea tickets, tilda Cancelado (con motivo) y marca la convocatoria a la selección.</td></tr>
+        <tr><td><b>Diseñador</b></td><td>Tilda Completado y Cancelado, usa el botón Copiar y completa los tickets a mano.</td></tr>
+        <tr><td><b>Prueba</b></td><td>Solo mira. No puede cambiar nada.</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <ul>
+    <li><b>Cierre por inactividad:</b> si una cuenta pasa <b>12 horas sin usar la web</b> en un dispositivo, la sesión de ese dispositivo se cierra y hay que volver a ingresar. Es para que un celular perdido no quede con la sesión abierta.</li>
+    <li><b>Cambiar la contraseña:</b> desde el menú con tu nombre, arriba a la derecha, en "Mi cuenta". Ahí también se pueden cerrar las sesiones abiertas en otros dispositivos.</li>
+    <li><b>Si te olvidás la contraseña:</b> por ahora la restablece Mazdesign. <span class="nota">(Se va a agregar "¿Olvidaste tu contraseña?" en el login; este punto se actualiza cuando esté.)</span></li>
+  </ul>
+
+  <h2 id="mazdesign">8. Qué pedirle a Mazdesign</h2>
+  <p>Hay datos que la web no puede cambiar sola y se cargan a mano:</p>
+  <ul>
+    <li>Un jugador nuevo, un jugador que deja de estar o un cambio de servicio (Match Day o Contenido).</li>
+    <li>Un traspaso confirmado.</li>
+    <li>Fechas nuevas o corregidas (cumpleaños, aniversarios, fechas de First): conviene mandarlas en el mismo formato del Excel.</li>
+    <li>Un estadio con el nombre mal escrito o una cancha nueva.</li>
+    <li>Fotos nuevas de los jugadores o cambios en los links de Dropbox.</li>
+    <li>Cualquier aviso de la campanita que no se resuelva solo en un día.</li>
+  </ul>
+  <div class="caja">
+    <p><b>Contacto:</b> Mazdesign · Gerardo. <span class="nota">(Completar el canal de contacto y el horario de soporte.)</span></p>
+  </div>
+
+  <p class="pie">Football First · Manual de operación · Borrador preliminar del 5 de octubre de 2026, preparado por Mazdesign. Algunos puntos se van a ajustar al cerrar el proyecto.</p>
+</main>

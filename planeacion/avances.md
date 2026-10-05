@@ -1329,6 +1329,16 @@ Charla con Gerardo (no se codeó nada): tres preguntas de la agencia / de él.
 3. **Manual de operación.** Documento para la agencia que explique cómo se opera la web y, en
    particular, **dónde se usa la API de pago (SportMonks) y dónde las gratis (API-Football Free,
    ESPN)**: qué función/sync usa cada una, para qué datos y qué pasa si una se cae. — **pendiente**
+   - **Notas para el manual (Gerardo, 2026-10-05):** se arranca cuando queden SOLO los puntos de cierre. Incluir:
+     rutina diaria — **revisar la web cada mañana** (todas las fuentes ya corrieron a las 04:00 UY: API-Football
+     00:00, SportMonks 00:30, ESPN 04:00); lo que aparece ese día con ⚡ es de último momento. Detallar qué da la API
+     de pago (SportMonks: 5 ligas, convocatoria, estadísticas) y qué dan las gratis (ESPN: copas, Uruguay, selección,
+     amistosos a veces; API-Football: ventana de solo hoy + mañana) — la agencia ya sabe que los amistosos NO vienen
+     en la de pago y que en las gratis la ventana es corta. Explicar la campanita (avisos), Cancelado con motivo y el
+     cierre de sesión a las 12 h. **NO** incluir lo de IPs fijas (tema técnico interno).
+   - **Borrador preliminar HECHO 2026-10-05:** `planeacion/instructivos/manual-operacion.html`, publicado (privado) en
+     https://claude.ai/artifact/98QHDgkndyanqfMaLCFnRX . Falta: revisión de Gerardo, canal/horario de contacto de Mazdesign,
+     actualizar la sección de contraseña cuando esté "¿Olvidaste tu contraseña?", y PDF para la agencia (como el de tickets).
 
 **Pedidos del fin de semana 03–04/10 (dictados por Gerardo 2026-10-05):**
 
