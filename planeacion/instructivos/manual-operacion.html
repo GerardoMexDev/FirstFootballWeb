@@ -84,6 +84,23 @@ td b { white-space: nowrap; }
 .caja { border-left: 3px solid var(--accent); padding: 4px 0 4px 16px; margin: 18px 0; }
 .caja p:last-child { margin-bottom: 0; }
 .pie { margin-top: 72px; padding-top: 18px; border-top: 1px solid var(--line); color: var(--fg-2); font-size: 14px; }
+/* PDF (A4): siempre en claro, tablas y bloques sin cortar. */
+@page { size: A4; margin: 16mm 15mm 18mm; }
+@media print {
+  :root { color-scheme: light; }
+  body { font-size: 11pt; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .hoja { max-width: none; padding: 0; }
+  h1 { font-size: 54pt; }
+  /* line-height mayor: el acento de Anton (QUÉ, DÓNDE) no se escapa al pie de la página anterior. */
+  h1, h2 { line-height: 1.15; padding-top: 4pt; }
+  h2 { font-size: 24pt; margin-top: 24pt; break-after: avoid; }
+  h3 { break-after: avoid; }
+  .tabla { overflow: visible; }
+  table { min-width: 0; font-size: 9.5pt; }
+  tr, .estados div, .rutina li, .caja { break-inside: avoid; }
+  .rutina, .indice { break-inside: avoid; }
+  .salto { break-before: page; }
+}
 @media (max-width: 520px) {
   .estados div { grid-template-columns: 1fr; gap: 4px; }
   h2 { font-size: 30px; }
@@ -225,7 +242,6 @@ td b { white-space: nowrap; }
         <tr><td><b>Administrador</b></td><td>Todo lo del Community Manager, ve la campanita de avisos y cancela cualquier ticket.</td></tr>
         <tr><td><b>Community Manager</b></td><td>Crea tickets, tilda Cancelado (con motivo) y marca la convocatoria a la selección.</td></tr>
         <tr><td><b>Diseñador</b></td><td>Tilda Completado y Cancelado, usa el botón Copiar y completa los tickets a mano.</td></tr>
-        <tr><td><b>Prueba</b></td><td>Solo mira. No puede cambiar nada.</td></tr>
       </tbody>
     </table>
   </div>

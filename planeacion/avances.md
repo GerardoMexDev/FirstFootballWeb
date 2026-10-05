@@ -1339,6 +1339,9 @@ Charla con Gerardo (no se codeó nada): tres preguntas de la agencia / de él.
    - **Borrador preliminar HECHO 2026-10-05:** `planeacion/instructivos/manual-operacion.html`, publicado (privado) en
      https://claude.ai/artifact/98QHDgkndyanqfMaLCFnRX . Falta: revisión de Gerardo, canal/horario de contacto de Mazdesign,
      actualizar la sección de contraseña cuando esté "¿Olvidaste tu contraseña?", y PDF para la agencia (como el de tickets).
+   - **PDF hecho 2026-10-05:** `planeacion/instructivos/Manual-Operacion-Football-First.pdf` (6 págs., Chrome headless con
+     `@media print`). Gerardo lo pasa a su socio para comentarios. **Al cierre del proyecto: borrar la cuenta de Prueba
+     (Alexis)** — Gerardo, 2026-10-05; ya no figura en el manual.
 
 **Pedidos del fin de semana 03–04/10 (dictados por Gerardo 2026-10-05):**
 
