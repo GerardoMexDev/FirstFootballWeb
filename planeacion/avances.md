@@ -1372,7 +1372,11 @@ Charla con Gerardo (no se codeó nada): tres preguntas de la agencia / de él.
      cada vista; cierre de sesión tras **12 h sin uso** (decidido por Gerardo): cookie `ff_actividad` en el middleware,
      `signOut({ scope: 'local' })`, `/login?motivo=inactividad` con aviso. Probado sin sesión con curl (redirige, borra
      la marca, aviso solo con el motivo); con sesión real NO probado (sin credenciales) → probar en prod.
-   - **Escudos:** 0042 (escrita, falta aplicar) = 12 clubes de API-Football desde su CDN (verificados 200). Gerardo busca
+   - **✅ QA EN PRODUCCIÓN OK (Gerardo, 2026-10-05):** campanita, casillas en tarjetas de /partidos, Cancelado (gris +
+     motivo + último momento), tarjeta flotante en el calendario del celular, escudos (India, Pachuca, Botafogo, Gent).
+     Claude verificó sin sesión: redirección + borrado de `ff_actividad` y aviso de inactividad en /login. 0042 aplicada.
+     Falta: probar el cierre real a las 12 h (Gerardo, en el celular).
+   - **Escudos:** 0042 (aplicada y verificada) = 12 clubes de API-Football desde su CDN (verificados 200). Gerardo busca
      los 5 de ESPN sin escudo: Al Gharafa, Al Shamal, Neftchi Fergana, Pakhtakor Tashkent, Shabab Al-Ahli.
    - **Abiertos (preguntas a Gerardo):** sesión que sigue abierta a los 3 días en el celular (Supabase no vence la sesión
      por defecto; propuesta: cierre por inactividad en el middleware, falta definir horas); carteles de avisos en celular
