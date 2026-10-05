@@ -25,6 +25,7 @@ export function ListaPartidos({
   fechas = [],
   alertasTicket = {},
   estadosDiseno = {},
+  ultimoMomento = {},
   convocatoria,
 }: {
   partidos: PartidoProximo[];
@@ -34,6 +35,8 @@ export function ListaPartidos({
   alertasTicket?: Record<string, string>;
   /** `{ '<partido>:<jugador>': estado }` del semáforo de diseño (0030). */
   estadosDiseno?: Record<string, EstadoVisual>;
+  /** `partido:jugador` de los Match Day de último momento (0040). */
+  ultimoMomento?: Record<string, true>;
   /** Fechas de Contenido ya filtradas; van debajo de los partidos de su día. */
   fechas?: FechaContenido[];
   partidosConHito?: Set<string>;
@@ -81,6 +84,7 @@ export function ListaPartidos({
                   linksDropbox={linksDropbox && !p.esSeleccion ? (linksDropbox[p.jugadorId] ?? SIN_LINKS) : undefined}
                   alertaTicket={alertasTicket[`${p.partidoId}:${p.jugadorId}`]}
                   estadoDiseno={estadosDiseno[`${p.partidoId}:${p.jugadorId}`]}
+                  ultimoMomento={ultimoMomento[`${p.partidoId}:${p.jugadorId}`] ?? false}
                 />
               ))}
               {fechasDelDia.map((f) => (

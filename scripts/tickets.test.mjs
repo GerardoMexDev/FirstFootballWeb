@@ -944,6 +944,8 @@ test('0030: partido futuro sin marca → pendiente; con marca del Diseñador →
 test('0030: pasado el límite y sin marca → vencido; anterior a match_day_desde → sin estado', () =>
   enTransaccion0030(async (cl) => {
     const manana = await partidoEnDias(cl, 1); // límite = ayer
+    // Cargado con tiempo (si no, 0040 lo trata como de último momento y vence el día del partido).
+    await cl.query(`update partidos set creado_en = now() - interval '10 days' where id = $1`, [manana]);
     assert.equal((await estadoMd(cl, manana)).estado, 'vencido');
     await comoDueno(cl);
     const { rows } = await cl.query(`select (match_day_desde() - 3) as d`);
@@ -1001,6 +1003,99 @@ test('0030: la migración pasa en_revision/aprobado a completado (publicado) con
     await comoDueno(cl);
     const { rows } = await cl.query(`select count(*)::int n from tickets where estado in ('en_revision','aprobado')`);
     assert.equal(rows[0].n, 0);
+  }));
+
+// ═════════════ 0040: Match Day cancelado (con motivo) + último momento ═════════════
+const MIGRACION_0040 = readFileSync(new URL('../supabase/migrations/0040_match_day_cancelado_y_ultimo_momento.sql', import.meta.url), 'utf8')
+  .replace(/^\s*begin;\s*$/m, '')
+  .replace(/^\s*commit;\s*$/m, '');
+let aplicada0040 = false;
+before(async () => {
+  const { rows } = await c.query(`select to_regprocedure('public.diseno_partido_cancelar(uuid,uuid,text)') is not null as ok`);
+  aplicada0040 = rows[0].ok;
+});
+async function enTransaccion0040(fn) {
+  return enTransaccion0030(async (cl) => {
+    if (!aplicada0040) await cl.query(MIGRACION_0040);
+    await fn(cl);
+  });
+}
+async function filaMd(cl, partido) {
+  await como(cl, ids.felipe);
+  const { rows } = await cl.query(
+    `select estado, fecha_limite, dia_uy, motivo_cancelacion, ultimo_momento from tickets_match_day where partido_id = $1 and jugador_id = $2`,
+    [partido, ids.jugadorMd],
+  );
+  return rows[0];
+}
+
+test('0040: Admin, CM y Diseñador cancelan con motivo; quitar la cancelación vuelve a pendiente', () =>
+  enTransaccion0040(async (cl) => {
+    const p = await partidoDePrueba(cl, ids.jugadorMd);
+    for (const quien of [ids.felipe, ids.pedro, ids.maxi]) {
+      await como(cl, quien);
+      await cl.query(`select diseno_partido_cancelar($1, $2, $3)`, [p, ids.jugadorMd, '  el jugador pidió no hacerlo  ']);
+      const f = await filaMd(cl, p);
+      assert.equal(f.estado, 'cancelado');
+      assert.equal(f.motivo_cancelacion, 'el jugador pidió no hacerlo');
+      await como(cl, quien);
+      await cl.query(`select diseno_partido_cancelar($1, $2, null)`, [p, ids.jugadorMd]);
+      assert.equal((await filaMd(cl, p)).estado, 'pendiente');
+    }
+  }));
+
+test('0040: motivo vacío o largo → error; Prueba (42501), anon y jugador ajeno no', () =>
+  enTransaccion0040(async (cl) => {
+    const p = await partidoDePrueba(cl, ids.jugadorMd);
+    await como(cl, ids.pedro);
+    await debeFallar(cl, `select diseno_partido_cancelar($1, $2, '   ')`, [p, ids.jugadorMd], /Escribí el motivo/);
+    await debeFallar(cl, `select diseno_partido_cancelar($1, $2, $3)`, [p, ids.jugadorMd, 'x'.repeat(301)], /demasiado largo/);
+    await debeFallar(cl, `select diseno_partido_cancelar($1, $2, 'motivo')`, [p, ids.felipe], /no figura en ese partido/);
+    await como(cl, ids.alexis);
+    const e = await debeFallar(cl, `select diseno_partido_cancelar($1, $2, 'motivo')`, [p, ids.jugadorMd], /No tenés permiso/);
+    assert.equal(e.code, '42501');
+    await comoAnon(cl);
+    await debeFallar(cl, `select diseno_partido_cancelar($1, $2, 'motivo')`, [p, ids.jugadorMd], /permission denied/);
+    await como(cl, ids.pedro);
+    await debeFallar(cl, `insert into disenos_partido (partido_id, jugador_id, completado_por, cancelado, motivo_cancelacion) values ($1, $2, $3, true, 'x')`, [p, ids.jugadorMd, ids.pedro], /permission denied/);
+  }));
+
+test('0040: Completado y Cancelado se excluyen; destildar Completado no borra un Cancelado', () =>
+  enTransaccion0040(async (cl) => {
+    const p = await partidoDePrueba(cl, ids.jugadorMd);
+    await como(cl, ids.felipe);
+    await cl.query(`select diseno_partido_cancelar($1, $2, 'amistoso')`, [p, ids.jugadorMd]);
+    await como(cl, ids.maxi);
+    await cl.query(`select diseno_partido_marcar($1, $2, false)`, [p, ids.jugadorMd]);
+    assert.equal((await filaMd(cl, p)).estado, 'cancelado');
+    await como(cl, ids.maxi);
+    await cl.query(`select diseno_partido_marcar($1, $2, true)`, [p, ids.jugadorMd]);
+    let f = await filaMd(cl, p);
+    assert.equal(f.estado, 'completado');
+    assert.equal(f.motivo_cancelacion, null);
+    await como(cl, ids.pedro);
+    await cl.query(`select diseno_partido_cancelar($1, $2, 'al final no')`, [p, ids.jugadorMd]);
+    f = await filaMd(cl, p);
+    assert.equal(f.estado, 'cancelado');
+    await como(cl, ids.pedro);
+    await cl.query(`select diseno_partido_cancelar($1, $2, null)`, [p, ids.jugadorMd]);
+    assert.equal((await filaMd(cl, p)).estado, 'pendiente');
+  }));
+
+test('0040: partido cargado después de su límite → último momento, vence el día del partido', () =>
+  enTransaccion0040(async (cl) => {
+    const p = await partidoEnDias(cl, 1); // cargado hoy, límite normal = ayer
+    let f = await filaMd(cl, p);
+    assert.equal(f.ultimo_momento, true);
+    assert.equal(f.estado, 'pendiente');
+    assert.equal(f.fecha_limite.getTime(), f.dia_uy.getTime());
+    await comoDueno(cl);
+    await cl.query(`update partidos set creado_en = now() - interval '10 days' where id = $1`, [p]);
+    f = await filaMd(cl, p);
+    assert.equal(f.ultimo_momento, false);
+    assert.equal(f.estado, 'vencido');
+    const lejos = await partidoEnDias(cl, 10); // cargado hoy con tiempo de sobra
+    assert.equal((await filaMd(cl, lejos)).ultimo_momento, false);
   }));
 
 export { enTransaccion, como, comoAnon, comoServicio, comoDueno, debeFallar, partidoDePrueba };

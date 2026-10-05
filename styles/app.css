@@ -561,3 +561,13 @@ html { overflow-x: clip; }
 .calflot__e { color: var(--text); font-weight: 700; }
 @keyframes calflot-in { from { opacity: 0; transform: translateY(3px); } to { opacity: 1; transform: none; } }
 
+/* Casilla Cancelado del Match Day (0040): motivo obligatorio. */
+.sem--cancelado { background: var(--surface-2); color: var(--text-2); }
+.ev.ev--sem-cancelado { border-left: 3px solid var(--line-2); opacity: 1; text-decoration: line-through; text-decoration-color: var(--text-3); }
+.ev__sem--cancelado { color: var(--text-2); }
+.csd__motivo { display: flex; flex-direction: column; width: 100%; margin: 4px 0 0; }
+.csd__motivo input { font-size: var(--t-md); padding: 10px 12px; }
+.csd__acc { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+.csd__nota { width: 100%; font-size: var(--t-xs); color: var(--text-2); overflow-wrap: anywhere; }
+/* Señal "de último momento" (0040): partido que apareció después de su fecha límite normal. */
+.um { display: inline-flex; align-items: center; gap: 4px; padding: 3px 9px; border-radius: 999px; font-size: var(--t-xs); font-weight: 600; white-space: nowrap; line-height: 1.4; background: var(--accent-soft); color: var(--accent-hover); }

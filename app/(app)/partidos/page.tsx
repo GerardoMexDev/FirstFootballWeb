@@ -23,7 +23,7 @@ import { hastaFechas } from '@/lib/partidos/fechas-contenido';
 import { pendientesDeSesion } from '@/lib/tickets/pendientes-de-sesion';
 import { sesionActual } from '@/lib/sesion/sesion-actual';
 import { RepositorioTicketsSupabase, type TicketAutomatico } from '@/lib/repositorios/repositorio-tickets';
-import { estadosPorPartidoJugador } from '@/lib/tickets/semaforo';
+import { estadosPorPartidoJugador, ultimoMomentoPorPartidoJugador } from '@/lib/tickets/semaforo';
 import { alertasPorTarjeta } from '@/lib/tickets/estados';
 
 export default async function PaginaPartidos() {
@@ -112,6 +112,7 @@ export default async function PaginaPartidos() {
         hoyUy={hoyUy}
         alertasTicket={alertasPorTarjeta(pendientes, hoyUy)}
         estadosDiseno={estadosPorPartidoJugador(matchDay, hoyUy)}
+        ultimoMomento={ultimoMomentoPorPartidoJugador(matchDay)}
       />
     </section>
   );

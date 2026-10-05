@@ -59,6 +59,25 @@ export async function marcarDiseno(
   return { ok: true, valor: null };
 }
 
+/**
+ * Cancela un Match Day para un jugador con su motivo, o quita la cancelación con `motivo = null`
+ * (Administrador, Community Manager o Diseñador, 0040).
+ */
+export async function cancelarDiseno(
+  supabase: Cliente,
+  partidoId: string,
+  jugadorId: string,
+  motivo: string | null,
+): Promise<Resultado<null>> {
+  const { error } = await supabase.rpc('diseno_partido_cancelar', {
+    p_partido: partidoId,
+    p_jugador: jugadorId,
+    p_motivo: motivo,
+  });
+  if (error) return { ok: false, mensaje: mensajeError(error) };
+  return { ok: true, valor: null };
+}
+
 // 0030: recorrido simple. Las RPC viejas (entregar, aprobar, devolver, publicar) quedan en la base.
 const FUNCION: Record<Accion, string> = {
   completar: 'ticket_completar',

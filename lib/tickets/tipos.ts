@@ -16,8 +16,8 @@ export type Cargo = 'Administrador' | 'Community Manager' | 'Diseñador' | 'Prue
 /** Acciones del flujo simple (0030): el Diseñador completa/reabre; creador o Admin cancelan. */
 export type Accion = 'completar' | 'reabrir' | 'cancelar' | 'comentar';
 
-/** Semáforo (0030): rojo pendiente, verde completado, amarillo vencido. */
-export type EstadoVisual = 'pendiente' | 'completado' | 'vencido';
+/** Semáforo (0030): rojo pendiente, verde completado, amarillo vencido; gris cancelado (0040). */
+export type EstadoVisual = 'pendiente' | 'completado' | 'vencido' | 'cancelado';
 
 /** Lo que necesitan el calendario, el contador y la pastilla del panel del partido. */
 export interface ResumenTicket {
@@ -41,6 +41,10 @@ export interface ResumenTicket {
   motivo: string | null;
   /** Ticket automático de Match Day (0030): id 'md:<partido>:<jugador>'; se abre el partido, no un ticket. */
   automatico?: boolean;
+  /** Automático cancelado (0040): el motivo que escribió quien lo canceló. */
+  motivoCancelacion?: string | null;
+  /** Automático de un partido que apareció después de su fecha límite normal (0040): vence el día del partido. */
+  ultimoMomento?: boolean;
 }
 
 /** La tarjeta del ticket. */

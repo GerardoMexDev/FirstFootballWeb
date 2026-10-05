@@ -116,6 +116,7 @@ export function SeccionTickets({
               ahoraIso={ahoraIso}
               alerta={debeActuar(cargo, usuarioId, t, esUrgenteHoy(hoyUy)) ? alertaDe(t, hoyUy) : undefined}
               puedeMarcar={cargo === 'Diseñador'}
+              puedeCancelar={cargo === 'Administrador' || cargo === 'Community Manager' || cargo === 'Diseñador'}
               onAbrir={() => (t.automatico && t.partidoId ? abrir('partido', t.partidoId) : abrir('ticket', t.id))}
             />
           ))}

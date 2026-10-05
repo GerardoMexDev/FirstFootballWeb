@@ -2,8 +2,8 @@
  * Una fila de la pantalla Tickets: semáforo + título, vencimiento (rojo si venció), quién lo
  * creó y cuándo, y la lucecita si vence pronto o venció. La zona del título es un botón que abre
  * el ticket (manual) o el partido (automático de Match Day, 0030). En los automáticos, al lado,
- * las casillas Pendiente/Completado (fuera del botón: un checkbox no puede ir dentro de otro
- * control). Estilos `.tkf` en app.css.
+ * las casillas Pendiente/Completado/Cancelado (fuera del botón: un checkbox no puede ir dentro de otro
+ * control) y la señal "Último momento" (0040). Estilos `.tkf` en app.css.
  *
  * Football First. Creado 2026-09-29.
  */
@@ -13,6 +13,7 @@ import { AlertaTicket } from '@/components/tickets/AlertaTicket';
 import { CasillasDiseno } from '@/components/tickets/CasillasDiseno';
 import { PastillaEstado } from '@/components/tickets/PastillaEstado';
 import { PastillaSemaforo } from '@/components/tickets/PastillaSemaforo';
+import { SenalUltimoMomento } from '@/components/tickets/SenalUltimoMomento';
 import { META_VISUAL, estadoVisual } from '@/lib/tickets/semaforo';
 import { textoCreado } from '@/lib/tickets/pantalla';
 import { textoVencimiento } from '@/lib/tickets/vencimiento';
@@ -24,6 +25,7 @@ export function FilaTicket({
   ahoraIso,
   alerta,
   puedeMarcar = false,
+  puedeCancelar = false,
   onAbrir,
 }: {
   ticket: ResumenTicket;
@@ -33,19 +35,22 @@ export function FilaTicket({
   alerta?: string;
   /** Solo el Diseñador tilda Completado en los automáticos. */
   puedeMarcar?: boolean;
+  /** Admin, CM y Diseñador cancelan los automáticos (0040). */
+  puedeCancelar?: boolean;
   onAbrir: () => void;
 }) {
   const venc = textoVencimiento(t.fechaLimite, t.estado, hoyUy);
   const visual = estadoVisual(t, hoyUy);
   const creado = t.automatico ? 'Match Day automático' : textoCreado(t, ahoraIso);
   // Nombre accesible completo: el lector no tiene que recorrer los hijos.
-  const etiqueta = [t.titulo, visual ? META_VISUAL[visual].etiqueta : 'Cancelado', venc?.texto, creado, alerta].filter(Boolean).join('. ');
+  const etiqueta = [t.titulo, visual ? META_VISUAL[visual].etiqueta : 'Cancelado', t.ultimoMomento ? 'Último momento' : null, venc?.texto, creado, alerta].filter(Boolean).join('. ');
   return (
     <div className="tkf">
       <button type="button" className="tkf__abrir" aria-label={etiqueta} onClick={onAbrir}>
         <span className="tkf__1">
           {visual ? <PastillaSemaforo estado={visual} /> : <PastillaEstado estado={t.estado} />}
           <b>{t.titulo}</b>
+          {t.ultimoMomento && <SenalUltimoMomento />}
         </span>
         <span className="tkf__2">
           {venc && <span className={venc.vencido ? 'tk__vence--mal' : undefined}>{venc.texto}</span>}
@@ -58,8 +63,10 @@ export function FilaTicket({
           partidoId={t.partidoId}
           jugadorId={t.jugadorId}
           jugadorNombre={t.jugadorNombre}
-          completado={t.estado === 'publicado'}
+          marca={t.estado === 'publicado' ? 'completado' : t.estado === 'cancelado' ? 'cancelado' : 'pendiente'}
+          motivoCancelacion={t.motivoCancelacion}
           puedeMarcar={puedeMarcar}
+          puedeCancelar={puedeCancelar}
         />
       )}
     </div>

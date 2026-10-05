@@ -69,7 +69,7 @@ function aResumen(f: FilaResumen): ResumenTicket {
   };
 }
 
-/** Fila de `tickets_match_day` (0030). */
+/** Fila de `tickets_match_day` (0030; cancelado y último momento: 0040). */
 type FilaMd = {
   partido_id: string;
   jugador_id: string;
@@ -78,12 +78,14 @@ type FilaMd = {
   dia_uy: string | null;
   inicio_utc: string | null;
   fecha_limite: string | null;
-  estado: 'pendiente' | 'completado' | 'vencido' | null;
+  estado: 'pendiente' | 'completado' | 'vencido' | 'cancelado' | null;
   completado_por_nombre: string | null;
   completado_en: string | null;
+  motivo_cancelacion: string | null;
+  ultimo_momento: boolean;
 };
 const CAMPOS_MD =
-  'partido_id, jugador_id, jugador_nombre, titulo, dia_uy, inicio_utc, fecha_limite, estado, completado_por_nombre, completado_en';
+  'partido_id, jugador_id, jugador_nombre, titulo, dia_uy, inicio_utc, fecha_limite, estado, completado_por_nombre, completado_en, motivo_cancelacion, ultimo_momento';
 
 export type TicketAutomatico = ResumenTicket & { completadoPorNombre: string | null };
 
@@ -100,7 +102,7 @@ export function aResumenAutomatico(f: FilaMd): TicketAutomatico | null {
     jugadorId: f.jugador_id,
     jugadorNombre: f.jugador_nombre,
     titulo: f.titulo,
-    estado: f.estado === 'completado' ? 'publicado' : 'pendiente',
+    estado: f.estado === 'completado' ? 'publicado' : f.estado === 'cancelado' ? 'cancelado' : 'pendiente',
     creadoPor: '',
     creadoPorNombre: null,
     inicioUtc: f.inicio_utc,
@@ -110,6 +112,8 @@ export function aResumenAutomatico(f: FilaMd): TicketAutomatico | null {
     fechaEvento: null,
     motivo: null,
     automatico: true,
+    motivoCancelacion: f.motivo_cancelacion,
+    ultimoMomento: f.ultimo_momento,
     completadoPorNombre: f.completado_por_nombre,
   };
 }

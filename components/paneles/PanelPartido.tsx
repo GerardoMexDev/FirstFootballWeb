@@ -21,6 +21,7 @@ import { BotonesDropbox } from '@/components/jugadores/BotonesDropbox';
 import { CrearTicket } from '@/components/tickets/CrearTicket';
 import { BotonCopiar } from '@/components/tickets/BotonCopiar';
 import { CasillasDiseno } from '@/components/tickets/CasillasDiseno';
+import { SenalUltimoMomento } from '@/components/tickets/SenalUltimoMomento';
 import { PastillaSemaforo } from '@/components/tickets/PastillaSemaforo';
 import { textoCopiarPartido } from '@/lib/tickets/copiar';
 import { estadoVisual } from '@/lib/tickets/semaforo';
@@ -224,16 +225,20 @@ export function PanelPartido({
                 if (!md || !estado) return null;
                 return (
                   <div className="mdj">
-                    <PastillaSemaforo estado={estado} detalle={md.fechaLimite && estado !== 'completado' ? `vence el ${fechaCortaUy(md.fechaLimite)}` : undefined} />
+                    <PastillaSemaforo estado={estado} detalle={md.fechaLimite && (estado === 'pendiente' || estado === 'vencido') ? `vence el ${fechaCortaUy(md.fechaLimite)}` : undefined} />
                     <CasillasDiseno
                       partidoId={d.partidoId}
                       jugadorId={j.jugadorId}
                       jugadorNombre={j.nombre}
-                      completado={md.estado === 'publicado'}
+                      marca={md.estado === 'publicado' ? 'completado' : md.estado === 'cancelado' ? 'cancelado' : 'pendiente'}
+                      motivoCancelacion={md.motivoCancelacion}
                       puedeMarcar={bundle.usuario?.cargo === 'Diseñador'}
+                      puedeCancelar={['Administrador', 'Community Manager', 'Diseñador'].includes(bundle.usuario?.cargo ?? '')}
                       onCambio={onActualizar}
                     />
+                    {md.ultimoMomento && <SenalUltimoMomento />}
                     {md.estado === 'publicado' && md.completadoPorNombre && <small className="mdj__q">Completado por {md.completadoPorNombre}</small>}
+                    {md.estado === 'cancelado' && md.completadoPorNombre && <small className="mdj__q">Cancelado por {md.completadoPorNombre}</small>}
                   </div>
                 );
               })()}

@@ -35,6 +35,7 @@ export function SeccionPartidos({
   hoyUy,
   alertasTicket = {},
   estadosDiseno = {},
+  ultimoMomento = {},
 }: {
   partidos: PartidoProximo[];
   /** Partidos de jugadores solo-Contenido: se ven únicamente con el filtro "Contenido". */
@@ -53,6 +54,8 @@ export function SeccionPartidos({
   alertasTicket?: Record<string, string>;
   /** `{ '<partido>:<jugador>': estado }` del semáforo de diseño (0030). */
   estadosDiseno?: Record<string, EstadoVisual>;
+  /** `partido:jugador` de los Match Day de último momento (0040). */
+  ultimoMomento?: Record<string, true>;
 }) {
   const [filtro, setFiltro] = useState<FiltroPartidos>('todos');
   const { abrir } = usePanel();
@@ -78,6 +81,7 @@ export function SeccionPartidos({
           fechas={fechasFiltradas}
           alertasTicket={esContenido ? {} : alertasTicket}
           estadosDiseno={esContenido ? {} : estadosDiseno}
+          ultimoMomento={esContenido ? {} : ultimoMomento}
           convocatoria={convocatoria}
         />
       </div>

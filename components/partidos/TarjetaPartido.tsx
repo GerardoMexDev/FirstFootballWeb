@@ -22,6 +22,7 @@ import { CaraJugador } from '@/components/comunes/CaraJugador';
 import { BotonesDropbox } from '@/components/jugadores/BotonesDropbox';
 import { AlertaTicket } from '@/components/tickets/AlertaTicket';
 import { PastillaSemaforo } from '@/components/tickets/PastillaSemaforo';
+import { SenalUltimoMomento } from '@/components/tickets/SenalUltimoMomento';
 import type { EstadoVisual } from '@/lib/tickets/tipos';
 import type { LinksDropbox } from '@/lib/jugadores/links-dropbox';
 import { horaCortaEnUruguay, horaCortaEnSede, marcadorCambioDeDia } from '@/lib/fechas/zonas';
@@ -36,6 +37,7 @@ export function TarjetaPartido({
   linksDropbox,
   alertaTicket,
   estadoDiseno,
+  ultimoMomento = false,
   convocatoria,
 }: {
   partido: PartidoProximo;
@@ -44,6 +46,8 @@ export function TarjetaPartido({
   alertaTicket?: string;
   /** Semáforo de diseño de este jugador en este partido (0030). */
   estadoDiseno?: EstadoVisual;
+  /** Apareció con poca anticipación (0040): señal "Último momento". */
+  ultimoMomento?: boolean;
   /** Tarjeta de la selección (0032): casillas "Convocado: …" en lugar de la cara. */
   convocatoria?: React.ReactNode;
   onAbrir?: () => void;
@@ -157,6 +161,7 @@ export function TarjetaPartido({
               </span>
             )}
             {estadoDiseno && <PastillaSemaforo estado={estadoDiseno} />}
+            {ultimoMomento && <SenalUltimoMomento />}
             {alertaTicket && <AlertaTicket texto={alertaTicket} />}
             {linksDropbox && (
               <BotonesDropbox links={linksDropbox} nombreJugador={p.jugadorApodo || p.jugadorNombre} />
