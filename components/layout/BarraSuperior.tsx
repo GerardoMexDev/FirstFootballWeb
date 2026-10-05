@@ -15,6 +15,8 @@ import { Ico } from '@/components/comunes/Ico';
 import { Buscador } from '@/components/buscador/Buscador';
 import { ToggleTema } from '@/components/layout/ToggleTema';
 import { ContadorTickets } from '@/components/tickets/ContadorTickets';
+import { CampanaAvisos } from '@/components/layout/CampanaAvisos';
+import type { AvisoSistema } from '@/lib/sistema/avisos-sistema';
 import { rutaPanel } from '@/lib/paneles/use-panel';
 import { crearClienteNavegador } from '@/lib/supabase/cliente-navegador';
 import type { Tema } from '@/lib/sesion/sesion-actual';
@@ -28,7 +30,18 @@ export interface PerfilBarra {
   tema: Tema;
 }
 
-export function BarraSuperior({ perfil, pendientes, hoyUy }: { perfil: PerfilBarra; pendientes: ResumenTicket[]; hoyUy: string }) {
+export function BarraSuperior({
+  perfil,
+  pendientes,
+  avisos = [],
+  hoyUy,
+}: {
+  perfil: PerfilBarra;
+  pendientes: ResumenTicket[];
+  /** Avisos del sistema (solo Administrador): campanita (2026-10-05). */
+  avisos?: AvisoSistema[];
+  hoyUy: string;
+}) {
   const router = useRouter();
   const pathname = usePathname();
   const [abierto, setAbierto] = useState(false);
@@ -89,6 +102,8 @@ export function BarraSuperior({ perfil, pendientes, hoyUy }: { perfil: PerfilBar
           <Buscador />
 
           <ToggleTema usuarioId={perfil.usuarioId} temaInicial={perfil.tema} />
+
+          <CampanaAvisos avisos={avisos} />
 
           <ContadorTickets pendientes={pendientes} hoyUy={hoyUy} />
 

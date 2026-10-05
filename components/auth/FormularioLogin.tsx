@@ -32,7 +32,8 @@ function mensajeError(mensajeOriginal: string): string {
   return 'No pudimos iniciar sesión. Probá de nuevo en un momento.';
 }
 
-export function FormularioLogin() {
+/** `aviso`: texto informativo arriba del formulario (p. ej. sesión cerrada por inactividad). */
+export function FormularioLogin({ aviso = null }: { aviso?: string | null }) {
   const router = useRouter();
   const [usuario, setUsuario] = useState('');
   const [clave, setClave] = useState('');
@@ -75,6 +76,12 @@ export function FormularioLogin() {
         producción
       </h1>
       <p>Ingresá para ver la cobertura de la semana.</p>
+      {aviso && !error && (
+        <div className="aviso" role="status" style={{ marginBottom: 20 }}>
+          <Ico nombre="reloj" clase="ico ico--sm" />
+          <span>{aviso}</span>
+        </div>
+      )}
       <div className="campo">
         <label htmlFor="usuario">Usuario</label>
         <input

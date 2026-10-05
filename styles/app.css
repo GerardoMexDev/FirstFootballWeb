@@ -516,8 +516,19 @@ html { overflow-x: clip; }
 @media (max-width: 620px) { .tke__otra { grid-template-columns: 1fr; } }
 
 /* Cartel de avisos del sistema (solo Administrador, 0029, 2026-09-30): arriba de cada vista. */
-.avs { display: flex; flex-direction: column; gap: 8px; margin-bottom: 18px; }
-.avs .aviso { color: var(--text); }
+/* Campanita de avisos del sistema (solo Administrador, 2026-10-05; antes un cartel arriba de cada vista). */
+.avc { position: relative; }
+.avc__btn { display: inline-flex; align-items: center; gap: 6px; height: 36px; padding: 0 12px; border-radius: 999px; background: var(--tk-amarillo-bg); color: var(--tk-amarillo); font-size: var(--t-md); }
+.avc__btn:hover { box-shadow: var(--sh-1); }
+.avc__btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.avc .drop { width: min(340px, calc(100vw - 32px)); max-height: 70vh; overflow-y: auto; }
+.avc__l { list-style: none; margin: 0; padding: 0; }
+.avc__i { display: flex; align-items: flex-start; gap: 10px; padding: 11px 13px; font-size: var(--t-sm); color: var(--text); overflow-wrap: anywhere; }
+.avc__i .ico { flex: none; margin-top: 2px; color: var(--tk-amarillo); }
+@media (max-width: 480px) {
+  .avc { position: static; }
+  .avc .drop { left: 16px; right: 16px; width: auto; }
+}
 
 /* Semáforo de diseño (0030): rojo pendiente, verde completado, amarillo vencido. Siempre con texto. */
 .sem { display: inline-flex; align-items: center; gap: 5px; padding: 3px 10px; border-radius: 999px; font-size: var(--t-xs); font-weight: 600; white-space: nowrap; line-height: 1.4; }
