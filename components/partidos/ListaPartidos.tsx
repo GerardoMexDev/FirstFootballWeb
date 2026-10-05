@@ -14,7 +14,29 @@ import { TarjetaFecha } from '@/components/partidos/TarjetaFecha';
 import { diasDesdeHoyUy, etiquetaDiaUy } from '@/lib/fechas/zonas';
 import { mezclarPorDia, textoCantidades, type FechaContenido } from '@/lib/partidos/fechas-contenido';
 import type { PartidoProximo } from '@/lib/repositorios/tipos';
-import type { EstadoVisual } from '@/lib/tickets/tipos';
+import type { EstadoVisual, ResumenTicket } from '@/lib/tickets/tipos';
+import { CasillasDiseno } from '@/components/tickets/CasillasDiseno';
+
+/** Quién tilda Completado (Diseñador) y Cancelado (Admin, CM, Diseñador) — 0040. */
+export type PermisosDiseno = { completar: boolean; cancelar: boolean };
+
+/** Casillas Completado/Cancelado de la tarjeta (0040); nada si el partido no tiene ticket automático. */
+function casillasDe(t: ResumenTicket | undefined, nombre: string, permisos: PermisosDiseno) {
+  if (!t?.partidoId) return undefined;
+  return (
+    <CasillasDiseno
+      key={`${t.id}:${t.estado}`}
+      partidoId={t.partidoId}
+      jugadorId={t.jugadorId}
+      jugadorNombre={nombre}
+      marca={t.estado === 'publicado' ? 'completado' : t.estado === 'cancelado' ? 'cancelado' : 'pendiente'}
+      motivoCancelacion={t.motivoCancelacion}
+      puedeMarcar={permisos.completar}
+      puedeCancelar={permisos.cancelar}
+      sinPendiente
+    />
+  );
+}
 import { SIN_LINKS, type LinksDropbox } from '@/lib/jugadores/links-dropbox';
 
 export function ListaPartidos({
@@ -25,7 +47,8 @@ export function ListaPartidos({
   fechas = [],
   alertasTicket = {},
   estadosDiseno = {},
-  ultimoMomento = {},
+  ticketsMd = {},
+  permisosDiseno = { completar: false, cancelar: false },
   convocatoria,
 }: {
   partidos: PartidoProximo[];
@@ -35,8 +58,10 @@ export function ListaPartidos({
   alertasTicket?: Record<string, string>;
   /** `{ '<partido>:<jugador>': estado }` del semáforo de diseño (0030). */
   estadosDiseno?: Record<string, EstadoVisual>;
-  /** `partido:jugador` de los Match Day de último momento (0040). */
-  ultimoMomento?: Record<string, true>;
+  /** Ticket automático por `partido:jugador` (0040): señal "Último momento" y casillas en la tarjeta. */
+  ticketsMd?: Record<string, ResumenTicket>;
+  /** Quién tilda Completado (Diseñador) y Cancelado (Admin, CM, Diseñador) — 0040. */
+  permisosDiseno?: PermisosDiseno;
   /** Fechas de Contenido ya filtradas; van debajo de los partidos de su día. */
   fechas?: FechaContenido[];
   partidosConHito?: Set<string>;
@@ -84,7 +109,8 @@ export function ListaPartidos({
                   linksDropbox={linksDropbox && !p.esSeleccion ? (linksDropbox[p.jugadorId] ?? SIN_LINKS) : undefined}
                   alertaTicket={alertasTicket[`${p.partidoId}:${p.jugadorId}`]}
                   estadoDiseno={estadosDiseno[`${p.partidoId}:${p.jugadorId}`]}
-                  ultimoMomento={ultimoMomento[`${p.partidoId}:${p.jugadorId}`] ?? false}
+                  ultimoMomento={ticketsMd[`${p.partidoId}:${p.jugadorId}`]?.ultimoMomento ?? false}
+                  casillasDiseno={casillasDe(ticketsMd[`${p.partidoId}:${p.jugadorId}`], p.jugadorApodo || p.jugadorNombre, permisosDiseno)}
                 />
               ))}
               {fechasDelDia.map((f) => (

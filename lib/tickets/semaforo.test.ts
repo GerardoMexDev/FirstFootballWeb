@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { estadoVisual, estadosPorPartidoJugador, peorEstado, ultimoMomentoPorPartidoJugador } from './semaforo.ts';
+import { estadoVisual, estadosPorPartidoJugador, peorEstado, ticketsPorPartidoJugador } from './semaforo.ts';
 import type { ResumenTicket } from './tipos.ts';
 
 const HOY = '2026-10-05';
@@ -34,9 +34,9 @@ test('estadosPorPartidoJugador: clave partido:jugador → semáforo; sin partido
   assert.deepEqual(estadosPorPartidoJugador([a, b, c, d], HOY), { 'p1:j1': 'vencido', 'p1:j2': 'completado', 'p2:j1': 'cancelado' });
 });
 
-test('ultimoMomentoPorPartidoJugador: solo los marcados y con partido (0040)', () => {
+test('ticketsPorPartidoJugador: clave partido:jugador → ticket; sin partido no entra (0040)', () => {
   const a = { ...tk('pendiente', '2026-10-03'), partidoId: 'p1', jugadorId: 'j1', ultimoMomento: true };
   const b = { ...tk('pendiente', '2026-10-01'), partidoId: 'p2', jugadorId: 'j1', ultimoMomento: false };
   const c = { ...tk('pendiente', '2026-10-01'), partidoId: null, jugadorId: 'j2', ultimoMomento: true };
-  assert.deepEqual(ultimoMomentoPorPartidoJugador([a, b, c]), { 'p1:j1': true });
+  assert.deepEqual(ticketsPorPartidoJugador([a, b, c]), { 'p1:j1': a, 'p2:j1': b });
 });

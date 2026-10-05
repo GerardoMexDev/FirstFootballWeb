@@ -38,6 +38,7 @@ export function TarjetaPartido({
   alertaTicket,
   estadoDiseno,
   ultimoMomento = false,
+  casillasDiseno,
   convocatoria,
 }: {
   partido: PartidoProximo;
@@ -48,6 +49,8 @@ export function TarjetaPartido({
   estadoDiseno?: EstadoVisual;
   /** Apareció con poca anticipación (0040): señal "Último momento". */
   ultimoMomento?: boolean;
+  /** Casillas Completado/Cancelado del ticket automático (0040). */
+  casillasDiseno?: React.ReactNode;
   /** Tarjeta de la selección (0032): casillas "Convocado: …" en lugar de la cara. */
   convocatoria?: React.ReactNode;
   onAbrir?: () => void;
@@ -162,6 +165,7 @@ export function TarjetaPartido({
             )}
             {estadoDiseno && <PastillaSemaforo estado={estadoDiseno} />}
             {ultimoMomento && <SenalUltimoMomento />}
+            {casillasDiseno}
             {alertaTicket && <AlertaTicket texto={alertaTicket} />}
             {linksDropbox && (
               <BotonesDropbox links={linksDropbox} nombreJugador={p.jugadorApodo || p.jugadorNombre} />

@@ -20,7 +20,8 @@ import { filtrarPartidos, type FiltroPartidos } from '@/lib/partidos/utilidades'
 import { listaSegunFiltro } from '@/lib/partidos/seleccion';
 import type { DatosConvocatoria } from '@/components/partidos/CasillasConvocatoria';
 import type { PartidoProximo } from '@/lib/repositorios/tipos';
-import type { EstadoVisual } from '@/lib/tickets/tipos';
+import type { EstadoVisual, ResumenTicket } from '@/lib/tickets/tipos';
+import type { PermisosDiseno } from '@/components/partidos/ListaPartidos';
 import type { LinksDropbox } from '@/lib/jugadores/links-dropbox';
 import { filtrarFechas, type FechaContenido } from '@/lib/partidos/fechas-contenido';
 
@@ -35,7 +36,8 @@ export function SeccionPartidos({
   hoyUy,
   alertasTicket = {},
   estadosDiseno = {},
-  ultimoMomento = {},
+  ticketsMd = {},
+  permisosDiseno,
 }: {
   partidos: PartidoProximo[];
   /** Partidos de jugadores solo-Contenido: se ven únicamente con el filtro "Contenido". */
@@ -54,8 +56,10 @@ export function SeccionPartidos({
   alertasTicket?: Record<string, string>;
   /** `{ '<partido>:<jugador>': estado }` del semáforo de diseño (0030). */
   estadosDiseno?: Record<string, EstadoVisual>;
-  /** `partido:jugador` de los Match Day de último momento (0040). */
-  ultimoMomento?: Record<string, true>;
+  /** Ticket automático por `partido:jugador` (0040): señal "Último momento" y casillas en la tarjeta. */
+  ticketsMd?: Record<string, ResumenTicket>;
+  /** Quién tilda Completado (Diseñador) y Cancelado (Admin, CM, Diseñador) — 0040. */
+  permisosDiseno?: PermisosDiseno;
 }) {
   const [filtro, setFiltro] = useState<FiltroPartidos>('todos');
   const { abrir } = usePanel();
@@ -81,7 +85,8 @@ export function SeccionPartidos({
           fechas={fechasFiltradas}
           alertasTicket={esContenido ? {} : alertasTicket}
           estadosDiseno={esContenido ? {} : estadosDiseno}
-          ultimoMomento={esContenido ? {} : ultimoMomento}
+          ticketsMd={esContenido ? {} : ticketsMd}
+          permisosDiseno={permisosDiseno}
           convocatoria={convocatoria}
         />
       </div>

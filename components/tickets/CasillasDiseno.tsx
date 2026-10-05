@@ -26,6 +26,7 @@ export function CasillasDiseno({
   motivoCancelacion = null,
   puedeMarcar,
   puedeCancelar,
+  sinPendiente = false,
   onCambio,
 }: {
   partidoId: string;
@@ -39,6 +40,8 @@ export function CasillasDiseno({
   /** Cancelado: Administrador, Community Manager y Diseñador. */
   puedeCancelar: boolean;
   /** Para recargar el panel que las contiene (el partido). */
+  /** Tarjeta de /partidos: sin la casilla fija "Pendiente" (el semáforo ya lo dice). */
+  sinPendiente?: boolean;
   onCambio?: () => Promise<void> | void;
 }) {
   const router = useRouter();
@@ -101,11 +104,14 @@ export function CasillasDiseno({
   }
 
   return (
-    <span className="csds">
-      <label className="csd">
-        <input type="checkbox" checked disabled readOnly />
-        Pendiente
-      </label>
+    // Frena la propagación: dentro de la tarjeta de /partidos (clickeable) no debe abrir el panel.
+    <span className="csds" onClick={(e) => e.stopPropagation()} onKeyDown={(e) => e.stopPropagation()}>
+      {!sinPendiente && (
+        <label className="csd">
+          <input type="checkbox" checked disabled readOnly />
+          Pendiente
+        </label>
+      )}
       <label className="csd">
         <input
           type="checkbox"

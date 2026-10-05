@@ -27,10 +27,10 @@ export function peorEstado(estados: (EstadoVisual | null)[]): EstadoVisual | nul
   return null;
 }
 
-/** `{ '<partido>:<jugador>': true }` de los Match Day de último momento, para las tarjetas (0040). */
-export function ultimoMomentoPorPartidoJugador(tickets: ResumenTicket[]): Record<string, true> {
-  const r: Record<string, true> = {};
-  for (const t of tickets) if (t.partidoId && t.ultimoMomento) r[`${t.partidoId}:${t.jugadorId}`] = true;
+/** `{ '<partido>:<jugador>': ticket automático }` para las tarjetas de /partidos (casillas y señal, 0040). */
+export function ticketsPorPartidoJugador(tickets: ResumenTicket[]): Record<string, ResumenTicket> {
+  const r: Record<string, ResumenTicket> = {};
+  for (const t of tickets) if (t.partidoId) r[`${t.partidoId}:${t.jugadorId}`] = t;
   return r;
 }
 
