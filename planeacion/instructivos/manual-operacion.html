@@ -85,10 +85,29 @@ td b { white-space: nowrap; }
 .caja p:last-child { margin-bottom: 0; }
 .pie { margin-top: 72px; padding-top: 18px; border-top: 1px solid var(--line); color: var(--fg-2); font-size: 14px; }
 /* PDF (A4): siempre en claro, tablas y bloques sin cortar. */
-@page { size: A4; margin: 16mm 15mm 18mm; }
+@page {
+  size: A4 portrait;
+  margin: 16mm 15mm 18mm;
+  @bottom-left { content: "Football First · Manual de operación"; font-family: 'Archivo', sans-serif; font-size: 8pt; color: #8A837E; }
+  @bottom-right { content: counter(page) " / " counter(pages); font-family: 'Archivo', sans-serif; font-size: 8pt; color: #8A837E; }
+}
+@page :first { @bottom-left { content: none; } }
 @media print {
+  /* Páginas: 1 portada + rutina · 2 pantallas · 3 Match Day · 4 fuentes · 5 amistosos + avisos · 6 cuentas + Mazdesign. */
+  #pantallas, #matchday, #fuentes, #amistosos, #cuentas { break-before: page; margin-top: 0; }
+  p, li, h3 + p, .estados, .tabla { break-inside: avoid; }
+  p, li { orphans: 3; widows: 3; }
+  /* Más compacto en papel: cada sección entra en su página. */
+  body { line-height: 1.5; }
+  .hoja h3 { font-size: 12.5pt; margin: 14pt 0 4pt; }
+  .hoja p, .hoja ul, .hoja ol { margin-bottom: 8pt; }
+  .hoja li { margin-bottom: 3pt; }
+  .hoja .estados { gap: 6px; margin: 8pt 0 10pt; }
+  .hoja th, .hoja td { padding: 7px 10px; }
+  .hoja .tabla { margin: 8pt 0 12pt; }
+  h3 { break-after: avoid; }
   :root { color-scheme: light; }
-  body { font-size: 11pt; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  body { font-size: 10.5pt; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
   .hoja { max-width: none; padding: 0; }
   h1 { font-size: 54pt; }
   /* line-height mayor: el acento de Anton (QUÉ, DÓNDE) no se escapa al pie de la página anterior. */
