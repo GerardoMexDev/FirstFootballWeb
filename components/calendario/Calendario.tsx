@@ -32,6 +32,7 @@ import {
   MESES_CORTOS,
   type EventoCalendario,
 } from '@/lib/calendario/eventos';
+import { useTarjetaFlotante } from './TarjetaFlotante';
 
 /** Texto de cada chip de evento: una etiqueta corta (arriba, en negrita) + el título. */
 /** Chips de filtro del calendario unificado (2026-09-30). */
@@ -88,6 +89,8 @@ export function Calendario({
   alertasPorTicket?: Record<string, string>;
 }) {
   const { abrir } = usePanel();
+  // Texto completo de los chips cortados (cierre con la agencia, 2026-10-01).
+  const { paraChip, paraChipSinPanel, tarjeta } = useTarjetaFlotante();
   const router = useRouter();
   const pathname = usePathname();
   const [anio, setAnio] = useState(() => Number(hoyUy.slice(0, 4)));
@@ -177,9 +180,10 @@ export function Calendario({
               <div className="celda__n">{c.dia}</div>
               {evs.map((e, j) => {
                 const { etiqueta, texto } = chipEvento(e);
+                const datos = { fecha: c.fecha, etiqueta, texto };
                 const clave = `${e.fuente}-${e.refId ?? j}`;
                 const clase = `ev ${e.tentativo ? 'ev--tent' : ''} ${e.esInternacional ? 'ev--int' : ''}`;
-                // Partidos de Contenido y de la selección (0031): no tienen panel → chip sin clic (abajo).
+                // Partidos de Contenido y de la selección (0031): no tienen panel → chip sin panel (abajo; el toque abre la tarjeta flotante).
                 if (e.fuente === 'partido' && e.refId && (e.grupo ?? 'matchday') === 'matchday') {
                   const refId = e.refId;
                   const tk = ticketsPorPartido[refId];
@@ -191,6 +195,7 @@ export function Calendario({
                       className={`${clase} ${tk ? `ev--t ev--t-${tk.estado}` : ''} ${sem ? `ev--sem-${sem}` : ''}`}
                       // 0030: siempre al partido (ahí están las casillas; el ticket manual se abre desde ahí).
                       onClick={() => abrir('partido', refId)}
+                      {...paraChip(datos)}
                     >
                       {tk && (
                         <small className="ev__tk">
@@ -221,14 +226,20 @@ export function Calendario({
                   const refId = e.refId;
                   const fuente = e.fuente;
                   return (
-                    <button key={clave} type="button" className={clase} onClick={() => abrir('jugador', refId, fuente)}>
+                    <button
+                      key={clave}
+                      type="button"
+                      className={clase}
+                      onClick={() => abrir('jugador', refId, fuente)}
+                      {...paraChip(datos)}
+                    >
                       <b>{etiqueta}</b>
                       {texto}
                     </button>
                   );
                 }
                 return (
-                  <div key={clave} className={clase}>
+                  <div key={clave} className={`${clase} ev--info`} {...paraChipSinPanel(datos)}>
                     <b>{etiqueta}</b>
                     {texto}
                   </div>
@@ -240,6 +251,7 @@ export function Calendario({
                   type="button"
                   className={`ev ev--t ev--t-${t.estado}`}
                   onClick={() => abrir('ticket', t.id)}
+                  {...paraChip({ fecha: c.fecha, etiqueta: t.motivo ?? 'Ticket', texto: t.jugadorNombre ?? '' })}
                 >
                   <small className="ev__tk">
                     {alertasPorTicket[t.id] ? (
@@ -270,6 +282,7 @@ export function Calendario({
           <i className="a" /> Competición internacional
         </span>
       </div>
+      {tarjeta}
     </>
   );
 }
