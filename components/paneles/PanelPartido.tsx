@@ -70,15 +70,18 @@ export function PanelPartido({
         <span className="compe__n">{mostrar(d.competenciaNombre)}</span>
       </div>
 
-      <div style={{ display: 'flex', alignItems: 'center', gap: 15, marginBottom: 15 }}>
-        <Escudo nombre={d.local.nombre ?? '?'} url={d.local.escudoUrl} clase="crest crest--lg" />
-        <h2 className="d2" style={{ flex: 1 }}>
-          {mostrar(d.local.nombre)}
-          <br />
-          vs {mostrar(d.visitante.nombre)}
-        </h2>
-        <Escudo nombre={d.visitante.nombre ?? '?'} url={d.visitante.escudoUrl} clase="crest crest--lg" />
-      </div>
+      {/* Cada escudo junto a su equipo (pedido de Gerardo 2026-10-09: antes iban uno a cada costado). */}
+      <h2 className="d2 pdu">
+        <span className="pdu__f">
+          <Escudo nombre={d.local.nombre ?? '?'} url={d.local.escudoUrl} clase="crest crest--lg" />
+          <span>{mostrar(d.local.nombre)}</span>
+        </span>
+        <span className="pdu__vs">vs</span>
+        <span className="pdu__f">
+          <Escudo nombre={d.visitante.nombre ?? '?'} url={d.visitante.escudoUrl} clase="crest crest--lg" />
+          <span>{mostrar(d.visitante.nombre)}</span>
+        </span>
+      </h2>
 
       {(d.ronda || d.representadoEsLocal !== null || d.tentativo) && (
         <div className="linea" style={{ marginBottom: 32 }}>

@@ -618,3 +618,10 @@ html { overflow-x: clip; }
   .cnt { padding: 16px; }
   .cnt__ver { margin-left: 0; }
 }
+
+/* Título del panel del partido: cada escudo junto a su equipo (2026-10-09). */
+.pdu { display: flex; flex-direction: column; gap: 8px; margin-bottom: 15px; }
+.pdu__f { display: flex; align-items: center; gap: 12px; min-width: 0; }
+.pdu__f > span { min-width: 0; overflow-wrap: anywhere; }
+.pdu__f .crest { flex: none; }
+.pdu__vs { font-family: var(--ui); font-size: var(--t-sm); font-weight: 600; text-transform: lowercase; color: var(--text-3); padding-left: 2px; }
