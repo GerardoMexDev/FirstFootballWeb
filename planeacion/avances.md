@@ -1364,6 +1364,10 @@ Charla con Gerardo (no se codeó nada): tres preguntas de la agencia / de él.
   todavía no se aplicó). También aclarar cuál es "la solicitud" que menciona: en la base el único pedido a mano es el
   "Cumpleaños de Peñarol" de Abel (29/09).
 - Commit `5f07da3`: título del panel del partido con cada escudo junto a su equipo (pedido de Gerardo 2026-10-09).
+- **✅ En producción 2026-10-09:** 0044 aplicada (verificada: anon → permission denied), push hecho; QA de Gerardo OK
+  (recuadro del conteo, detalle, escudos del panel).
+- **📌 PARA MAÑANA (Gerardo, 2026-10-09):** en el recuadro del Calendario, el botón "Ver detalle" queda pegado al otro
+  extremo de la página (`.cnt__ver { margin-left: auto }` en app.css) → acercarlo a los totales.
 
 **Pedidos del fin de semana 03–04/10 (dictados por Gerardo 2026-10-05):**
 
