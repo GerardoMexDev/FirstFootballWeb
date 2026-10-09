@@ -14,6 +14,10 @@
 import { DateTime } from 'luxon';
 import { NotasAgenda } from '@/components/agenda/NotasAgenda';
 import { Calendario } from '@/components/calendario/Calendario';
+import { ConteoPeriodo } from '@/components/conteo/ConteoPeriodo';
+import { leerConteo, puedeVerConteo, totalizar, type TotalesConteo } from '@/lib/conteo/conteo-disenos';
+import { periodoDeDia } from '@/lib/conteo/periodos';
+import { sesionActual } from '@/lib/sesion/sesion-actual';
 import { FUENTES_CONTENIDO, notasProximas, unirNotas } from '@/lib/agenda/notas-proximas';
 import { filtrarCalendario, sumarSeleccion, unirEventos, type FiltroCalendario } from '@/lib/calendario/eventos';
 import { RepositorioAgendaSupabase } from '@/lib/repositorios/repositorio-agenda';
@@ -56,6 +60,19 @@ export default async function PaginaCalendario({ searchParams }: { searchParams:
     pendientesDeSesion(),
   ]);
 
+  // Conteo mensual de diseños (pago del Diseñador, 2026-10-08): solo Administrador y Diseñador.
+  const sesion = await sesionActual();
+  const periodo = periodoDeDia(hoyUy);
+  let conteo: TotalesConteo | null | undefined;
+  if (puedeVerConteo(sesion?.cargo)) {
+    conteo = await leerConteo(supabase, periodo)
+      .then(totalizar)
+      .catch((e) => {
+        console.error('conteo de diseños (calendario):', e);
+        return null;
+      });
+  }
+
   // La selección va aparte de unirEventos (un convocado comparte refId con Match Day; ver sumarSeleccion).
   const unidos = unirEventos(eventosMd, [...eventosCo, ...partidosCo]);
   const eventos = filtrarCalendario(sumarSeleccion(unidos, partidosSel, filtro), filtro);
@@ -86,6 +103,8 @@ export default async function PaginaCalendario({ searchParams }: { searchParams:
           de 90 días son tentativas.
         </p>
       </div>
+
+      {conteo !== undefined && <ConteoPeriodo periodo={periodo} totales={conteo} />}
 
       <NotasAgenda notas={notas} />
 

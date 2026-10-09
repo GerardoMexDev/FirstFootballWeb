@@ -582,3 +582,39 @@ html { overflow-x: clip; }
 .csd__nota { width: 100%; font-size: var(--t-xs); color: var(--text-2); overflow-wrap: anywhere; }
 /* Señal "de último momento" (0040): partido que apareció después de su fecha límite normal. */
 .um { display: inline-flex; align-items: center; gap: 4px; padding: 3px 9px; border-radius: 999px; font-size: var(--t-xs); font-weight: 600; white-space: nowrap; line-height: 1.4; background: var(--accent-soft); color: var(--accent-hover); }
+
+/* Conteo mensual de diseños (pago del Diseñador, 2026-10-08): recuadro del Calendario + página /conteo. */
+.cnt { display: flex; flex-wrap: wrap; align-items: center; gap: 14px 28px; padding: 18px 22px; margin-bottom: 28px; border-radius: var(--r); background: var(--surface); box-shadow: var(--sh-1); }
+.cnt__h { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.cnt__h b { font-size: var(--t-md); font-weight: 700; }
+.cnt__h span { font-size: var(--t-sm); color: var(--text-2); }
+.cnt__n { display: flex; gap: 22px; margin: 0; }
+.cnt__n div { display: flex; flex-direction: column-reverse; gap: 4px; }
+.cnt__n dt { font-size: var(--t-xs); color: var(--text-2); }
+.cnt__n dd { margin: 0; font-family: var(--display); font-size: 30px; line-height: .9; font-variant-numeric: tabular-nums; }
+.cnt__tot dd { color: var(--accent); }
+.cnt__err { margin: 0; font-size: var(--t-sm); color: var(--text-2); }
+.cnt__ver { margin-left: auto; }
+.cnt__volver { margin-bottom: 14px; font-size: var(--t-sm); }
+.cnt__volver a { color: var(--text-2); }
+.cnt__t { margin: 40px 0 14px; }
+.cnt__tabla { overflow-x: auto; border-radius: var(--r); background: var(--surface); box-shadow: var(--sh-1); }
+.cnt__tabla table { width: 100%; min-width: 520px; border-collapse: collapse; font-size: var(--t-sm); }
+.cnt__tabla th, .cnt__tabla td { padding: 11px 16px; text-align: left; vertical-align: top; border-bottom: 1px solid var(--line); }
+.cnt__tabla thead th { font-size: var(--t-xs); font-weight: 600; text-transform: uppercase; letter-spacing: .06em; color: var(--text-2); }
+.cnt__tabla tbody th { font-weight: 600; }
+.cnt__tabla tr:last-child > * { border-bottom: 0; }
+.cnt__tabla td:not(:nth-child(2)) { white-space: nowrap; }
+.cnt__dia { font-variant-numeric: tabular-nums; color: var(--text-2); }
+.cnt__tipo { display: inline-block; padding: 2px 9px; border-radius: 999px; font-size: var(--t-xs); font-weight: 600; }
+.cnt__tipo--matchday { background: var(--accent-soft); color: var(--accent-hover); }
+.cnt__tipo--pedido { background: var(--surface-3); color: var(--text); }
+.cnt__per { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px; }
+.cnt__per li { padding: 8px 14px; border-radius: 999px; background: var(--surface); box-shadow: var(--sh-1); font-size: var(--t-sm); }
+.cnt__per a { color: var(--text); }
+.cnt__per [aria-current] { font-weight: 700; }
+.cnt__per small { color: var(--text-2); }
+@media (max-width: 620px) {
+  .cnt { padding: 16px; }
+  .cnt__ver { margin-left: 0; }
+}

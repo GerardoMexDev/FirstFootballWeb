@@ -920,6 +920,15 @@ const HOY = `(now() at time zone 'America/Montevideo')::date`;
 /** Partido de prueba a `dias` de hoy (hora 20:00 UY), con el jugador de Match Day. */
 async function partidoEnDias(cl, dias) {
   const { rows } = await cl.query(`select ((${HOY} + $1::int)::text || 'T23:00:00Z') as iso`, [dias]);
+  // Si el jugador tiene un partido REAL ese día, la vista (1 por jugador y día) mostraría ese y no
+  // el de prueba (falló el 2026-10-09: Toluca vs Tigres el 10/10). Dentro de la transacción (rollback)
+  // se lo saca de los partidos reales de ese día.
+  await comoDueno(cl);
+  await cl.query(
+    `delete from partidos_jugadores where jugador_id = $1 and partido_id in (
+       select id from partidos where (inicio_utc at time zone 'America/Montevideo')::date = (${HOY} + $2::int))`,
+    [ids.jugadorMd, dias],
+  );
   return partidoDePrueba(cl, ids.jugadorMd, rows[0].iso);
 }
 async function estadoMd(cl, partido) {
@@ -1096,6 +1105,86 @@ test('0040: partido cargado después de su límite → último momento, vence el
     assert.equal(f.estado, 'vencido');
     const lejos = await partidoEnDias(cl, 10); // cargado hoy con tiempo de sobra
     assert.equal((await filaMd(cl, lejos)).ultimo_momento, false);
+  }));
+
+// ═════════════ 0044: conteo mensual de diseños (pago del Diseñador) ═════════════
+const MIGRACION_0044 = readFileSync(new URL('../supabase/migrations/0044_conteo_disenos.sql', import.meta.url), 'utf8')
+  .replace(/^\s*begin;\s*$/m, '')
+  .replace(/^\s*commit;\s*$/m, '');
+let aplicada0044 = false;
+before(async () => {
+  const { rows } = await c.query(`select to_regprocedure('public.conteo_disenos(date,date)') is not null as ok`);
+  aplicada0044 = rows[0].ok;
+});
+async function enTransaccion0044(fn) {
+  return enTransaccion0040(async (cl) => {
+    if (!aplicada0044) await cl.query(MIGRACION_0044);
+    await fn(cl);
+  });
+}
+/** Filas del conteo de un período de prueba (2030: sin datos reales) como `uid`. */
+async function conteo(cl, uid, desde = '2030-06-06', hasta = '2030-07-05') {
+  await como(cl, uid);
+  const { rows } = await cl.query(`select * from conteo_disenos($1, $2)`, [desde, hasta]);
+  return rows;
+}
+
+test('0044: cuenta Match Day completados y pedidos completados por el día en que se completaron', () =>
+  enTransaccion0044(async (cl) => {
+    const p1 = await partidoDePrueba(cl, ids.jugadorMd, '2030-06-20T23:00:00Z');
+    const p2 = await partidoDePrueba(cl, ids.jugadorMd, '2030-06-25T23:00:00Z');
+    await como(cl, ids.maxi);
+    await cl.query(`select diseno_partido_marcar($1, $2, true)`, [p1, ids.jugadorMd]);
+    await como(cl, ids.pedro);
+    await cl.query(`select diseno_partido_cancelar($1, $2, 'no se hace')`, [p2, ids.jugadorMd]); // cancelado: no cuenta
+    // Las marcas se hicieron "hoy": se llevan al 10/06/2030 (dentro del período 6 jun – 5 jul).
+    await comoDueno(cl);
+    await cl.query(`update disenos_partido set completado_en = '2030-06-10T15:00:00Z' where partido_id in ($1, $2)`, [p1, p2]);
+    for (const quien of [ids.felipe, ids.maxi]) {
+      const filas = await conteo(cl, quien);
+      assert.deepEqual(filas.map((f) => f.tipo), ['matchday']); // el cancelado no cuenta
+      assert.equal(filas[0].completado_dia.toISOString().slice(0, 10), '2030-06-10');
+      assert.match(filas[0].titulo, /^Match Day — /);
+      assert.ok(filas[0].completado_por_nombre);
+    }
+    // Fuera del período (5 jun o 6 jul) no aparece.
+    assert.equal((await conteo(cl, ids.felipe, '2030-07-06', '2030-08-05')).length, 0);
+    // Destildar Completado lo saca del conteo (en vivo).
+    await como(cl, ids.maxi);
+    await cl.query(`select diseno_partido_marcar($1, $2, false)`, [p1, ids.jugadorMd]);
+    assert.equal((await conteo(cl, ids.felipe)).length, 0);
+  }));
+
+test('0044: un pedido completado hoy suma 1 al período de hoy (el historial es inmutable: no se mueve su fecha)', () =>
+  enTransaccion0044(async (cl) => {
+    const { rows } = await cl.query(`select ${HOY} - 1 as d, ${HOY} + 1 as h`);
+    const [d, h] = [rows[0].d.toISOString().slice(0, 10), rows[0].h.toISOString().slice(0, 10)];
+    const pedidos = async () => (await conteo(cl, ids.felipe, d, h)).filter((f) => f.tipo === 'pedido').length;
+    const antes = await pedidos();
+    const p = await partidoDePrueba(cl, ids.jugadorMd);
+    await como(cl, ids.pedro);
+    const t = (await cl.query(`select ticket_crear($1, $2, 'pieza extra') id`, [p, ids.jugadorMd])).rows[0].id;
+    assert.equal(await pedidos(), antes); // pendiente: no cuenta
+    await como(cl, ids.maxi);
+    await cl.query(`select ticket_completar($1)`, [t]);
+    assert.equal(await pedidos(), antes + 1);
+    await como(cl, ids.maxi); // `pedidos()` cuenta como Felipe
+    await cl.query(`select ticket_reabrir($1, 'faltó algo')`, [t]);
+    assert.equal(await pedidos(), antes); // reabierto: sale del conteo
+  }));
+
+test('0044: solo Administrador y Diseñador (CM y Prueba 42501, anon sin permiso); período inválido → error', () =>
+  enTransaccion0044(async (cl) => {
+    for (const quien of [ids.pedro, ids.alexis]) {
+      await como(cl, quien);
+      const e = await debeFallar(cl, `select * from conteo_disenos('2030-06-06', '2030-07-05')`, [], /Solo el Administrador y el Diseñador/);
+      assert.equal(e.code, '42501');
+    }
+    await comoAnon(cl);
+    await debeFallar(cl, `select * from conteo_disenos('2030-06-06', '2030-07-05')`, [], /permission denied/);
+    await como(cl, ids.felipe);
+    await debeFallar(cl, `select * from conteo_disenos('2030-07-05', '2030-06-06')`, [], /Período inválido/);
+    await debeFallar(cl, `select * from conteo_disenos('2030-01-01', '2030-12-31')`, [], /Período inválido/);
   }));
 
 export { enTransaccion, como, comoAnon, comoServicio, comoDueno, debeFallar, partidoDePrueba };

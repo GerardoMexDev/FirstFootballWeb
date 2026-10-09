@@ -1343,6 +1343,21 @@ Charla con Gerardo (no se codeó nada): tres preguntas de la agencia / de él.
      `@media print`). Gerardo lo pasa a su socio para comentarios. **Al cierre del proyecto: borrar la cuenta de Prueba
      (Alexis)** — Gerardo, 2026-10-05; ya no figura en el manual.
 
+**Pedido de la agencia (dictado por Gerardo 2026-10-08): conteo mensual de diseños para el pago del Diseñador.**
+- Período del **6 de cada mes al 5 del siguiente** (actual: 6 oct – 5 nov). Cuenta los **completados**: Match Day
+  (casilla Completado) + pedidos fuera de Match Day (tickets a mano de partido y de fecha). Cancelados y vencidos sin
+  hacer no cuentan.
+- Decidido por Gerardo: el período lo define **el día en que se tildó Completado** (1a); **en vivo**, sin congelar
+  (2a: "mes pagado ya no hay reclamación, se firma de pagado y listo"); lo ven **solo Diseñador y Administrador**.
+- Recuadro arriba del Calendario (Match Day N · Pedidos N · Total N → Ver detalle; **sin** "quedan N pendientes") +
+  página de detalle por período con lista, totales por jugador y links a los períodos anteriores (desde 6 sep – 5 oct).
+- **✅ IMPLEMENTADO 2026-10-08 (falta aplicar 0044 + push):** RPC `conteo_disenos(desde, hasta)` (0044, security definer,
+  42501 para CM/Prueba); `lib/conteo/periodos.ts` (6→5, clave = mes de inicio) + `conteo-disenos.ts`; recuadro
+  `ConteoPeriodo` en /calendario; página `/conteo/[periodo]` (KPIs, por jugador, lista, períodos con link fijo); `/conteo`
+  → período en curso. Tests: 220 unitarios + 53 de base (3 de 0044) OK. Prueba con datos reales (rollback): 6 sep–5 oct
+  = 3 Match Day + 1 pedido (ticket de Abel, completado por la migración 0030 → sin "Por"); 6 oct–5 nov = 3 Match Day.
+  De paso: `partidoEnDias` del test saca al jugador de partidos reales de ese día (fallaba si tenía partido mañana).
+
 **Pedidos del fin de semana 03–04/10 (dictados por Gerardo 2026-10-05):**
 
 4. **Pregunta: ¿cómo trata SportMonks los amistosos?** El amistoso Monterrey vs Toluca (sáb 3/10, 23:30 UTC)
