@@ -19,7 +19,30 @@ En Claude Code **no hay memoria entre sesiones**, así que este protocolo es obl
 3. Rutina de cierre Git: `git add . && git commit -m "Sesión N: ..." && git push`.
 4. La sesión no se cierra hasta que `git push` terminó OK.
 
-**Última actualización:** 2026-10-01 (Sesión 16: punto 6 — fechas del Excel de la agencia en producción,
+**Última actualización:** 2026-10-09 (Sesiones 17–18, 05/10 y 08–09/10). **Todo en producción y con QA de Gerardo:**
+tarjeta flotante del calendario, casilla Cancelado con motivo + señal ⚡ Último momento (0040), amistosos de ESPN + escudos
+(0041–0043, ya no queda ningún club sin escudo), campanita de avisos, cierre de sesión a las 12 h, conteo mensual de
+diseños (0044, `/conteo`), escudos del panel del partido, manual de operación (borrador + PDF).
+**📌 MAÑANA (2026-10-10):**
+1. Botón "Ver detalle" del recuadro del conteo pegado a los totales (hoy queda al otro extremo: `.cnt__ver`).
+2. **Idea a proponer a la agencia: sección de Noticias de los equipos** (pedido de Gerardo 2026-10-09). Pensar una
+   versión sencilla. Punto de partida a evaluar: ESPN (gratis, la fuente que ya usamos) tiene noticias por liga/equipo
+   (`site.api.espn.com/apis/site/v2/sports/soccer/<liga>/news?team=<id>`): titular, bajada, foto, fecha y link a la nota.
+   Propuesta tentativa: una pestaña o bloque "Noticias" con las últimas 5–10 notas de los clubes de los representados,
+   filtrable por jugador/club, refrescada 1 vez por día con la misma sync de ESPN, sin escribir notas propias. A
+   verificar: idioma (ESPN en inglés vs ESPN Deportes en español), si cubre Arabia/Bélgica/Uruguay, y derechos de uso
+   (mostrar solo titular + link, no el texto completo).
+**⏸ EN ESPERA:** (a) agencia: ¿el conteo va por fecha del partido o por día en que se completó? (Uruguay vs India: partido
+6/10, completado 5/10); (b) soporte de API-Football: cuenta suspendida desde el 03/10, Gerardo re-escaló el 09/10 con
+el texto de los datos. **Plan B** si no contestan en unos días: apagar las 2 syncs de API-Football y sacar sus avisos de
+la campanita (ESPN ya trae casi todo; se pierden copas chicas, estadísticas de copa y algunos amistosos); (c) socio de
+Gerardo: comentarios del manual + canal/horario de contacto de Mazdesign; (d) Gerardo prueba en el celular el cierre a
+las 12 h.
+**PUNTOS DE CIERRE:** recuperar contraseña (falta el correo remitente y si el login pasa a mail); auditorías de cierre
+(seguridad + SEO, con la revisión con agentes); borrar la cuenta de Prueba (Alexis); actualizar el manual cuando esté
+"¿Olvidaste tu contraseña?"; pendientes chicos de las revisiones del 30/09 (partido suspendido → vencido, RPC viejos de
+tickets, etc.) y del 05/10 (marca de Completado que se pierde si ESPN trae después un partido que vino por API-Football).
+**Antes (Sesión 16, 2026-10-01):** punto 6 — fechas del Excel de la agencia en producción,
 migraciones 0036–0039 aplicadas y verificadas; Abel 6/8; fix de años bisiestos. **Próxima sesión** (después del
 reset del límite semanal de Gerardo, ~2026-10-03): revisión con agentes → SOLO en las auditorías de cierre
 (decidido por Gerardo 2026-10-01); pendientes chicos de las revisiones del 30/09 (prioridad: partido suspendido → vencido);
