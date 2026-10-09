@@ -1357,6 +1357,13 @@ Charla con Gerardo (no se codeó nada): tres preguntas de la agencia / de él.
   → período en curso. Tests: 220 unitarios + 53 de base (3 de 0044) OK. Prueba con datos reales (rollback): 6 sep–5 oct
   = 3 Match Day + 1 pedido (ticket de Abel, completado por la migración 0030 → sin "Por"); 6 oct–5 nov = 3 Match Day.
   De paso: `partidoEnDias` del test saca al jugador de partidos reales de ese día (fallaba si tenía partido mañana).
+- **⏸ PENDIENTE (Gerardo consulta a la agencia, 2026-10-09):** Gerardo cuenta por **fecha del partido**: Uruguay vs India
+  (partido 6/10, Completado tildado 5/10 16:17) para él es de octubre; con la regla 1a cae en 6 sep–5 oct. Gerardo pregunta
+  a la agencia si ese mes ya se pagó; según la respuesta se pasa a **1b (fecha del partido / fecha del evento en pedidos)**
+  o se deja como está. Si se cambia: migración nueva con `create or replace function conteo_disenos` (o editar 0044 si
+  todavía no se aplicó). También aclarar cuál es "la solicitud" que menciona: en la base el único pedido a mano es el
+  "Cumpleaños de Peñarol" de Abel (29/09).
+- Commit `5f07da3`: título del panel del partido con cada escudo junto a su equipo (pedido de Gerardo 2026-10-09).
 
 **Pedidos del fin de semana 03–04/10 (dictados por Gerardo 2026-10-05):**
 
