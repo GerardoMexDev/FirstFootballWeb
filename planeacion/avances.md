@@ -33,8 +33,8 @@ diseños (0044, `/conteo`), escudos del panel del partido, manual de operación 
    verificar: idioma (ESPN en inglés vs ESPN Deportes en español), si cubre Arabia/Bélgica/Uruguay, y derechos de uso
    (mostrar solo titular + link, no el texto completo).
 **⏸ EN ESPERA:** (a) agencia: ¿el conteo va por fecha del partido o por día en que se completó? (Uruguay vs India: partido
-6/10, completado 5/10); (b) soporte de API-Football: cuenta suspendida desde el 03/10, Gerardo re-escaló el 09/10 con
-el texto de los datos. **Plan B** si no contestan en unos días: apagar las 2 syncs de API-Football y sacar sus avisos de
+6/10, completado 5/10); (b) ~~soporte de API-Football~~ **✅ REACTIVADA: todas las corridas OK desde el 2026-10-10** (verificado 2026-10-16,
+`GET /status` sin errores; la campanita ya no debería mostrar sus avisos). Plan B descartado. **Plan B** si no contestan en unos días: apagar las 2 syncs de API-Football y sacar sus avisos de
 la campanita (ESPN ya trae casi todo; se pierden copas chicas, estadísticas de copa y algunos amistosos); (c) socio de
 Gerardo: comentarios del manual + canal/horario de contacto de Mazdesign; (d) Gerardo prueba en el celular el cierre a
 las 12 h.
