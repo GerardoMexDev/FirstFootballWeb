@@ -3018,3 +3018,8 @@ F–H → I (con migración). Cada ítem cerrado se documenta en §4.
 - Spec/plan `2026-09-29-tickets-desde-ficha`. Migración 0028 (aplicada por Gerardo): `fecha_evento` + `motivo`, `ticket_crear_evento`, vista con `fecha_limite` por fecha y `partido_eliminado` corregido. 7 tests de base nuevos (40/40).
 - Ficha (las dos): bloque "Tickets de diseño" + "Crear ticket de diseño" (próximas fechas de Contenido u "Otra fecha"). Panel del ticket: evento + "Ver jugador". Calendario general: chip del ticket en el día.
 - QA :3100 con los 4 usuarios OK (Felipe crea cumpleaños de Aguirre con doble clic → 1 solo; Pedro "Otra fecha" selección; Maxi ve lucecita en ficha/pantalla/calendario y entrega; Felipe "Para revisar"; Alexis sin botón; 390 px sin scroll); tickets de QA cancelados.
+
+### 🙈 Nahitan Nández oculto (2026-10-19) — sin borrar nada
+- La agencia ya no le ofrece el servicio (pedido vía Gerardo): sacarlo de Match Day y de fechas importantes, invisible para todos. En prod: `jugadores` id `ef0b1152-…` → `activo=false`, `servicio_match_day=false`, `servicio_contenido=false` (antes los 3 en `true`). Verificado: 0 filas suyas en `agenda_anual` y `agenda_contenido`; sin tickets.
+- Se conservan sus datos y el historial de `disenos_partido` (5 Match Day entregados, cuentan en el conteo de diseños).
+- Para revertir: volver esas 3 columnas a `true`.
