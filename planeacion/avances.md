@@ -3024,7 +3024,7 @@ F–H → I (con migración). Cada ítem cerrado se documenta en §4.
 - Se conservan sus datos y el historial de `disenos_partido` (5 Match Day entregados, cuentan en el conteo de diseños).
 - Para revertir: volver esas 3 columnas a `true`.
 
-### 🎫 El Diseñador también crea tickets (2026-10-27) — ⏳ falta aplicar la migración 0045 y push
+### 🎫 El Diseñador también crea tickets (2026-10-27) — ⏳ falta aplicar las migraciones 0045 y 0046 y push
 - Pedido de la agencia (vía Gerardo): que el Diseñador pueda hacer tickets. Ahora crean **Admin, CM y Diseñador**, de los dos tipos
   (de partido de Match Day desde el panel del partido, y de fecha desde la ficha del jugador). Prueba sigue sin poder.
 - Migración `0045_disenador_crea_tickets.sql` (solo `create or replace`, no toca datos): `ticket_crear` y `ticket_crear_evento`
@@ -3035,7 +3035,10 @@ F–H → I (con migración). Cada ítem cerrado se documenta en §4.
   solo, sin tocar los componentes. Tests: unitarios 220/220; `scripts/tickets.test.mjs` actualizado (Diseñador crea partido y
   fecha; cancela el suyo y no el ajeno) aplicando 0045 adentro del rollback — **no se pudo correr hoy** (`pg` directa: timeout,
   §10b IPv6).
-- ⚠️ Para la agencia: los tickets a mano completados **cuentan en el conteo de diseños (0044)**, también los que cree el
-  Diseñador. El detalle del conteo muestra el título; si quieren distinguirlos, se puede agregar "lo pidió X".
-- Pasos de Gerardo: (1) aplicar 0045 en el SQL Editor de Supabase; (2) `git push`; (3) QA con Maxi: crear un ticket desde un
-  partido y uno desde la ficha, cancelar uno propio; con Pedro, ver que Maxi no le cancela los suyos.
+- Los tickets a mano completados **cuentan en el conteo de diseños (0044)**, también los que cree el Diseñador. Para
+  distinguirlos (OK de Gerardo 2026-10-27): migración `0046_conteo_quien_pidio.sql` (drop + create de `conteo_disenos`, mismo
+  cuerpo + columna `pedido_por_nombre` = quien creó el ticket; null en Match Day). El detalle `/conteo/<período>` tiene la
+  columna **"Lo pidió"** (y "Por" pasó a "Completó"). Si el código sube antes que la 0046, la columna muestra "—" sin romper.
+  Test de base nuevo en `tickets.test.mjs` (no corrido hoy, misma causa).
+- Pasos de Gerardo: (1) aplicar 0045 y después 0046 en el SQL Editor de Supabase; (2) `git push`; (3) QA con Maxi: crear un ticket desde un
+  partido y uno desde la ficha, cancelar uno propio; con Pedro, ver que Maxi no le cancela los suyos; en `/conteo`, la columna "Lo pidió" con el nombre correcto.

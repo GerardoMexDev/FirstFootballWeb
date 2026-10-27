@@ -2,7 +2,8 @@
  * Detalle del conteo mensual de diseños (pedido de la agencia 2026-10-08, para el pago del
  * Diseñador): `/conteo/2026-10` = 6 oct – 5 nov 2026. Totales (Match Day, pedidos, por jugador),
  * la lista de cada diseño completado en el período y los links a los períodos anteriores — cada
- * período queda con su dirección fija para consultarlo después.
+ * período queda con su dirección fija para consultarlo después. Cada pedido muestra quién lo
+ * pidió (0046): desde 0045 el Diseñador también crea tickets.
  *
  * Solo Administrador y Diseñador (la base también lo valida, 0044). Se calcula en vivo.
  *
@@ -117,7 +118,8 @@ export default async function PaginaConteo({ params }: { params: { periodo: stri
                       <th scope="col">Completado</th>
                       <th scope="col">Diseño</th>
                       <th scope="col">Tipo</th>
-                      <th scope="col">Por</th>
+                      <th scope="col">Lo pidió</th>
+                      <th scope="col">Completó</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -128,6 +130,7 @@ export default async function PaginaConteo({ params }: { params: { periodo: stri
                         <td>
                           <span className={`cnt__tipo cnt__tipo--${d.tipo}`}>{d.tipo === 'matchday' ? 'Match Day' : 'Pedido'}</span>
                         </td>
+                        <td>{d.pedidoPorNombre ?? '—'}</td>
                         <td>{d.completadoPorNombre ?? '—'}</td>
                       </tr>
                     ))}

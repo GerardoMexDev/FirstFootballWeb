@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { puedeVerConteo, totalizar, type DisenoContado } from './conteo-disenos.ts';
 
 const d = (tipo: DisenoContado['tipo'], jugadorId: string, jugadorNombre: string): DisenoContado => ({
-  tipo, completadoDia: '2026-10-10', jugadorId, jugadorNombre, titulo: 'T', completadoPorNombre: 'Maxi',
+  tipo, completadoDia: '2026-10-10', jugadorId, jugadorNombre, titulo: 'T', completadoPorNombre: 'Maxi', pedidoPorNombre: null,
 });
 
 test('totalizar: Match Day + pedidos, y por jugador de más a menos', () => {

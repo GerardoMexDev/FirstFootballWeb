@@ -1212,4 +1212,37 @@ test('0044: solo Administrador y Diseñador (CM y Prueba 42501, anon sin permiso
     await debeFallar(cl, `select * from conteo_disenos('2030-01-01', '2030-12-31')`, [], /Período inválido/);
   }));
 
+// 0046: el conteo dice quién pidió cada pedido (0045: el Diseñador también crea). Drop + create
+// adentro del rollback → se aplica siempre, después de 0044 y 0045.
+const MIGRACION_0046 = readFileSync(new URL('../supabase/migrations/0046_conteo_quien_pidio.sql', import.meta.url), 'utf8')
+  .replace(/^\s*begin;\s*$/m, '')
+  .replace(/^\s*commit;\s*$/m, '');
+
+test('0046: el conteo muestra quién pidió cada pedido (el Diseñador incluido); Match Day sin pedido', () =>
+  enTransaccion0044(async (cl) => {
+    await cl.query(MIGRACION_0045);
+    await cl.query(MIGRACION_0046);
+    const { rows: r0 } = await cl.query(`select ${HOY} - 1 as d, ${HOY} + 1 as h`);
+    const [d, h] = [r0[0].d.toISOString().slice(0, 10), r0[0].h.toISOString().slice(0, 10)];
+    const nombre = async (uid) => {
+      await comoDueno(cl);
+      return (await cl.query(`select nombre_completo from perfiles where id = $1`, [uid])).rows[0].nombre_completo;
+    };
+    const [maxi, pedro] = [await nombre(ids.maxi), await nombre(ids.pedro)];
+    const p = await partidoDePrueba(cl, ids.jugadorMd);
+    await como(cl, ids.maxi);
+    const propio = (await cl.query(`select ticket_crear($1, $2, 'pieza que pidió el jugador') id`, [p, ids.jugadorMd])).rows[0].id;
+    await como(cl, ids.pedro);
+    const dePedro = (await cl.query(`select ticket_crear($1, $2, 'pieza del CM') id`, [p, ids.jugadorMd])).rows[0].id;
+    await como(cl, ids.maxi);
+    await cl.query(`select ticket_completar($1)`, [propio]);
+    await cl.query(`select ticket_completar($1)`, [dePedro]);
+    await cl.query(`select diseno_partido_marcar($1, $2, true)`, [p, ids.jugadorMd]);
+    const filas = await conteo(cl, ids.felipe, d, h);
+    const porTitulo = (patron) => filas.filter((f) => f.tipo === 'pedido' && f.completado_por_nombre === maxi && patron.test(f.pedido_por_nombre ?? ''));
+    assert.equal(porTitulo(new RegExp(`^${maxi}$`)).length >= 1, true);
+    assert.equal(porTitulo(new RegExp(`^${pedro}$`)).length >= 1, true);
+    assert.ok(filas.some((f) => f.tipo === 'matchday' && f.pedido_por_nombre === null));
+  }));
+
 export { enTransaccion, como, comoAnon, comoServicio, comoDueno, debeFallar, partidoDePrueba };

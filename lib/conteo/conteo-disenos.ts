@@ -25,6 +25,8 @@ export interface DisenoContado {
   jugadorNombre: string;
   titulo: string;
   completadoPorNombre: string | null;
+  /** Quien creó el ticket (0046); null en Match Day (automático). */
+  pedidoPorNombre: string | null;
 }
 
 export interface TotalesConteo {
@@ -42,6 +44,8 @@ type Fila = {
   jugador_nombre: string;
   titulo: string;
   completado_por_nombre: string | null;
+  /** Falta si la base todavía no tiene la 0046. */
+  pedido_por_nombre?: string | null;
 };
 
 export async function leerConteo(supabase: ReturnType<typeof crearClienteServidor>, periodo: Periodo): Promise<DisenoContado[]> {
@@ -58,6 +62,7 @@ export async function leerConteo(supabase: ReturnType<typeof crearClienteServido
     jugadorNombre: f.jugador_nombre,
     titulo: f.titulo,
     completadoPorNombre: f.completado_por_nombre,
+    pedidoPorNombre: f.pedido_por_nombre ?? null,
   }));
 }
 
