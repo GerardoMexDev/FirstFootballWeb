@@ -19,7 +19,9 @@ En Claude Code **no hay memoria entre sesiones**, así que este protocolo es obl
 3. Rutina de cierre Git: `git add . && git commit -m "Sesión N: ..." && git push`.
 4. La sesión no se cierra hasta que `git push` terminó OK.
 
-**Última actualización:** 2026-10-09 (Sesiones 17–18, 05/10 y 08–09/10). **Todo en producción y con QA de Gerardo:**
+**Última actualización:** 2026-10-27 (Sesión 19): **el Diseñador también crea tickets (0045) + columna "Lo pidió" en el
+conteo (0046)** — en producción, migraciones verificadas; falta solo el QA de Gerardo con Maxi/Pedro (ver §5, última entrada).
+**Antes:** 2026-10-09 (Sesiones 17–18, 05/10 y 08–09/10). **Todo en producción y con QA de Gerardo:**
 tarjeta flotante del calendario, casilla Cancelado con motivo + señal ⚡ Último momento (0040), amistosos de ESPN + escudos
 (0041–0043, ya no queda ningún club sin escudo), campanita de avisos, cierre de sesión a las 12 h, conteo mensual de
 diseños (0044, `/conteo`), escudos del panel del partido, manual de operación (borrador + PDF).
@@ -2970,7 +2972,7 @@ F–H → I (con migración). Cada ítem cerrado se documenta en §4.
 | `npm run migracion …0022…` desde Claude (Sesión 12, con OK de Gerardo) | Bloqueado por el auto-mode ("Production Deploy"). Inconsistente: la `0024` pasó ese mismo día | Tratar toda migración como algo que puede bloquearse: dejarla verificada y pasarle a Gerardo el comando (o el SQL Editor); Claude verifica después con una consulta de solo lectura |
 | Verificar que una migración está aplicada con `select('*', { count: 'exact', head: true })` y mirar `r.error` (Sesión 13, 0027) | Falso positivo: con `head: true` la vista inexistente no devolvió `error` en ese campo y el script dijo "aplicada" | Pedir filas reales (`select('col').limit(1)`) y exigir `data` no nulo; el error real es `PGRST205` |
 | `node -e "…"` en Bash con texto que tiene comillas dobles o backticks (Sesión 15, 2026-09-30) | Bash corta el string / interpreta los backticks → "syntax error near unexpected token" y no se aplica nada | Para editar archivos con texto largo: escribir un script `.cjs` en el scratchpad y correrlo con `node archivo.cjs` (o usar Edit/Write). **Repetido 2026-10-05** (texto con backticks en `node -e`): si el texto nuevo tiene backticks → Edit, sin excepción |
-| `git push` desde Claude (Sesión 12, 2026-09-28) | Bloqueado por el auto-mode ("Out-of-Place Publication": el push despliega a Vercel) | Dejar los commits hechos y verificados; Gerardo corre `git push` y Claude hace el QA en prod después |
+| `git push` desde Claude (Sesión 12, 2026-09-28) | Bloqueado por el auto-mode ("Out-of-Place Publication": el push despliega a Vercel) | Dejar los commits hechos y verificados; Gerardo corre `git push` y Claude hace el QA en prod después. **2026-10-27: pasó** cuando Gerardo pidió `git push` explícitamente en el chat (sin pedido explícito, seguir dejándoselo a él) |
 | Meter `git stash` en un comando de diagnóstico (Sesión 15, 2026-09-30) | Guardó en el stash un cambio sin commitear; se recuperó con `git stash pop` | Nunca `git stash` en comandos de QA/diagnóstico; si hace falta comparar con HEAD, usar `git diff` o `git worktree` |
 | `npx prettier --write` sobre un componente (Sesión 15, 2026-09-30) | El proyecto no tiene config de Prettier: lo reformateó entero con los defaults (comillas dobles, 80 columnas) → diff de 110 líneas | No correr Prettier; indentar a mano (script `.cjs` que agregue espacios) y verificar con `git diff -w --stat` |
 | Insertar texto con `s.replace(a, textoNuevo)` de JS cuando el texto trae SQL con `$$` (Sesión 15, 2026-09-30) | En el reemplazo de `String.replace`, `$$` significa "un $": la función plpgsql quedó con `as $` → syntax error 42601 | Reemplazar con `s.split(a).join(b)` (no interpreta $), o pasar una función: `s.replace(a, () => b)` |
@@ -3024,7 +3026,7 @@ F–H → I (con migración). Cada ítem cerrado se documenta en §4.
 - Se conservan sus datos y el historial de `disenos_partido` (5 Match Day entregados, cuentan en el conteo de diseños).
 - Para revertir: volver esas 3 columnas a `true`.
 
-### 🎫 El Diseñador también crea tickets (2026-10-27) — ✅ 0045 y 0046 aplicadas por Gerardo y verificadas en prod; ⏳ falta push + QA
+### 🎫 El Diseñador también crea tickets (2026-10-27) — ✅ EN PRODUCCIÓN (push `87f06da`, deploy Vercel OK 2026-10-27); ⏳ falta QA con usuarios
 - Pedido de la agencia (vía Gerardo): que el Diseñador pueda hacer tickets. Ahora crean **Admin, CM y Diseñador**, de los dos tipos
   (de partido de Match Day desde el panel del partido, y de fecha desde la ficha del jugador). Prueba sigue sin poder.
 - Migración `0045_disenador_crea_tickets.sql` (solo `create or replace`, no toca datos): `ticket_crear` y `ticket_crear_evento`
@@ -3046,5 +3048,7 @@ F–H → I (con migración). Cada ítem cerrado se documenta en §4.
   que hacer."), Prueba rebota con el mensaje nuevo (42501), partido y fecha. 0 tickets creados.
   Técnica reutilizable: `POST https://api.supabase.com/v1/projects/<ref>/database/query` con `read_only: true` para leer
   (el usuario read-only no ejecuta funciones; para probarlas, `read_only: false` dentro de `begin … rollback`).
-- Pasos de Gerardo: (1) ~~aplicar 0045 y 0046~~ hecho; (2) `git push`; (3) QA con Maxi: crear un ticket desde un
+- Push y deploy hechos (2026-10-27): Vercel `success`; smoke en prod: /login 200, /conteo y /tickets → /login sin sesión.
+- Pasos de Gerardo: (1) ~~aplicar 0045 y 0046~~ hecho; (2) ~~push~~ hecho; (3) QA pendiente (Claude no tiene las
+  contraseñas). Los tickets de prueba: cancelarlos, no completarlos (un completado cuenta en el conteo de pago). Pasos originales: (2) `git push`; (3) QA con Maxi: crear un ticket desde un
   partido y uno desde la ficha, cancelar uno propio; con Pedro, ver que Maxi no le cancela los suyos; en `/conteo`, la columna "Lo pidió" con el nombre correcto.
