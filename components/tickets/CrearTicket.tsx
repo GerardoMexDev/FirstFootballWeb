@@ -1,6 +1,6 @@
 /**
  * "Crear ticket de diseño" para un jugador de un partido (panel del partido). Solo lo
- * renderiza el padre para Admin/CM. Al crear, abre la tarjeta del ticket nuevo.
+ * renderiza el padre para Admin/CM/Diseñador (`puedeCrear`). Al crear, abre la tarjeta del ticket nuevo.
  * El botón se deshabilita mientras envía: la base admite 2 tickets por partido, así que
  * un doble clic crearía dos.
  *

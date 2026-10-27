@@ -343,13 +343,11 @@ test('Crear: Admin y CM crean; queda pendiente con título armado e historial "c
     assert.ok(t2);
   }));
 
-test('Crear: Diseñador, Prueba e inactivo no pueden', () =>
-  enTransaccion(async (cl) => {
+test('Crear: Prueba e inactivo no pueden', () =>
+  enTransaccion0045(async (cl) => {
     const p = await partidoDePrueba(cl, ids.jugadorMd);
-    await como(cl, ids.maxi);
-    await debeFallar(cl, `select ticket_crear($1,$2,'x')`, [p, ids.jugadorMd], /Solo el Administrador o el Community Manager/);
     await como(cl, ids.alexis);
-    await debeFallar(cl, `select ticket_crear($1,$2,'x')`, [p, ids.jugadorMd], /Solo el Administrador o el Community Manager/);
+    await debeFallar(cl, `select ticket_crear($1,$2,'x')`, [p, ids.jugadorMd], /Solo el Administrador, el Community Manager o el Diseñador/);
     await comoDueno(cl);
     await cl.query(`update perfiles set activo = false where id = $1`, [ids.pedro]);
     await como(cl, ids.pedro);
@@ -782,6 +780,17 @@ async function enTransaccion0028(fn) {
   }
 }
 
+// 0045 (el Diseñador crea): solo `create or replace` → se aplica siempre adentro, es idempotente.
+const MIGRACION_0045 = readFileSync(new URL('../supabase/migrations/0045_disenador_crea_tickets.sql', import.meta.url), 'utf8')
+  .replace(/^\s*begin;\s*$/m, '')
+  .replace(/^\s*commit;\s*$/m, '');
+async function enTransaccion0045(fn) {
+  return enTransaccion0028(async (cl) => {
+    await cl.query(MIGRACION_0045);
+    await fn(cl);
+  });
+}
+
 const HOY_UY = `(now() at time zone 'America/Montevideo')::date`;
 
 test('0028: Admin crea un ticket de fecha; título, fecha límite y no-huérfano', () =>
@@ -809,20 +818,36 @@ test('0028: Admin crea un ticket de fecha; título, fecha límite y no-huérfano
     assert.deepEqual(h.rows.map((x) => x.tipo), ['creado']);
   }));
 
-test('0028: el CM también crea; Diseñador y Prueba no (42501)', () =>
-  enTransaccion0028(async (cl) => {
-    await como(cl, ids.pedro);
-    await cl.query(`select ticket_crear_evento($1, ${HOY_UY} + 3, 'Convocado a la selección', 'Pieza de convocatoria')`, [ids.jugadorContenido]);
-    for (const quien of [ids.maxi, ids.alexis]) {
+test('0028/0045: el CM y el Diseñador también crean; Prueba no (42501)', () =>
+  enTransaccion0045(async (cl) => {
+    for (const quien of [ids.pedro, ids.maxi]) {
       await como(cl, quien);
-      const e = await debeFallar(
-        cl,
-        `select ticket_crear_evento($1, ${HOY_UY} + 3, 'Cumpleaños', 'x')`,
-        [ids.jugadorContenido],
-        /Solo el Administrador o el Community Manager pueden crear tickets\./,
-      );
-      assert.equal(e.code, '42501');
+      await cl.query(`select ticket_crear_evento($1, ${HOY_UY} + 3, 'Convocado a la selección', 'Pieza de convocatoria')`, [ids.jugadorContenido]);
     }
+    await como(cl, ids.alexis);
+    const e = await debeFallar(
+      cl,
+      `select ticket_crear_evento($1, ${HOY_UY} + 3, 'Cumpleaños', 'x')`,
+      [ids.jugadorContenido],
+      /Solo el Administrador, el Community Manager o el Diseñador pueden crear tickets\./,
+    );
+    assert.equal(e.code, '42501');
+  }));
+
+test('0045: el Diseñador crea un ticket de partido y cancela el suyo; el de otro, no', () =>
+  enTransaccion0045(async (cl) => {
+    const p = await partidoDePrueba(cl, ids.jugadorMd);
+    await como(cl, ids.maxi);
+    const propio = await crear(cl, p, 'Pieza extra pedida por el jugador');
+    const { rows } = await cl.query(`select creado_por, estado from tickets where id = $1`, [propio]);
+    assert.equal(rows[0].creado_por, ids.maxi);
+    assert.equal(rows[0].estado, 'pendiente');
+    await como(cl, ids.pedro);
+    const ajeno = await crear(cl, p);
+    await como(cl, ids.maxi);
+    await debeFallar(cl, `select ticket_cancelar($1,'no va')`, [ajeno], /Solo quien creó el ticket o el Administrador/);
+    await cl.query(`select ticket_cancelar($1,'Lo cargué por error')`, [propio]);
+    assert.equal(await estadoDe(cl, propio), 'cancelado');
   }));
 
 test('0028: fecha pasada, motivo vacío o largo, nota vacía → error', () =>

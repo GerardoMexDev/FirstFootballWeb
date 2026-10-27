@@ -2959,7 +2959,7 @@ F–H → I (con migración). Cada ítem cerrado se documenta en §4.
 | `npm run deploy:funcion` / `supabase secrets set` desde Claude | Bloqueado por el auto-mode ("Production Deploy" / "Secret-Store Writes") | Dejar todo verificado y pasarle a Gerardo `npm run deploy:funcion -- <nombre>` o `npm run secrets:edge -- <NOMBRE>` |
 | Migración con `DELETE` desde Claude (`0019`) | Bloqueado por el auto-mode ("Modify Shared Resources") | Gerardo la aplica (terminal o SQL Editor de Supabase) y Claude verifica con una consulta de solo lectura |
 | Deployar una Edge Function sin revisar sus secrets | Falló en prod con "Invalid token": la key estaba solo en `.secretos/.env` | Antes de dar por hecho un deploy, confirmar que cada env var nueva está subida como secret de Supabase |
-| `npm run migracion` / conexión `pg` directa a `db.<ref>.supabase.co` (2026-09-24) | `ETIMEDOUT`: esa conexión es solo IPv6 y la red del día no tenía IPv6 | Para leer: `supabase-js` con service role (REST, IPv4). Para aplicar migraciones: SQL Editor del panel de Supabase |
+| `npm run migracion` / conexión `pg` directa a `db.<ref>.supabase.co` (2026-09-24) | `ETIMEDOUT`: esa conexión es solo IPv6 y la red del día no tenía IPv6 | Para leer: `supabase-js` con service role (REST, IPv4). Para aplicar migraciones: SQL Editor del panel de Supabase. **Repetido 2026-10-27** con `npm run test:tickets` ("timeout expired"): los tests de base también dependen de esa conexión |
 | Buscar la carrera completa de un jugador en SportMonks (2026-09-24) | El plan Starter solo tiene temporadas de sus 5 ligas; homónimos (Franco Romero n. 2000) | Carrera histórica = siempre manual (Transfermarkt → hoja "Hitos" del Excel) |
 | Matchear jugadores por substring (`.includes('nández')`) | Coincidió con Nández y con Fernández del mismo plantel | Matchear por token completo del apellido + fecha de nacimiento |
 | Transcribir el roster del Excel a mano en seeds (Sesión 8) | 3 jugadores mal cargados | Releer el Excel al momento de cargar y verificar en la base después del seed |
@@ -3023,3 +3023,19 @@ F–H → I (con migración). Cada ítem cerrado se documenta en §4.
 - La agencia ya no le ofrece el servicio (pedido vía Gerardo): sacarlo de Match Day y de fechas importantes, invisible para todos. En prod: `jugadores` id `ef0b1152-…` → `activo=false`, `servicio_match_day=false`, `servicio_contenido=false` (antes los 3 en `true`). Verificado: 0 filas suyas en `agenda_anual` y `agenda_contenido`; sin tickets.
 - Se conservan sus datos y el historial de `disenos_partido` (5 Match Day entregados, cuentan en el conteo de diseños).
 - Para revertir: volver esas 3 columnas a `true`.
+
+### 🎫 El Diseñador también crea tickets (2026-10-27) — ⏳ falta aplicar la migración 0045 y push
+- Pedido de la agencia (vía Gerardo): que el Diseñador pueda hacer tickets. Ahora crean **Admin, CM y Diseñador**, de los dos tipos
+  (de partido de Match Day desde el panel del partido, y de fecha desde la ficha del jugador). Prueba sigue sin poder.
+- Migración `0045_disenador_crea_tickets.sql` (solo `create or replace`, no toca datos): `ticket_crear` y `ticket_crear_evento`
+  aceptan 'Diseñador'; `ticket__mover` ('revisor'): quien creó el ticket lo cancela sea del cargo que sea (el Diseñador cancela
+  los suyos, no los de otros; el Admin sigue cancelando cualquiera). Mensaje nuevo: "Solo el Administrador, el Community Manager
+  o el Diseñador pueden crear tickets."
+- UI: `lib/tickets/permisos.ts` (`CREADORES` + Diseñador; cancelar = Admin o creador) → el botón "Crear ticket de diseño" aparece
+  solo, sin tocar los componentes. Tests: unitarios 220/220; `scripts/tickets.test.mjs` actualizado (Diseñador crea partido y
+  fecha; cancela el suyo y no el ajeno) aplicando 0045 adentro del rollback — **no se pudo correr hoy** (`pg` directa: timeout,
+  §10b IPv6).
+- ⚠️ Para la agencia: los tickets a mano completados **cuentan en el conteo de diseños (0044)**, también los que cree el
+  Diseñador. El detalle del conteo muestra el título; si quieren distinguirlos, se puede agregar "lo pidió X".
+- Pasos de Gerardo: (1) aplicar 0045 en el SQL Editor de Supabase; (2) `git push`; (3) QA con Maxi: crear un ticket desde un
+  partido y uno desde la ficha, cancelar uno propio; con Pedro, ver que Maxi no le cancela los suyos.

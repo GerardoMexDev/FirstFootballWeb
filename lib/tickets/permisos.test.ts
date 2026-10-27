@@ -4,10 +4,10 @@ import { accionesPermitidas, debeActuar, pendientesDe, puedeCrear } from './perm
 import { esUrgenteHoy } from './pantalla.ts';
 import type { ResumenTicket } from './tipos.ts';
 
-test('puedeCrear: solo Administrador y Community Manager', () => {
+test('puedeCrear: Administrador, Community Manager y Diseñador (0045); Prueba no', () => {
   assert.equal(puedeCrear('Administrador'), true);
   assert.equal(puedeCrear('Community Manager'), true);
-  assert.equal(puedeCrear('Diseñador'), false);
+  assert.equal(puedeCrear('Diseñador'), true);
   assert.equal(puedeCrear('Prueba'), false);
 });
 
@@ -18,6 +18,8 @@ test('accionesPermitidas: Diseñador completa (pendiente) y reabre (completado);
   assert.deepEqual(accionesPermitidas({ cargo: 'Community Manager', esCreador: true, estado: 'pendiente' }), ['cancelar', 'comentar']);
   assert.deepEqual(accionesPermitidas({ cargo: 'Community Manager', esCreador: false, estado: 'pendiente' }), ['comentar']);
   assert.deepEqual(accionesPermitidas({ cargo: 'Prueba', esCreador: false, estado: 'pendiente' }), []);
+  // 0045: el Diseñador que creó el ticket también lo cancela.
+  assert.deepEqual(accionesPermitidas({ cargo: 'Diseñador', esCreador: true, estado: 'pendiente' }), ['completar', 'cancelar', 'comentar']);
 });
 
 const r = (id: string, estado: ResumenTicket['estado'], creadoPor: string, fechaLimite: string | null): ResumenTicket => ({

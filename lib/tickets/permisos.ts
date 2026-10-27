@@ -3,7 +3,8 @@
  * `ticket__mover`). La base es la que manda: esto solo decide qué botones mostrar. Puro.
  *
  * Desde 2026-09-30 (0030) el recorrido es simple: pendiente → completado (el estado 'publicado').
- * El Diseñador completa y reabre; quien creó el ticket o el Administrador lo cancelan.
+ * Crean Admin, CM y Diseñador (0045). El Diseñador completa y reabre; quien creó el ticket o
+ * el Administrador lo cancelan.
  * "Lo que te toca" (globito, lucecita) = solo lo vencido o por vencer: `esUrgente` lo decide el
  * llamador (`esUrgenteHoy` de pantalla.ts) para no importar otro módulo desde acá.
  *
@@ -11,7 +12,8 @@
  */
 import type { Accion, EstadoTicket, ResumenTicket } from '@/lib/tickets/tipos';
 
-const CREADORES = ['Administrador', 'Community Manager'];
+// 0045 (2026-10-27): el Diseñador también crea, y cancela los que creó él.
+const CREADORES = ['Administrador', 'Community Manager', 'Diseñador'];
 const COMENTAN = ['Administrador', 'Community Manager', 'Diseñador'];
 
 export function puedeCrear(cargo: string): boolean {
@@ -20,7 +22,7 @@ export function puedeCrear(cargo: string): boolean {
 
 export function accionesPermitidas(p: { cargo: string; esCreador: boolean; estado: EstadoTicket }): Accion[] {
   const acciones: Accion[] = [];
-  const esRevisor = p.cargo === 'Administrador' || (p.cargo === 'Community Manager' && p.esCreador);
+  const esRevisor = p.cargo === 'Administrador' || (CREADORES.includes(p.cargo) && p.esCreador);
   if (p.cargo === 'Diseñador' && p.estado === 'pendiente') acciones.push('completar');
   if (p.cargo === 'Diseñador' && p.estado === 'publicado') acciones.push('reabrir');
   if (esRevisor && p.estado === 'pendiente') acciones.push('cancelar');

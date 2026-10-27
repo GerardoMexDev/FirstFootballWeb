@@ -1,6 +1,6 @@
 /**
  * Bloque "Tickets de diseño" de la ficha del jugador (0028): sus tickets abiertos (pastilla +
- * título + lucecita si le toca a quien mira; clic abre el ticket) y, para Admin/CM, el botón
+ * título + lucecita si le toca a quien mira; clic abre el ticket) y, para Admin/CM/Diseñador, el botón
  * de crear un ticket de fecha. Si no se pudieron leer los tickets, no se ofrece crear.
  *
  * Football First. Creado 2026-09-29.
