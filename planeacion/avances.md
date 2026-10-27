@@ -3024,7 +3024,7 @@ F–H → I (con migración). Cada ítem cerrado se documenta en §4.
 - Se conservan sus datos y el historial de `disenos_partido` (5 Match Day entregados, cuentan en el conteo de diseños).
 - Para revertir: volver esas 3 columnas a `true`.
 
-### 🎫 El Diseñador también crea tickets (2026-10-27) — ⏳ falta aplicar las migraciones 0045 y 0046 y push
+### 🎫 El Diseñador también crea tickets (2026-10-27) — ✅ 0045 y 0046 aplicadas por Gerardo y verificadas en prod; ⏳ falta push + QA
 - Pedido de la agencia (vía Gerardo): que el Diseñador pueda hacer tickets. Ahora crean **Admin, CM y Diseñador**, de los dos tipos
   (de partido de Match Day desde el panel del partido, y de fecha desde la ficha del jugador). Prueba sigue sin poder.
 - Migración `0045_disenador_crea_tickets.sql` (solo `create or replace`, no toca datos): `ticket_crear` y `ticket_crear_evento`
@@ -3040,5 +3040,11 @@ F–H → I (con migración). Cada ítem cerrado se documenta en §4.
   cuerpo + columna `pedido_por_nombre` = quien creó el ticket; null en Match Day). El detalle `/conteo/<período>` tiene la
   columna **"Lo pidió"** (y "Por" pasó a "Completó"). Si el código sube antes que la 0046, la columna muestra "—" sin romper.
   Test de base nuevo en `tickets.test.mjs` (no corrido hoy, misma causa).
-- Pasos de Gerardo: (1) aplicar 0045 y después 0046 en el SQL Editor de Supabase; (2) `git push`; (3) QA con Maxi: crear un ticket desde un
+- **Verificado en prod (2026-10-27)** por la Management API de Supabase (HTTPS, sin IPv6; `SUPABASE_ACCESS_TOKEN`):
+  definiciones nuevas de las 4 funciones, permisos (authenticated sí, anon no, `ticket__mover` interno). Comportamiento con
+  usuarios simulados en `begin … rollback` y nota en blanco: Admin, CM y Diseñador pasan el chequeo de cargo ("Escribí qué hay
+  que hacer."), Prueba rebota con el mensaje nuevo (42501), partido y fecha. 0 tickets creados.
+  Técnica reutilizable: `POST https://api.supabase.com/v1/projects/<ref>/database/query` con `read_only: true` para leer
+  (el usuario read-only no ejecuta funciones; para probarlas, `read_only: false` dentro de `begin … rollback`).
+- Pasos de Gerardo: (1) ~~aplicar 0045 y 0046~~ hecho; (2) `git push`; (3) QA con Maxi: crear un ticket desde un
   partido y uno desde la ficha, cancelar uno propio; con Pedro, ver que Maxi no le cancela los suyos; en `/conteo`, la columna "Lo pidió" con el nombre correcto.
