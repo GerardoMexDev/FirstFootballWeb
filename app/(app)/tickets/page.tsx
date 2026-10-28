@@ -8,6 +8,7 @@
  */
 import { redirect } from 'next/navigation';
 import { DateTime } from 'luxon';
+import { CrearTicketGeneral } from '@/components/tickets/CrearTicketGeneral';
 import { SeccionTickets } from '@/components/tickets/SeccionTickets';
 import { EstadoSinDatos } from '@/components/comunes/EstadoSinDatos';
 import { sesionActual } from '@/lib/sesion/sesion-actual';
@@ -16,6 +17,9 @@ import { RepositorioTicketsSupabase } from '@/lib/repositorios/repositorio-ticke
 import { crearClienteServidor } from '@/lib/supabase/cliente-servidor';
 import { ordenarPantalla, visiblesPara } from '@/lib/tickets/pantalla';
 import type { ResumenTicket } from '@/lib/tickets/tipos';
+
+/** Cargos que crean tickets (0045); acá, los generales sin jugador (0047). */
+const CREAN_TICKETS = ['Administrador', 'Community Manager', 'Diseñador'];
 
 /** Cerrados más viejos que esto no se traen (spec §3). */
 const DIAS_CERRADOS = 60;
@@ -52,6 +56,8 @@ export default async function PaginaTickets() {
         <h1 className="d1">Tickets</h1>
         <p className="sub">Primero lo que vence antes; después lo completado.</p>
       </div>
+
+      {CREAN_TICKETS.includes(sesion.cargo) && <CrearTicketGeneral hoyUy={hoyUy} />}
 
       {tickets === null ? (
         <EstadoSinDatos>No pudimos cargar los tickets. Recargá la página.</EstadoSinDatos>

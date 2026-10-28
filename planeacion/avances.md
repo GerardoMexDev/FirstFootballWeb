@@ -19,7 +19,8 @@ En Claude Code **no hay memoria entre sesiones**, así que este protocolo es obl
 3. Rutina de cierre Git: `git add . && git commit -m "Sesión N: ..." && git push`.
 4. La sesión no se cierra hasta que `git push` terminó OK.
 
-**Última actualización:** 2026-10-27 (Sesión 19): **el Diseñador también crea tickets (0045) + columna "Lo pidió" en el
+**Última actualización:** 2026-10-28: **tickets generales sin jugador (0047)** — migración en prod y verificada; falta push + QA (ver §5, última entrada).
+**Antes:** 2026-10-27 (Sesión 19): **el Diseñador también crea tickets (0045) + columna "Lo pidió" en el
 conteo (0046)** — en producción, migraciones verificadas; falta solo el QA de Gerardo con Maxi/Pedro (ver §5, última entrada).
 **Antes:** 2026-10-09 (Sesiones 17–18, 05/10 y 08–09/10). **Todo en producción y con QA de Gerardo:**
 tarjeta flotante del calendario, casilla Cancelado con motivo + señal ⚡ Último momento (0040), amistosos de ESPN + escudos
@@ -2978,6 +2979,7 @@ F–H → I (con migración). Cada ítem cerrado se documenta en §4.
 | Insertar texto con `s.replace(a, textoNuevo)` de JS cuando el texto trae SQL con `$$` (Sesión 15, 2026-09-30) | En el reemplazo de `String.replace`, `$$` significa "un $": la función plpgsql quedó con `as $` → syntax error 42601 | Reemplazar con `s.split(a).join(b)` (no interpreta $), o pasar una función: `s.replace(a, () => b)` |
 | `sed 's/\`/`/g'` para sacar barras antes de backticks (Sesión 15, 2026-09-30) | En GNU sed/grep, barra+backtick es el ANCLA de inicio: agregó un backtick al comienzo de cada línea del archivo | Para texto con backticks o barras: Edit, o node con `split/join` sobre el texto literal |
 | Un `cat > archivo` suelto sin heredoc al inicio de un comando Bash (2026-10-01) | Se queda esperando stdin: el comando se colgó 2 min y pasó a segundo plano | Escribir scripts con Write (o heredoc completo) y nunca dejar un `cat >` sin entrada. **Repetido 2026-10-05** (un `cat > x` de más ANTES del heredoc): scripts SIEMPRE con Write, nunca heredoc en Bash |
+| Probar una migración en prod por la Management API dentro de `begin … rollback` (`read_only: false`), desde Claude (2026-10-28, 0047) | Bloqueado por el auto-mode ("Production Deploy"), aunque la sesión 19 sí pudo ejecutar funciones así | Dejar el script de prueba listo en `scripts/` y que Gerardo lo corra (o aplique la migración en el SQL Editor); Claude verifica después con `read_only: true` |
 
 ## 11. Dudas abiertas (de `contexto.md` §12)
 
@@ -3052,3 +3054,22 @@ F–H → I (con migración). Cada ítem cerrado se documenta en §4.
 - Pasos de Gerardo: (1) ~~aplicar 0045 y 0046~~ hecho; (2) ~~push~~ hecho; (3) QA pendiente (Claude no tiene las
   contraseñas). Los tickets de prueba: cancelarlos, no completarlos (un completado cuenta en el conteo de pago). Pasos originales: (2) `git push`; (3) QA con Maxi: crear un ticket desde un
   partido y uno desde la ficha, cancelar uno propio; con Pedro, ver que Maxi no le cancela los suyos; en `/conteo`, la columna "Lo pidió" con el nombre correcto.
+
+### 🎫 Tickets generales, sin jugador (2026-10-28) — 0047 aplicada y verificada en prod; ⏳ falta push + QA con usuarios
+- Pedido de la agencia: el Diseñador hace trabajos que no son de un jugador (piezas de la agencia, eventos, sponsors…).
+  Decisiones de Gerardo: **fecha de entrega obligatoria** y **asunto libre** (sin categorías).
+- Migración `0047_tickets_generales.sql` (aditiva): `tickets.jugador_id` admite null solo en generales (check
+  `tickets_general_con_fecha`: sin jugador ⇒ sin partido y con fecha). Reutiliza las columnas de los tickets de fecha:
+  `fecha_evento` = entrega, `motivo` = asunto. `tickets_vista`: left join a jugadores, `fecha_limite` = el día de
+  entrega (sin los 2 días de anticipación), columna `es_general`. `ticket_crear_general(fecha, asunto, nota)` para Admin,
+  CM y Diseñador. `conteo_disenos`: los generales suman en una fila "General".
+- UI: botón **"Nuevo ticket general"** arriba de /tickets (`CrearTicketGeneral.tsx`); panel: "Ticket general · entrega d/m",
+  sin "Ver jugador"; calendario: chip con "General". Tipos: `jugadorId`/`jugadorNombre` nullable + `esGeneral`.
+- Verificado: `scripts/probar-0047.mjs` (lo corrió Gerardo: migración + pruebas en prod dentro de un rollback) → todo OK
+  (Diseñador crea, conteo "General", fecha pasada/asunto/nota vacíos rechazados, Prueba y anon 42501, check 23514, 0 restos).
+  Gerardo aplicó la 0047 en el SQL Editor; Claude verificó por Management API `read_only`. Tipos regenerados (estaban
+  atrasados), tsc limpio, 221/221 tests, `npm run build` OK.
+- Fix: `scripts/generar-tipos.mjs` fallaba en Windows por los espacios en la ruta del proyecto (ruta entre comillas).
+- Pasos de Gerardo: (1) `git push`; (2) QA: con Maxi crear un ticket general, verlo en el calendario el día de entrega
+  y **cancelarlo** (no completarlo: un completado cuenta en el conteo de pago); con Pedro, ver que lo ve solo si lo creó él.
+

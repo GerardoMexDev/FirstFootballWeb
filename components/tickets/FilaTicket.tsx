@@ -58,11 +58,11 @@ export function FilaTicket({
           {alerta && <AlertaTicket texto={alerta} />}
         </span>
       </button>
-      {t.automatico && t.partidoId && (
+      {t.automatico && t.partidoId && t.jugadorId && (
         <CasillasDiseno
           partidoId={t.partidoId}
           jugadorId={t.jugadorId}
-          jugadorNombre={t.jugadorNombre}
+          jugadorNombre={t.jugadorNombre ?? ''}
           marca={t.estado === 'publicado' ? 'completado' : t.estado === 'cancelado' ? 'cancelado' : 'pendiente'}
           motivoCancelacion={t.motivoCancelacion}
           puedeMarcar={puedeMarcar}

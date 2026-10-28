@@ -10,7 +10,7 @@ export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "14.5"
+    PostgrestVersion: "14.17"
   }
   public: {
     Tables: {
@@ -255,21 +255,27 @@ export type Database = {
       }
       disenos_partido: {
         Row: {
+          cancelado: boolean
           completado_en: string
           completado_por: string
           jugador_id: string
+          motivo_cancelacion: string | null
           partido_id: string
         }
         Insert: {
+          cancelado?: boolean
           completado_en?: string
           completado_por: string
           jugador_id: string
+          motivo_cancelacion?: string | null
           partido_id: string
         }
         Update: {
+          cancelado?: boolean
           completado_en?: string
           completado_por?: string
           jugador_id?: string
+          motivo_cancelacion?: string | null
           partido_id?: string
         }
         Relationships: [
@@ -371,6 +377,39 @@ export type Database = {
           metrica?: Database["public"]["Enums"]["metrica_hito"]
           paso?: number
           plantilla_frase?: string
+        }
+        Relationships: []
+      }
+      estadios_equipo: {
+        Row: {
+          alias: string[]
+          ciudad: string | null
+          equipo: string
+          estadio: string
+          id: number
+          liga: string | null
+          nombres_fuente: string[]
+          pais: string | null
+        }
+        Insert: {
+          alias: string[]
+          ciudad?: string | null
+          equipo: string
+          estadio: string
+          id?: number
+          liga?: string | null
+          nombres_fuente?: string[]
+          pais?: string | null
+        }
+        Update: {
+          alias?: string[]
+          ciudad?: string | null
+          equipo?: string
+          estadio?: string
+          id?: number
+          liga?: string | null
+          nombres_fuente?: string[]
+          pais?: string | null
         }
         Relationships: []
       }
@@ -478,6 +517,110 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "tickets_match_day"
             referencedColumns: ["partido_id"]
+          },
+        ]
+      }
+      fechas_agencia: {
+        Row: {
+          anio: number | null
+          club_id: string | null
+          dia: number
+          id: string
+          jugador_id: string | null
+          mes: number
+          texto: string
+          tipo: string
+        }
+        Insert: {
+          anio?: number | null
+          club_id?: string | null
+          dia: number
+          id?: string
+          jugador_id?: string | null
+          mes: number
+          texto: string
+          tipo: string
+        }
+        Update: {
+          anio?: number | null
+          club_id?: string | null
+          dia?: number
+          id?: string
+          jugador_id?: string | null
+          mes?: number
+          texto?: string
+          tipo?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fechas_agencia_club_id_fkey"
+            columns: ["club_id"]
+            isOneToOne: false
+            referencedRelation: "clubes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fechas_agencia_club_id_fkey"
+            columns: ["club_id"]
+            isOneToOne: false
+            referencedRelation: "partidos_seleccion"
+            referencedColumns: ["club_id"]
+          },
+          {
+            foreignKeyName: "fechas_agencia_club_id_fkey"
+            columns: ["club_id"]
+            isOneToOne: false
+            referencedRelation: "partidos_seleccion"
+            referencedColumns: ["jugador_id"]
+          },
+          {
+            foreignKeyName: "fechas_agencia_club_id_fkey"
+            columns: ["club_id"]
+            isOneToOne: false
+            referencedRelation: "partidos_seleccion"
+            referencedColumns: ["rival_id"]
+          },
+          {
+            foreignKeyName: "fechas_agencia_club_id_fkey"
+            columns: ["club_id"]
+            isOneToOne: false
+            referencedRelation: "proximos_partidos"
+            referencedColumns: ["club_id"]
+          },
+          {
+            foreignKeyName: "fechas_agencia_club_id_fkey"
+            columns: ["club_id"]
+            isOneToOne: false
+            referencedRelation: "proximos_partidos"
+            referencedColumns: ["rival_id"]
+          },
+          {
+            foreignKeyName: "fechas_agencia_club_id_fkey"
+            columns: ["club_id"]
+            isOneToOne: false
+            referencedRelation: "proximos_partidos_contenido"
+            referencedColumns: ["club_id"]
+          },
+          {
+            foreignKeyName: "fechas_agencia_club_id_fkey"
+            columns: ["club_id"]
+            isOneToOne: false
+            referencedRelation: "proximos_partidos_contenido"
+            referencedColumns: ["rival_id"]
+          },
+          {
+            foreignKeyName: "fechas_agencia_jugador_id_fkey"
+            columns: ["jugador_id"]
+            isOneToOne: false
+            referencedRelation: "jugadores"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fechas_agencia_jugador_id_fkey"
+            columns: ["jugador_id"]
+            isOneToOne: false
+            referencedRelation: "totales_jugador"
+            referencedColumns: ["jugador_id"]
           },
         ]
       }
@@ -1410,7 +1553,7 @@ export type Database = {
           fecha_evento: string | null
           id: string
           inicio_utc_conocido: string | null
-          jugador_id: string
+          jugador_id: string | null
           link_entrega: string | null
           motivo: string | null
           nota: string
@@ -1425,7 +1568,7 @@ export type Database = {
           fecha_evento?: string | null
           id?: string
           inicio_utc_conocido?: string | null
-          jugador_id: string
+          jugador_id?: string | null
           link_entrega?: string | null
           motivo?: string | null
           nota: string
@@ -1440,7 +1583,7 @@ export type Database = {
           fecha_evento?: string | null
           id?: string
           inicio_utc_conocido?: string | null
-          jugador_id?: string
+          jugador_id?: string | null
           link_entrega?: string | null
           motivo?: string | null
           nota?: string
@@ -1871,8 +2014,10 @@ export type Database = {
           inicio_utc: string | null
           jugador_id: string | null
           jugador_nombre: string | null
+          motivo_cancelacion: string | null
           partido_id: string | null
           titulo: string | null
+          ultimo_momento: boolean | null
         }
         Relationships: [
           {
@@ -1897,6 +2042,7 @@ export type Database = {
           creado_en: string | null
           creado_por: string | null
           creado_por_nombre: string | null
+          es_general: boolean | null
           estado: Database["public"]["Enums"]["estado_ticket"] | null
           estado_partido: Database["public"]["Enums"]["estado_partido"] | null
           fecha_evento: string | null
@@ -2000,11 +2146,37 @@ export type Database = {
           texto: string
         }[]
       }
+      conteo_disenos: {
+        Args: { p_desde: string; p_hasta: string }
+        Returns: {
+          completado_dia: string
+          completado_en: string
+          completado_por_nombre: string
+          jugador_id: string
+          jugador_nombre: string
+          pedido_por_nombre: string
+          tipo: string
+          titulo: string
+        }[]
+      }
+      diseno_partido_cancelar: {
+        Args: { p_jugador: string; p_motivo: string; p_partido: string }
+        Returns: undefined
+      }
       diseno_partido_marcar: {
         Args: { p_completado: boolean; p_jugador: string; p_partido: string }
         Returns: undefined
       }
       es_usuario_activo: { Args: never; Returns: boolean }
+      fecha_agencia: {
+        Args: {
+          p_base: string
+          p_club: string
+          p_jugador: string
+          p_tipo: string
+        }
+        Returns: string
+      }
       match_day_desde: { Args: never; Returns: string }
       seleccion_convocar: {
         Args: { p_convocado: boolean; p_jugador: string; p_partido: string }
@@ -2020,7 +2192,7 @@ export type Database = {
           fecha_evento: string | null
           id: string
           inicio_utc_conocido: string | null
-          jugador_id: string
+          jugador_id: string | null
           link_entrega: string | null
           motivo: string | null
           nota: string
@@ -2080,6 +2252,10 @@ export type Database = {
           p_motivo: string
           p_nota: string
         }
+        Returns: string
+      }
+      ticket_crear_general: {
+        Args: { p_asunto: string; p_fecha: string; p_nota: string }
         Returns: string
       }
       ticket_devolver: {

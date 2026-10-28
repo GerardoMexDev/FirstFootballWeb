@@ -251,7 +251,7 @@ export function Calendario({
                   type="button"
                   className={`ev ev--t ev--t-${t.estado}`}
                   onClick={() => abrir('ticket', t.id)}
-                  {...paraChip({ fecha: c.fecha, etiqueta: t.motivo ?? 'Ticket', texto: t.jugadorNombre ?? '' })}
+                  {...paraChip({ fecha: c.fecha, etiqueta: t.motivo ?? 'Ticket', texto: t.jugadorNombre ?? 'General' })}
                 >
                   <small className="ev__tk">
                     {alertasPorTicket[t.id] ? (
@@ -263,7 +263,7 @@ export function Calendario({
                   </small>
                   {/* Como el resto de los chips: <b> = qué (en celular se oculta), texto = quién. */}
                   <b>{t.motivo}</b>
-                  {t.jugadorNombre}
+                  {t.jugadorNombre ?? 'General'}
                 </button>
               ))}
             </div>

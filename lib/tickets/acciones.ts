@@ -43,6 +43,20 @@ export async function crearTicketEvento(
   return { ok: true, valor: data as string };
 }
 
+/** Ticket general, sin jugador (0047): asunto + día de entrega (`fecha` yyyy-mm-dd) + nota. */
+export async function crearTicketGeneral(
+  supabase: Cliente,
+  datos: { fecha: string; asunto: string; nota: string },
+): Promise<Resultado<string>> {
+  const { data, error } = await supabase.rpc('ticket_crear_general', {
+    p_fecha: datos.fecha,
+    p_asunto: datos.asunto,
+    p_nota: datos.nota,
+  });
+  if (error) return { ok: false, mensaje: mensajeError(error) };
+  return { ok: true, valor: data as string };
+}
+
 /** Tilda o destilda "Completado" de un partido de Match Day para un jugador (solo Diseñador, 0030). */
 export async function marcarDiseno(
   supabase: Cliente,

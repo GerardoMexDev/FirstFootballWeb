@@ -22,7 +22,7 @@ export type PermisosDiseno = { completar: boolean; cancelar: boolean };
 
 /** Casillas Completado/Cancelado de la tarjeta (0040); nada si el partido no tiene ticket automático. */
 function casillasDe(t: ResumenTicket | undefined, nombre: string, permisos: PermisosDiseno) {
-  if (!t?.partidoId) return undefined;
+  if (!t?.partidoId || !t.jugadorId) return undefined;
   return (
     <CasillasDiseno
       key={`${t.id}:${t.estado}`}

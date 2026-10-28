@@ -20,7 +20,7 @@ import { estadoVisual } from '@/lib/tickets/semaforo';
 import { crearClienteNavegador } from '@/lib/supabase/cliente-navegador';
 import { ejecutarAccion } from '@/lib/tickets/acciones';
 import { accionesPermitidas } from '@/lib/tickets/permisos';
-import { fechaHoraCortaUy, textoEvento, textoVencimiento } from '@/lib/tickets/vencimiento';
+import { fechaCortaUy, fechaHoraCortaUy, textoEvento, textoVencimiento } from '@/lib/tickets/vencimiento';
 import type { DetalleTicketBundle } from '@/lib/tickets/cargar-detalle-ticket';
 import type { Accion, EventoHistorial } from '@/lib/tickets/tipos';
 
@@ -129,7 +129,9 @@ export function PanelTicket({ bundle, onActualizar }: { bundle: DetalleTicketBun
       </div>
       <h2 ref={tituloRef} tabIndex={-1} className="d2" style={{ marginBottom: 10, outline: 'none' }}>{ticket.titulo}</h2>
       <p className="meta" style={{ marginBottom: 24 }}>
-        {ticket.fechaEvento && ticket.motivo
+        {ticket.esGeneral && ticket.fechaEvento
+          ? `Ticket general · entrega ${fechaCortaUy(ticket.fechaEvento)}`
+          : ticket.fechaEvento && ticket.motivo
           ? textoEvento(ticket.motivo, ticket.fechaEvento)
           : ticket.partidoEliminado
             ? 'El partido ya no figura en la fuente de datos.'
@@ -144,7 +146,7 @@ export function PanelTicket({ bundle, onActualizar }: { bundle: DetalleTicketBun
         <p className="tk__nota">{ticket.nota}</p>
       </div>
 
-      {(ticket.linkEntrega || (ticket.partidoId && !ticket.partidoEliminado) || ticket.fechaEvento) && (
+      {(ticket.linkEntrega || (ticket.partidoId && !ticket.partidoEliminado) || (ticket.fechaEvento && ticket.jugadorId)) && (
         <div className="linea" style={{ gap: 10, marginBottom: 24 }}>
           {ticket.linkEntrega && (
             <a href={ticket.linkEntrega} target="_blank" rel="noopener noreferrer" className="btn btn--g">
@@ -156,11 +158,12 @@ export function PanelTicket({ bundle, onActualizar }: { bundle: DetalleTicketBun
               Ver partido
             </button>
           )}
-          {ticket.fechaEvento && (
+          {/* Ticket de fecha: ver la ficha. Los generales (0047) no tienen jugador. */}
+          {ticket.fechaEvento && ticket.jugadorId && (
             <button
               type="button"
               className="btn btn--g"
-              onClick={() => abrir(ticket.jugadorSoloContenido ? 'jugador-contenido' : 'jugador', ticket.jugadorId)}
+              onClick={() => abrir(ticket.jugadorSoloContenido ? 'jugador-contenido' : 'jugador', ticket.jugadorId!)}
             >
               Ver jugador
             </button>

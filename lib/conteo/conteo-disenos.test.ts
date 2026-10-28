@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { puedeVerConteo, totalizar, type DisenoContado } from './conteo-disenos.ts';
 
-const d = (tipo: DisenoContado['tipo'], jugadorId: string, jugadorNombre: string): DisenoContado => ({
+const d = (tipo: DisenoContado['tipo'], jugadorId: string | null, jugadorNombre: string): DisenoContado => ({
   tipo, completadoDia: '2026-10-10', jugadorId, jugadorNombre, titulo: 'T', completadoPorNombre: 'Maxi', pedidoPorNombre: null,
 });
 
@@ -16,6 +16,15 @@ test('totalizar: Match Day + pedidos, y por jugador de más a menos', () => {
     { jugadorNombre: 'Nacho', matchday: 1, pedidos: 0, total: 1 },
   ]);
   assert.deepEqual(totalizar([]), { matchday: 0, pedidos: 0, total: 0, porJugador: [] });
+});
+
+test('totalizar: los tickets generales (sin jugador, 0047) suman juntos en "General"', () => {
+  const t = totalizar([d('pedido', null, 'General'), d('pedido', null, 'General'), d('matchday', 'a', 'Fede')]);
+  assert.equal(t.pedidos, 2);
+  assert.deepEqual(t.porJugador, [
+    { jugadorNombre: 'General', matchday: 0, pedidos: 2, total: 2 },
+    { jugadorNombre: 'Fede', matchday: 1, pedidos: 0, total: 1 },
+  ]);
 });
 
 test('puedeVerConteo: solo Administrador y Diseñador', () => {

@@ -15,8 +15,8 @@ type FilaResumen = Omit<FilaTicket, 'nota' | 'link_entrega' | 'estado_partido' |
 interface FilaTicket {
   id: string;
   partido_id: string | null;
-  jugador_id: string;
-  jugador_nombre: string;
+  jugador_id: string | null;
+  jugador_nombre: string | null;
   titulo: string;
   nota: string;
   estado: EstadoTicket;
@@ -31,6 +31,7 @@ interface FilaTicket {
   fecha_evento: string | null;
   motivo: string | null;
   jugador_solo_contenido: boolean;
+  es_general: boolean;
 }
 
 interface FilaHistorial {
@@ -46,9 +47,9 @@ interface FilaHistorial {
 
 // Listas: sin `nota` (solo el detalle la necesita).
 const CAMPOS_RESUMEN =
-  'id, partido_id, jugador_id, jugador_nombre, titulo, estado, creado_por, creado_por_nombre, inicio_utc, fecha_limite, partido_eliminado, creado_en, fecha_evento, motivo';
+  'id, partido_id, jugador_id, jugador_nombre, titulo, estado, creado_por, creado_por_nombre, inicio_utc, fecha_limite, partido_eliminado, creado_en, fecha_evento, motivo, es_general';
 const CAMPOS =
-  'id, partido_id, jugador_id, jugador_nombre, titulo, nota, estado, link_entrega, creado_por, creado_por_nombre, inicio_utc, estado_partido, partido_eliminado, fecha_limite, creado_en, fecha_evento, motivo, jugador_solo_contenido';
+  'id, partido_id, jugador_id, jugador_nombre, titulo, nota, estado, link_entrega, creado_por, creado_por_nombre, inicio_utc, estado_partido, partido_eliminado, fecha_limite, creado_en, fecha_evento, motivo, jugador_solo_contenido, es_general';
 
 function aResumen(f: FilaResumen): ResumenTicket {
   return {
@@ -66,6 +67,7 @@ function aResumen(f: FilaResumen): ResumenTicket {
     creadoEn: f.creado_en,
     fechaEvento: f.fecha_evento,
     motivo: f.motivo,
+    esGeneral: f.es_general,
   };
 }
 

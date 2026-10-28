@@ -28,8 +28,9 @@ const bin = fileURLToPath(
     import.meta.url,
   ),
 );
+// Con shell:true la ruta va entre comillas: la carpeta del proyecto tiene espacios.
 const r = spawnSync(
-  bin,
+  process.platform === 'win32' ? `"${bin}"` : bin,
   ['gen', 'types', 'typescript', '--project-id', ref, '--schema', 'public'],
   {
     env: { ...process.env, SUPABASE_ACCESS_TOKEN },

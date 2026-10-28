@@ -23,8 +23,9 @@ export type EstadoVisual = 'pendiente' | 'completado' | 'vencido' | 'cancelado';
 export interface ResumenTicket {
   id: string;
   partidoId: string | null;
-  jugadorId: string;
-  jugadorNombre: string;
+  /** `null` en los tickets generales (0047). */
+  jugadorId: string | null;
+  jugadorNombre: string | null;
   titulo: string;
   estado: EstadoTicket;
   creadoPor: string;
@@ -39,6 +40,8 @@ export interface ResumenTicket {
   /** Tickets de fecha (0028): yyyy-mm-dd del evento y qué se celebra. `null` en los de partido. */
   fechaEvento: string | null;
   motivo: string | null;
+  /** Ticket general (0047): sin jugador; `fechaEvento` = día de entrega y `motivo` = asunto. */
+  esGeneral?: boolean;
   /** Ticket automático de Match Day (0030): id 'md:<partido>:<jugador>'; se abre el partido, no un ticket. */
   automatico?: boolean;
   /** Automático cancelado (0040): el motivo que escribió quien lo canceló. */

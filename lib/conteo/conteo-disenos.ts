@@ -21,7 +21,8 @@ export interface DisenoContado {
   tipo: TipoDiseno;
   /** YYYY-MM-DD (Uruguay) en que se completó. */
   completadoDia: string;
-  jugadorId: string;
+  /** `null` en los tickets generales (0047): todos suman en una fila "General". */
+  jugadorId: string | null;
   jugadorNombre: string;
   titulo: string;
   completadoPorNombre: string | null;
@@ -40,7 +41,7 @@ export interface TotalesConteo {
 type Fila = {
   tipo: TipoDiseno;
   completado_dia: string;
-  jugador_id: string;
+  jugador_id: string | null;
   jugador_nombre: string;
   titulo: string;
   completado_por_nombre: string | null;
@@ -68,7 +69,7 @@ export async function leerConteo(supabase: ReturnType<typeof crearClienteServido
 
 /** Totales del período y por jugador. Puro. */
 export function totalizar(disenos: DisenoContado[]): TotalesConteo {
-  const porJugador = new Map<string, { jugadorNombre: string; matchday: number; pedidos: number; total: number }>();
+  const porJugador = new Map<string | null, { jugadorNombre: string; matchday: number; pedidos: number; total: number }>();
   let matchday = 0;
   let pedidos = 0;
   for (const d of disenos) {
