@@ -19,7 +19,10 @@ En Claude Code **no hay memoria entre sesiones**, así que este protocolo es obl
 3. Rutina de cierre Git: `git add . && git commit -m "Sesión N: ..." && git push`.
 4. La sesión no se cierra hasta que `git push` terminó OK.
 
-**Última actualización:** 2026-10-28: **tickets generales sin jugador (0047)** — migración en prod y verificada; falta push + QA (ver §5, última entrada).
+**Última actualización:** 2026-10-28 (Sesión 20, cierre): **tickets generales sin jugador (0047)** — EN PRODUCCIÓN (push `22a3606`,
+deploy Vercel `success`, smoke OK). Solo falta el QA de Gerardo con Maxi y Pedro (ver §5, última entrada).
+**📌 PRÓXIMA SESIÓN:** (1) resultado del QA de tickets generales (y el pendiente de 0045/0046); (2) seguir con los PUNTOS DE
+CIERRE de abajo; (3) decidir qué hacer con la carpeta `escudos/` (5 PNG originales sin commitear desde hace varias sesiones).
 **Antes:** 2026-10-27 (Sesión 19): **el Diseñador también crea tickets (0045) + columna "Lo pidió" en el
 conteo (0046)** — en producción, migraciones verificadas; falta solo el QA de Gerardo con Maxi/Pedro (ver §5, última entrada).
 **Antes:** 2026-10-09 (Sesiones 17–18, 05/10 y 08–09/10). **Todo en producción y con QA de Gerardo:**
@@ -3055,7 +3058,7 @@ F–H → I (con migración). Cada ítem cerrado se documenta en §4.
   contraseñas). Los tickets de prueba: cancelarlos, no completarlos (un completado cuenta en el conteo de pago). Pasos originales: (2) `git push`; (3) QA con Maxi: crear un ticket desde un
   partido y uno desde la ficha, cancelar uno propio; con Pedro, ver que Maxi no le cancela los suyos; en `/conteo`, la columna "Lo pidió" con el nombre correcto.
 
-### 🎫 Tickets generales, sin jugador (2026-10-28) — 0047 aplicada y verificada en prod; ⏳ falta push + QA con usuarios
+### 🎫 Tickets generales, sin jugador (2026-10-28, Sesión 20) — ✅ EN PRODUCCIÓN (push `22a3606`, Vercel `success`); ⏳ falta QA con usuarios
 - Pedido de la agencia: el Diseñador hace trabajos que no son de un jugador (piezas de la agencia, eventos, sponsors…).
   Decisiones de Gerardo: **fecha de entrega obligatoria** y **asunto libre** (sin categorías).
 - Migración `0047_tickets_generales.sql` (aditiva): `tickets.jugador_id` admite null solo en generales (check
@@ -3070,6 +3073,7 @@ F–H → I (con migración). Cada ítem cerrado se documenta en §4.
   Gerardo aplicó la 0047 en el SQL Editor; Claude verificó por Management API `read_only`. Tipos regenerados (estaban
   atrasados), tsc limpio, 221/221 tests, `npm run build` OK.
 - Fix: `scripts/generar-tipos.mjs` fallaba en Windows por los espacios en la ruta del proyecto (ruta entre comillas).
-- Pasos de Gerardo: (1) `git push`; (2) QA: con Maxi crear un ticket general, verlo en el calendario el día de entrega
+- Push y deploy hechos (2026-10-28): Vercel `success`; smoke en prod: /login 200, /tickets → /login sin sesión.
+- Paso pendiente de Gerardo — QA: con Maxi crear un ticket general, verlo en el calendario el día de entrega
   y **cancelarlo** (no completarlo: un completado cuenta en el conteo de pago); con Pedro, ver que lo ve solo si lo creó él.
 
