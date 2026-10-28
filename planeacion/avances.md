@@ -19,9 +19,9 @@ En Claude Code **no hay memoria entre sesiones**, así que este protocolo es obl
 3. Rutina de cierre Git: `git add . && git commit -m "Sesión N: ..." && git push`.
 4. La sesión no se cierra hasta que `git push` terminó OK.
 
-**Última actualización:** 2026-10-28 (Sesión 20, cierre): **tickets generales sin jugador (0047)** — EN PRODUCCIÓN (push `22a3606`,
+**Última actualización:** 2026-10-28 (Sesión 20, cierre): **aviso de seguridad de `perfiles_publicos` resuelto (0048)** + **tickets generales sin jugador (0047)** — EN PRODUCCIÓN (push `22a3606`,
 deploy Vercel `success`, smoke OK). Solo falta el QA de Gerardo con Maxi y Pedro (ver §5, última entrada).
-**📌 PRÓXIMA SESIÓN:** (1) resultado del QA de tickets generales (y el pendiente de 0045/0046); (2) seguir con los PUNTOS DE
+**📌 PRÓXIMA SESIÓN:** (0) qué hacer con la cuenta `alexis` (perfil llamado "Felipe Merola"; ver §5, última entrada); (1) resultado del QA de tickets generales (y el pendiente de 0045/0046); (2) seguir con los PUNTOS DE
 CIERRE de abajo; (3) decidir qué hacer con la carpeta `escudos/` (5 PNG originales sin commitear desde hace varias sesiones).
 **Antes:** 2026-10-27 (Sesión 19): **el Diseñador también crea tickets (0045) + columna "Lo pidió" en el
 conteo (0046)** — en producción, migraciones verificadas; falta solo el QA de Gerardo con Maxi/Pedro (ver §5, última entrada).
@@ -3077,3 +3077,15 @@ F–H → I (con migración). Cada ítem cerrado se documenta en §4.
 - Paso pendiente de Gerardo — QA: con Maxi crear un ticket general, verlo en el calendario el día de entrega
   y **cancelarlo** (no completarlo: un completado cuenta en el conteo de pago); con Pedro, ver que lo ve solo si lo creó él.
 
+### 🔒 Aviso CRITICAL "Security Definer View" en `perfiles_publicos` (2026-10-28, Sesión 20) — ✅ 0048 aplicada y verificada en prod
+- Gerardo lo vio en el Security Advisor de Supabase al cerrar. No había fuga real (solo id/nombre/cargo, solo usuarios
+  activos, anon sin permisos, authenticated solo SELECT), pero la vista era SECURITY DEFINER y auto-actualizable.
+- Migración `0048_perfiles_publicos_invoker.sql`: función `perfiles_publicos_filas()` (SECURITY DEFINER, search_path fijo,
+  3 columnas, filtro `es_usuario_activo()`) + vista `perfiles_publicos` con `security_invoker = true` sobre la función.
+  Mismo nombre y columnas: las vistas de tickets no cambian, la app no se toca.
+- `scripts/probar-0048.mjs` (Gerardo, rollback en prod): antes = después (4 perfiles, mismo autor del ticket), anon 42501,
+  escribir por la vista 55000, `security_invoker=true`, 0 restos. Gerardo aplicó en el SQL Editor; Claude verificó `read_only`.
+- **Usuarios (2026-10-28):** 4, todos activos: felipe (Admin), maxi (Diseñador), pedro (CM), alexis (Prueba). **El perfil de
+  alexis se llama "Felipe Merola"** (igual que el Admin) y alguien entró con esa cuenta el 26/10. Gerardo le consulta a
+  Alexis/Felipe antes de tocarla. Opciones: desactivar (`activo=false`, reversible, recomendado) o borrar desde
+  Authentication → Users (lo hace Gerardo; no tiene tickets ni historial que lo impidan).
