@@ -21,8 +21,7 @@ En Claude Code **no hay memoria entre sesiones**, así que este protocolo es obl
 
 **Última actualización:** 2026-11-06 (Sesión 21, cierre): **suspender / reactivar jugadores (0049)** — EN PRODUCCIÓN (ver §5,
 última entrada). Usuario nuevo `gerardo` (Admin). Perfil de `alexis` renombrado a "Alexis Agustín".
-**📌 PRÓXIMA SESIÓN:** (1) ¿Gerardo suspendió a Rodrigo Aguirre desde la página? Si no, hacerlo y verificar el calendario;
-(2) QA pendiente de tickets generales (0047) y de 0045/0046 con Maxi y Pedro; (3) `alexis`: la clave demo ya no anda —
+**📌 PRÓXIMA SESIÓN:** (1) ~~suspender a Rodrigo Aguirre~~ hecho por Gerardo 2026-11-06 20:12 y verificado; (2) QA pendiente de tickets generales (0047) y de 0045/0046 con Maxi y Pedro; (3) `alexis`: la clave demo ya no anda —
 si Alexis no la recuerda, ponerle una nueva y pasársela a Gerardo; (4) PUNTOS DE CIERRE de abajo; (5) borrar la carpeta
 `escudos/` (son los originales del 8/10; las versiones finales están en `public/escudos/`, commit `5a42454`).
 **Antes:** 2026-10-28 (Sesión 20, cierre): **aviso de seguridad de `perfiles_publicos` resuelto (0048)** + **tickets generales sin jugador (0047)** — EN PRODUCCIÓN (push `22a3606`,
@@ -3096,7 +3095,7 @@ F–H → I (con migración). Cada ítem cerrado se documenta en §4.
   Alexis/Felipe antes de tocarla. Opciones: desactivar (`activo=false`, reversible, recomendado) o borrar desde
   Authentication → Users (lo hace Gerardo; no tiene tickets ni historial que lo impidan).
 
-### ⏸️ Suspender / reactivar jugadores (2026-11-06, Sesión 21) — 0049 aplicada y verificada en prod; ⏳ falta push + suspender a Aguirre
+### ⏸️ Suspender / reactivar jugadores (2026-11-06, Sesión 21) — ✅ EN PRODUCCIÓN (push `ef618ff`, Vercel `success`); Aguirre suspendido
 - Pedido de la agencia: dar de baja a **Rodrigo Aguirre** con una opción reutilizable en Jugadores. Decisiones de Gerardo:
   suspenden y reactivan **Administrador y Community Manager**; **motivo obligatorio**.
 - Migración `0049_suspender_jugadores.sql` (generada copiando el cuerpo de cada vista de su migración más reciente +
@@ -3124,5 +3123,8 @@ F–H → I (con migración). Cada ítem cerrado se documenta en §4.
   cuenta se modificó el 5/11 9:21 sin login) — sigue el pendiente de qué hacer con esa cuenta.
 - **Perfil de `alexis` renombrado** (pedido de Alexis, 2026-11-06): "Felipe Merola" → **"Alexis Agustín"** (solo el nombre;
   clave, cargo y estado sin tocar).
-- Pasos de Gerardo: (1) `git push`; (2) en producción, ficha de **Rodrigo Aguirre → Suspender jugador** con el motivo;
+- ✅ **Rodrigo Aguirre suspendido** por Gerardo desde la página (2026-11-06 20:12, motivo "La agencia ya no le ofrece el
+  servicio"). Verificado `read_only`: `activo=false`, servicio Contenido intacto, 0 próximos partidos. (Las agendas no se
+  pueden leer con el usuario read-only: usan `fecha_agencia()`; el filtro ya se probó en el rollback de `probar-0049`.)
+- Pasos originales de Gerardo: (1) `git push`; (2) en producción, ficha de **Rodrigo Aguirre → Suspender jugador** con el motivo;
   verificar que pasa a "Suspendidos" y que sus fechas ya no están en el calendario.
