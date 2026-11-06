@@ -5,23 +5,33 @@
  * de la tarjeta. La navegación a la ficha vive en el Client Component `GrillaPlantel`.
  */
 import { GrillaPlantel } from '@/components/jugadores/GrillaPlantel';
+import { SeccionSuspendidos } from '@/components/jugadores/SeccionSuspendidos';
 import { calcularHitos, ordenarHitos } from '@/lib/motor-hitos';
 import { agruparPorJugador } from '@/lib/partidos/utilidades';
 import { RepositorioJugadoresSupabase } from '@/lib/repositorios/repositorio-jugadores';
 import { RepositorioHitosSupabase } from '@/lib/repositorios/repositorio-hitos';
 import { RepositorioPartidosSupabase } from '@/lib/repositorios/repositorio-partidos';
 import { crearClienteServidor } from '@/lib/supabase/cliente-servidor';
+import { sesionActual } from '@/lib/sesion/sesion-actual';
+import type { JugadorSuspendido } from '@/lib/repositorios/tipos';
 
 export default async function PaginaJugadores() {
   const supabase = crearClienteServidor();
   const repositorioHitos = new RepositorioHitosSupabase(supabase);
 
-  const [jugadores, partidos, jugadoresBasicos, totales, escalas] = await Promise.all([
-    new RepositorioJugadoresSupabase(supabase).listar(),
+  const repositorioJugadores = new RepositorioJugadoresSupabase(supabase);
+  const [jugadores, partidos, jugadoresBasicos, totales, escalas, suspendidos, sesion] = await Promise.all([
+    repositorioJugadores.listar(),
     new RepositorioPartidosSupabase(supabase).listarProximos(),
     repositorioHitos.listarJugadoresActivos(),
     repositorioHitos.listarTotales(),
     repositorioHitos.listarEscalasActivas(),
+    // 0049: si falla, la página sigue sin la sección (no es lo principal).
+    repositorioJugadores.listarSuspendidos().catch((e) => {
+      console.error('suspendidos (jugadores):', e);
+      return [] as JugadorSuspendido[];
+    }),
+    sesionActual(),
   ]);
 
   const totalesPorJugador = new Map(totales.map((t) => [t.jugadorId, t]));
@@ -50,6 +60,8 @@ export default async function PaginaJugadores() {
       </div>
 
       <GrillaPlantel jugadores={jugadores} hitoFrasePorJugador={hitoFrasePorJugador} />
+
+      <SeccionSuspendidos jugadores={suspendidos} cargo={sesion?.cargo ?? null} />
     </section>
   );
 }

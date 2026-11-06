@@ -19,7 +19,9 @@ En Claude Code **no hay memoria entre sesiones**, así que este protocolo es obl
 3. Rutina de cierre Git: `git add . && git commit -m "Sesión N: ..." && git push`.
 4. La sesión no se cierra hasta que `git push` terminó OK.
 
-**Última actualización:** 2026-10-28 (Sesión 20, cierre): **aviso de seguridad de `perfiles_publicos` resuelto (0048)** + **tickets generales sin jugador (0047)** — EN PRODUCCIÓN (push `22a3606`,
+**Última actualización:** 2026-11-06 (Sesión 21): **suspender / reactivar jugadores (0049)** — migración en prod y verificada;
+falta push + suspender a Rodrigo Aguirre desde la página (ver §5, última entrada). Usuario nuevo `gerardo` (Admin).
+**Antes:** 2026-10-28 (Sesión 20, cierre): **aviso de seguridad de `perfiles_publicos` resuelto (0048)** + **tickets generales sin jugador (0047)** — EN PRODUCCIÓN (push `22a3606`,
 deploy Vercel `success`, smoke OK). Solo falta el QA de Gerardo con Maxi y Pedro (ver §5, última entrada).
 **📌 PRÓXIMA SESIÓN:** (0) qué hacer con la cuenta `alexis` (perfil llamado "Felipe Merola"; ver §5, última entrada); (1) resultado del QA de tickets generales (y el pendiente de 0045/0046); (2) seguir con los PUNTOS DE
 CIERRE de abajo; (3) decidir qué hacer con la carpeta `escudos/` (5 PNG originales sin commitear desde hace varias sesiones).
@@ -3089,3 +3091,32 @@ F–H → I (con migración). Cada ítem cerrado se documenta en §4.
   alexis se llama "Felipe Merola"** (igual que el Admin) y alguien entró con esa cuenta el 26/10. Gerardo le consulta a
   Alexis/Felipe antes de tocarla. Opciones: desactivar (`activo=false`, reversible, recomendado) o borrar desde
   Authentication → Users (lo hace Gerardo; no tiene tickets ni historial que lo impidan).
+
+### ⏸️ Suspender / reactivar jugadores (2026-11-06, Sesión 21) — 0049 aplicada y verificada en prod; ⏳ falta push + suspender a Aguirre
+- Pedido de la agencia: dar de baja a **Rodrigo Aguirre** con una opción reutilizable en Jugadores. Decisiones de Gerardo:
+  suspenden y reactivan **Administrador y Community Manager**; **motivo obligatorio**.
+- Migración `0049_suspender_jugadores.sql` (generada copiando el cuerpo de cada vista de su migración más reciente +
+  filtro): suspender = `activo = false`, **los servicios no se tocan** (al reactivar vuelve igual). Columnas
+  `suspendido_en / suspendido_por / motivo_suspension`; `jugador_suspender(jugador, motivo)` y `jugador_reactivar(jugador)`.
+  **Blindaje:** la política `jugadores_update_manual` (0001) deja a cualquier usuario activo editar cualquier columna de
+  `jugadores` (incluido Prueba); el trigger `jugadores_proteger_estado` ahora rechaza cambiar `activo` y los datos de
+  suspensión salvo por esas funciones (marcan la transacción con `app.jugador_estado`) o service_role. Las demás columnas
+  siguen editables como antes. **Las agendas (`agenda_anual`, `agenda_contenido`) y `proximos_partidos(_contenido)`
+  ahora filtran `activo`** — antes solo miraban los servicios (por eso a Nández hubo que apagarle los dos). Nández quedó
+  con motivo "La agencia ya no le ofrece el servicio." (desde 19/10).
+- UI: ficha del jugador (los dos paneles) → bloque "Estado del jugador" con **"Suspender jugador"** (motivo + confirmación;
+  cierra el panel). Página Jugadores → sección **"Suspendidos"** al pie (fecha, quién, motivo, servicios que recupera,
+  **"Reactivar"** con confirmación). Archivos: `lib/jugadores/estado-jugador.ts`, `components/jugadores/SuspenderJugador.tsx`,
+  `components/jugadores/SeccionSuspendidos.tsx`, `listarSuspendidos()` en el repositorio, estilos `.susp`.
+- Verificado: `scripts/probar-0049.mjs` (Gerardo, rollback en prod): Diseñador/Prueba/anon 42501, Prueba no cambia
+  `activo` directo (trigger), otras columnas OK, motivo vacío y doble suspensión rechazados; Aguirre suspendido → 0 fechas
+  (antes 12) y 0 partidos (antes 54), y -4 aniversarios de Tigres (único jugador de Contenido del club); reactivado →
+  todos los conteos idénticos a antes, servicios intactos. Gerardo aplicó; Claude verificó `read_only`. Tipos regenerados
+  (salen las relaciones vía `perfiles_publicos`, efecto de 0048; nadie las usaba). tsc limpio, 221/221, build OK.
+  QA local (`next start` :3100, usuario `gerardo`): sección Suspendidos con Nández y Reactivar; en la ficha de Aguirre el
+  botón, el texto y "Suspender a Rodrigo Aguirre" deshabilitado sin motivo; cancelado (no se suspendió a nadie).
+- **Usuario nuevo `gerardo`** (Administrador, "Gerardo Agustín"), creado 2026-11-06 a pedido de Gerardo para entrar sin
+  tocar las cuentas existentes. La clave la tiene Gerardo (no se anota acá). `alexis`: `demo1234` ya no funciona (la
+  cuenta se modificó el 5/11 9:21 sin login) — sigue el pendiente de qué hacer con esa cuenta.
+- Pasos de Gerardo: (1) `git push`; (2) en producción, ficha de **Rodrigo Aguirre → Suspender jugador** con el motivo;
+  verificar que pasa a "Suspendidos" y que sus fechas ya no están en el calendario.

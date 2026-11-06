@@ -6,6 +6,7 @@
  * Football First (Fase 1). Creado 2026-09-06.
  */
 import { FichaJugador } from '@/components/jugadores/FichaJugador';
+import { SuspenderJugador } from '@/components/jugadores/SuspenderJugador';
 import { TicketsJugador } from '@/components/tickets/TicketsJugador';
 import type { FichaJugadorBundle } from '@/lib/jugadores/cargar-ficha';
 
@@ -18,7 +19,13 @@ export function PanelJugador({ bundle, destacar }: { bundle: FichaJugadorBundle;
       proximos={bundle.proximos}
       hoyUy={bundle.hoyUy}
       destacar={destacar}
-      tickets={<TicketsJugador jugadorId={bundle.jugador.id} jugadorNombre={bundle.jugador.nombre} datos={bundle.ticketsJugador} />}
+      tickets={
+        <>
+          <TicketsJugador jugadorId={bundle.jugador.id} jugadorNombre={bundle.jugador.nombre} datos={bundle.ticketsJugador} />
+          {/* 0049: Admin y CM suspenden desde la ficha; se reactiva en la sección "Suspendidos". */}
+          <SuspenderJugador jugadorId={bundle.jugador.id} jugadorNombre={bundle.jugador.nombre} cargo={bundle.ticketsJugador.usuario?.cargo} />
+        </>
+      }
     />
   );
 }

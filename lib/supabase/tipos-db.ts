@@ -47,13 +47,6 @@ export type Database = {
             referencedRelation: "perfiles"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "campanas_creado_por_fkey"
-            columns: ["creado_por"]
-            isOneToOne: false
-            referencedRelation: "perfiles_publicos"
-            referencedColumns: ["id"]
-          },
         ]
       }
       clubes: {
@@ -284,13 +277,6 @@ export type Database = {
             columns: ["completado_por"]
             isOneToOne: false
             referencedRelation: "perfiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "disenos_partido_completado_por_fkey"
-            columns: ["completado_por"]
-            isOneToOne: false
-            referencedRelation: "perfiles_publicos"
             referencedColumns: ["id"]
           },
           {
@@ -747,13 +733,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "hitos_creado_por_fkey"
-            columns: ["creado_por"]
-            isOneToOne: false
-            referencedRelation: "perfiles_publicos"
-            referencedColumns: ["id"]
-          },
-          {
             foreignKeyName: "hitos_jugador_id_fkey"
             columns: ["jugador_id"]
             isOneToOne: false
@@ -793,6 +772,7 @@ export type Database = {
           id_externo: string | null
           id_externo_sportmonks: string | null
           instagram: string | null
+          motivo_suspension: string | null
           nacionalidad: string | null
           nombre: string
           origen: Database["public"]["Enums"]["origen_dato"]
@@ -806,6 +786,8 @@ export type Database = {
           servicio_contenido: boolean
           servicio_match_day: boolean
           sincronizado_en: string | null
+          suspendido_en: string | null
+          suspendido_por: string | null
         }
         Insert: {
           activo?: boolean
@@ -830,6 +812,7 @@ export type Database = {
           id_externo?: string | null
           id_externo_sportmonks?: string | null
           instagram?: string | null
+          motivo_suspension?: string | null
           nacionalidad?: string | null
           nombre: string
           origen?: Database["public"]["Enums"]["origen_dato"]
@@ -843,6 +826,8 @@ export type Database = {
           servicio_contenido?: boolean
           servicio_match_day?: boolean
           sincronizado_en?: string | null
+          suspendido_en?: string | null
+          suspendido_por?: string | null
         }
         Update: {
           activo?: boolean
@@ -867,6 +852,7 @@ export type Database = {
           id_externo?: string | null
           id_externo_sportmonks?: string | null
           instagram?: string | null
+          motivo_suspension?: string | null
           nacionalidad?: string | null
           nombre?: string
           origen?: Database["public"]["Enums"]["origen_dato"]
@@ -880,6 +866,8 @@ export type Database = {
           servicio_contenido?: boolean
           servicio_match_day?: boolean
           sincronizado_en?: string | null
+          suspendido_en?: string | null
+          suspendido_por?: string | null
         }
         Relationships: [
           {
@@ -946,10 +934,10 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "jugadores_representante_id_fkey"
-            columns: ["representante_id"]
+            foreignKeyName: "jugadores_suspendido_por_fkey"
+            columns: ["suspendido_por"]
             isOneToOne: false
-            referencedRelation: "perfiles_publicos"
+            referencedRelation: "perfiles"
             referencedColumns: ["id"]
           },
         ]
@@ -1330,13 +1318,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "piezas_creado_por_fkey"
-            columns: ["creado_por"]
-            isOneToOne: false
-            referencedRelation: "perfiles_publicos"
-            referencedColumns: ["id"]
-          },
-          {
             foreignKeyName: "piezas_jugador_id_fkey"
             columns: ["jugador_id"]
             isOneToOne: false
@@ -1386,13 +1367,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "piezas_aprobaciones_aprobador_id_fkey"
-            columns: ["aprobador_id"]
-            isOneToOne: false
-            referencedRelation: "perfiles_publicos"
-            referencedColumns: ["id"]
-          },
-          {
             foreignKeyName: "piezas_aprobaciones_pieza_id_fkey"
             columns: ["pieza_id"]
             isOneToOne: false
@@ -1429,13 +1403,6 @@ export type Database = {
             columns: ["autor_id"]
             isOneToOne: false
             referencedRelation: "perfiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "piezas_comentarios_autor_id_fkey"
-            columns: ["autor_id"]
-            isOneToOne: false
-            referencedRelation: "perfiles_publicos"
             referencedColumns: ["id"]
           },
           {
@@ -1490,13 +1457,6 @@ export type Database = {
             columns: ["creado_por"]
             isOneToOne: false
             referencedRelation: "perfiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "piezas_versiones_creado_por_fkey"
-            columns: ["creado_por"]
-            isOneToOne: false
-            referencedRelation: "perfiles_publicos"
             referencedColumns: ["id"]
           },
           {
@@ -1599,13 +1559,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "tickets_creado_por_fkey"
-            columns: ["creado_por"]
-            isOneToOne: false
-            referencedRelation: "perfiles_publicos"
-            referencedColumns: ["id"]
-          },
-          {
             foreignKeyName: "tickets_jugador_id_fkey"
             columns: ["jugador_id"]
             isOneToOne: false
@@ -1696,13 +1649,6 @@ export type Database = {
             columns: ["autor_id"]
             isOneToOne: false
             referencedRelation: "perfiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "tickets_historial_autor_id_fkey"
-            columns: ["autor_id"]
-            isOneToOne: false
-            referencedRelation: "perfiles_publicos"
             referencedColumns: ["id"]
           },
           {
@@ -1802,16 +1748,6 @@ export type Database = {
           cargo: string | null
           id: string | null
           nombre_completo: string | null
-        }
-        Insert: {
-          cargo?: string | null
-          id?: string | null
-          nombre_completo?: string | null
-        }
-        Update: {
-          cargo?: string | null
-          id?: string | null
-          nombre_completo?: string | null
         }
         Relationships: []
       }
@@ -1982,13 +1918,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "tickets_historial_autor_id_fkey"
-            columns: ["autor_id"]
-            isOneToOne: false
-            referencedRelation: "perfiles_publicos"
-            referencedColumns: ["id"]
-          },
-          {
             foreignKeyName: "tickets_historial_ticket_id_fkey"
             columns: ["ticket_id"]
             isOneToOne: false
@@ -2065,13 +1994,6 @@ export type Database = {
             columns: ["creado_por"]
             isOneToOne: false
             referencedRelation: "perfiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "tickets_creado_por_fkey"
-            columns: ["creado_por"]
-            isOneToOne: false
-            referencedRelation: "perfiles_publicos"
             referencedColumns: ["id"]
           },
           {
@@ -2177,7 +2099,20 @@ export type Database = {
         }
         Returns: string
       }
+      jugador_reactivar: { Args: { p_jugador: string }; Returns: undefined }
+      jugador_suspender: {
+        Args: { p_jugador: string; p_motivo: string }
+        Returns: undefined
+      }
       match_day_desde: { Args: never; Returns: string }
+      perfiles_publicos_filas: {
+        Args: never
+        Returns: {
+          cargo: string
+          id: string
+          nombre_completo: string
+        }[]
+      }
       seleccion_convocar: {
         Args: { p_convocado: boolean; p_jugador: string; p_partido: string }
         Returns: undefined

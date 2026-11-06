@@ -151,6 +151,21 @@ export interface RepositorioJugadores {
   temporadaActual(jugadorId: string): Promise<TemporadaActual | null>;
   /** Links de Dropbox (saneados) de todos los jugadores activos, por id. */
   listarLinksDropbox(): Promise<Record<string, LinksDropbox>>;
+  /** Jugadores suspendidos (`activo = false`, 0049), el más reciente primero. */
+  listarSuspendidos(): Promise<JugadorSuspendido[]>;
+}
+
+/** Fila de la sección "Suspendidos" de la página Jugadores (0049). */
+export interface JugadorSuspendido {
+  id: string;
+  nombre: string;
+  motivo: string | null;
+  /** ISO UTC; `null` si se suspendió antes de 0049 sin fecha registrada. */
+  suspendidoEn: string | null;
+  suspendidoPorNombre: string | null;
+  /** Servicios que conserva: vuelven tal cual al reactivar. */
+  matchDay: boolean;
+  contenido: boolean;
 }
 
 // RepositorioHitos: la clase `RepositorioHitosSupabase` se usa directo (sin interfaz)

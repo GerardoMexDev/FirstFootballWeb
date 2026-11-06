@@ -17,9 +17,22 @@ import { aMapaLinks, type FilaLinksDropbox, type LinksDropbox } from '@/lib/juga
 import type {
   JugadorFicha,
   JugadorPlantel,
+  JugadorSuspendido,
   RepositorioJugadores,
   TemporadaActual,
 } from './tipos';
+
+/** Fila cruda de un suspendido (columnas de 0049). */
+interface FilaSuspendido {
+  id: string;
+  nombre: string;
+  apodo: string | null;
+  motivo_suspension: string | null;
+  suspendido_en: string | null;
+  suspendido_por: string | null;
+  servicio_match_day: boolean;
+  servicio_contenido: boolean;
+}
 
 // Ver avances.md §10: un `SupabaseClient<Database>` reconstruido a mano no calza con el que
 // devuelve `createServerClient` en esta versión — se toma el tipo del propio factory.
@@ -189,5 +202,38 @@ export class RepositorioJugadoresSupabase implements RepositorioJugadores {
       temporadaAnioHasta: data.temporada_anio_hasta,
       temporadaInicio: data.temporada_inicio,
     };
+  }
+
+  async listarSuspendidos(): Promise<JugadorSuspendido[]> {
+    const { data, error } = await this.supabase
+      .from('jugadores')
+      .select('id, nombre, apodo, motivo_suspension, suspendido_en, suspendido_por, servicio_match_day, servicio_contenido')
+      .eq('activo', false)
+      .order('suspendido_en', { ascending: false, nullsFirst: false })
+      .returns<FilaSuspendido[]>();
+    if (error) throw new Error(`No se pudo leer los jugadores suspendidos: ${error.message}`);
+
+    // Nombre de quien suspendió: la RLS de `perfiles` solo deja ver la fila propia → vista pública.
+    const ids = [...new Set((data ?? []).map((f) => f.suspendido_por).filter((x): x is string => !!x))];
+    const nombres = new Map<string, string>();
+    if (ids.length) {
+      const { data: perfiles } = await this.supabase
+        .from('perfiles_publicos')
+        .select('id, nombre_completo')
+        .in('id', ids)
+        .returns<{ id: string | null; nombre_completo: string | null }[]>();
+      for (const p of perfiles ?? []) if (p.id && p.nombre_completo) nombres.set(p.id, p.nombre_completo);
+    }
+
+    return (data ?? []).map((f) => ({
+      id: f.id,
+      // Nombre completo (no el apodo): en una lista de bajas no tiene que haber dudas de quién es.
+      nombre: f.nombre,
+      motivo: f.motivo_suspension,
+      suspendidoEn: f.suspendido_en,
+      suspendidoPorNombre: f.suspendido_por ? (nombres.get(f.suspendido_por) ?? null) : null,
+      matchDay: f.servicio_match_day,
+      contenido: f.servicio_contenido,
+    }));
   }
 }
