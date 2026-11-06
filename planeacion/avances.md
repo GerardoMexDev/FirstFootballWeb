@@ -19,8 +19,12 @@ En Claude Code **no hay memoria entre sesiones**, así que este protocolo es obl
 3. Rutina de cierre Git: `git add . && git commit -m "Sesión N: ..." && git push`.
 4. La sesión no se cierra hasta que `git push` terminó OK.
 
-**Última actualización:** 2026-11-06 (Sesión 21): **suspender / reactivar jugadores (0049)** — migración en prod y verificada;
-falta push + suspender a Rodrigo Aguirre desde la página (ver §5, última entrada). Usuario nuevo `gerardo` (Admin).
+**Última actualización:** 2026-11-06 (Sesión 21, cierre): **suspender / reactivar jugadores (0049)** — EN PRODUCCIÓN (ver §5,
+última entrada). Usuario nuevo `gerardo` (Admin). Perfil de `alexis` renombrado a "Alexis Agustín".
+**📌 PRÓXIMA SESIÓN:** (1) ¿Gerardo suspendió a Rodrigo Aguirre desde la página? Si no, hacerlo y verificar el calendario;
+(2) QA pendiente de tickets generales (0047) y de 0045/0046 con Maxi y Pedro; (3) `alexis`: la clave demo ya no anda —
+si Alexis no la recuerda, ponerle una nueva y pasársela a Gerardo; (4) PUNTOS DE CIERRE de abajo; (5) borrar la carpeta
+`escudos/` (son los originales del 8/10; las versiones finales están en `public/escudos/`, commit `5a42454`).
 **Antes:** 2026-10-28 (Sesión 20, cierre): **aviso de seguridad de `perfiles_publicos` resuelto (0048)** + **tickets generales sin jugador (0047)** — EN PRODUCCIÓN (push `22a3606`,
 deploy Vercel `success`, smoke OK). Solo falta el QA de Gerardo con Maxi y Pedro (ver §5, última entrada).
 **📌 PRÓXIMA SESIÓN:** (0) qué hacer con la cuenta `alexis` (perfil llamado "Felipe Merola"; ver §5, última entrada); (1) resultado del QA de tickets generales (y el pendiente de 0045/0046); (2) seguir con los PUNTOS DE
@@ -3118,5 +3122,7 @@ F–H → I (con migración). Cada ítem cerrado se documenta en §4.
 - **Usuario nuevo `gerardo`** (Administrador, "Gerardo Agustín"), creado 2026-11-06 a pedido de Gerardo para entrar sin
   tocar las cuentas existentes. La clave la tiene Gerardo (no se anota acá). `alexis`: `demo1234` ya no funciona (la
   cuenta se modificó el 5/11 9:21 sin login) — sigue el pendiente de qué hacer con esa cuenta.
+- **Perfil de `alexis` renombrado** (pedido de Alexis, 2026-11-06): "Felipe Merola" → **"Alexis Agustín"** (solo el nombre;
+  clave, cargo y estado sin tocar).
 - Pasos de Gerardo: (1) `git push`; (2) en producción, ficha de **Rodrigo Aguirre → Suspender jugador** con el motivo;
   verificar que pasa a "Suspendidos" y que sus fechas ya no están en el calendario.
