@@ -40,6 +40,11 @@ const FOTOS = [
   { ref: 'Javier Méndez', id_externo: '6122', slug: 'mendez' },
   { ref: 'Kevin Amaro', id_externo: '377326', slug: 'amaro' },
   { ref: 'Martín Fernández', id_externo: '51549', slug: 'fernandez' },
+  // 2026-11-12: tanda nueva de fotos de la agencia (antes usaban la foto de API-Football).
+  { ref: 'Abel Hernández', id_externo: '844', slug: 'hernandez' },
+  { ref: 'Gastón Martirena', id_externo: '197520', slug: 'martirena' },
+  { ref: 'Maximiliano Silvera', id_externo: '52058', slug: 'silvera' },
+  { ref: 'Franco Romero', id_externo: '51542', slug: 'romero' },
 ];
 
 for (const f of FOTOS) {

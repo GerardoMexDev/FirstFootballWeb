@@ -55,6 +55,10 @@ Thumbs.db
 !/public/jugadores/mendez.webp
 !/public/jugadores/amaro.webp
 !/public/jugadores/fernandez.webp
+!/public/jugadores/hernandez.webp
+!/public/jugadores/martirena.webp
+!/public/jugadores/silvera.webp
+!/public/jugadores/romero.webp
 
 # Config personal de Claude Code (permisos locales, no versionar)
 .claude/settings.local.json

@@ -3128,3 +3128,14 @@ F–H → I (con migración). Cada ítem cerrado se documenta en §4.
   pueden leer con el usuario read-only: usan `fecha_agencia()`; el filtro ya se probó en el rollback de `probar-0049`.)
 - Pasos originales de Gerardo: (1) `git push`; (2) en producción, ficha de **Rodrigo Aguirre → Suspender jugador** con el motivo;
   verificar que pasa a "Suspendidos" y que sus fechas ya no están en el calendario.
+
+### 2026-11-12 — Fotos nuevas de los 9 jugadores activos
+
+- Pedido de la agencia: reemplazar las fotos de la página Jugadores con la tanda de `Downloads/Firts_images_players` (9 .jpeg).
+- Procesadas a 600×800 WebP (receta del LEEME; `sosa` y `fernandez` con recorte acercado, son planos enteros).
+  Reemplazadas: pereira, sosa, mendez, amaro, fernandez. Nuevas: hernandez, martirena, silvera, romero (antes usaban la
+  foto de API-Football). `nandez.webp` sin tocar (suspendido, no vino foto).
+- `seed-fotos-jugadores.mjs` +4 entradas; `.gitignore` deja versionar los 4 .webp nuevos; LEEME actualizado.
+- `npm run seed:fotos` corrido (prod): las 4 nuevas ya apuntan a `/jugadores/<slug>.webp` → **en prod se ven rotas/sin foto
+  hasta el `git push`** (los archivos todavía no están en Vercel).
+- Verificado con `browser-automation` en local (`npm run dev` :3000, login `maxi`): las 9 tarjetas muestran la foto nueva.
