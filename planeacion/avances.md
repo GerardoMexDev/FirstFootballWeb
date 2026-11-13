@@ -3139,3 +3139,25 @@ F–H → I (con migración). Cada ítem cerrado se documenta en §4.
 - `npm run seed:fotos` corrido (prod): las 4 nuevas ya apuntan a `/jugadores/<slug>.webp` → **en prod se ven rotas/sin foto
   hasta el `git push`** (los archivos todavía no están en Vercel).
 - Verificado con `browser-automation` en local (`npm run dev` :3000, login `maxi`): las 9 tarjetas muestran la foto nueva.
+
+### 2026-11-12 — 🐞 API-Football suspendida OTRA VEZ (avisos de la campanita)
+
+- Avisos del Administrador: "partidos de copas y selección no se actualiza desde el 10/11" y "estadísticas … desde el 09/11".
+- `sincronizaciones`: estadísticas 10/11 05:00 → `HTTP 429` (límite por minuto); desde 11/11 todas las corridas de las 2 syncs
+  → `{"access":"Your account is suspended…"}`. `GET /status` con la clave f8fc… = suspendida. SportMonks y ESPN siguen OK.
+- **Bug encontrado (no arreglado todavía):** `sync-estadisticas` toma todos los partidos con `id_externo` sin filtrar
+  `proveedor_externo = 'api-football'` → le pide a API-Football ids de ESPN (401…) y de SportMonks, que nunca devuelve; los
+  reintenta todos los días (llamadas tiradas; el 429 del 10/11 fue con el id ESPN 401931258). Posible factor de la
+  suspensión (hipótesis; soporte en octubre habló de IPs compartidas de Supabase).
+- Pendiente decisión de Gerardo: contactar soporte + arreglar filtro / proxy IP fija / apagar las 2 syncs (Plan B).
+- **Respuesta de soporte (2026-11-12):** causa = IPs compartidas de Supabase Edge Functions; solo reactivan con IP
+  **dedicada** (no alcanza un proxy de IP fija compartido). **Decisión de Gerardo: Plan A = apagar API-Football.**
+- **Migración `0050_apagar_api_football.sql`**: `cron.unschedule` de `sync-partidos-diario` y `sync-estadisticas-diario` +
+  `avisos_sistema()` sin las 2 fuentes de api-football. Las Edge Functions y su código quedan (por si se vuelve con IP
+  dedicada). No hay partidos futuros de api-football en la base (los 4 "programado" pasados son de septiembre, ya estaban).
+  `test:avisos` actualizado (fuente de ejemplo → espn/partidos, + test 0050): **6/6** con 0050 aplicada en transacción.
+  Manual de operación: API-Football "Apagada" y fuera la fila de su aviso. El bug del filtro de `sync-estadisticas`
+  queda sin arreglar (función apagada).
+- ✅ **0050 aplicada por Gerardo** (SQL Editor; una 2da corrida dio "could not find valid entry for job" = ya estaba
+  aplicada, sin efecto por la transacción). Verificado read_only: quedan 3 cron (espn, sportmonks, roster) y
+  `avisos_sistema()` sin api-football.

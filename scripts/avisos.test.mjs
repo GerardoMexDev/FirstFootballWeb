@@ -18,13 +18,22 @@ const c = new Client({
 const MIGRACION = readFileSync(new URL('../supabase/migrations/0029_avisos_sistema_y_codigos_sportmonks.sql', import.meta.url), 'utf8')
   .replace(/^\s*begin;\s*$/m, '')
   .replace(/^\s*commit;\s*$/m, '');
+// 0050 (2026-11-12): saca las fuentes de API-Football de avisos_sistema(). Si todavía no está
+// aplicada, se aplica su función dentro de la transacción (sin los cron.unschedule).
+const MIGRACION_0050 = readFileSync(new URL('../supabase/migrations/0050_apagar_api_football.sql', import.meta.url), 'utf8')
+  .replace(/^\s*begin;\s*$/m, '')
+  .replace(/^\s*commit;\s*$/m, '')
+  .replace(/^select cron\.unschedule\(.*\);$/gm, '');
 let aplicada = false;
+let aplicada0050 = false;
 const ids = {};
 
 before(async () => {
   await c.connect();
   const r = await c.query(`select to_regprocedure('public.avisos_sistema()') is not null as ok`);
   aplicada = r.rows[0].ok;
+  const r2 = await c.query(`select coalesce(bool_and(prosrc not like '%''api-football''%'), false) as ok from pg_proc where proname = 'avisos_sistema'`);
+  aplicada0050 = r2.rows[0].ok;
   const u = await c.query(`select email, id from auth.users where email in ('felipe@footballfirst.uy','maxi@footballfirst.uy')`);
   for (const x of u.rows) ids[x.email.split('@')[0]] = x.id;
   assert.ok(ids.felipe && ids.maxi, 'faltan usuarios');
@@ -35,6 +44,7 @@ async function enTransaccion(fn) {
   await c.query('begin');
   try {
     if (!aplicada) await c.query(MIGRACION);
+    if (!aplicada0050) await c.query(MIGRACION_0050);
     await fn(c);
   } finally {
     await c.query('rollback');
@@ -69,24 +79,33 @@ test('0029: los 4 uruguayos y sus 2 clubes quedan con código de SportMonks', ()
 test('0029: una fuente caída más de 36 h le aparece al Administrador, con la fecha del último ok', () =>
   enTransaccion(async () => {
     await comoDueno();
-    await c.query(`delete from sincronizaciones where proveedor = 'api-football' and recurso = 'partidos'`);
-    await corrida('api-football', 'partidos', 'ok', 72);
-    await corrida('api-football', 'partidos', 'error', 1);
+    await c.query(`delete from sincronizaciones where proveedor = 'espn' and recurso = 'partidos'`);
+    await corrida('espn', 'partidos', 'ok', 72);
+    await corrida('espn', 'partidos', 'error', 1);
     await como(ids.felipe);
     const { rows } = await c.query(`select clave, texto from avisos_sistema()`);
-    const a = rows.find((r) => r.clave === 'fuente:api-football/partidos');
+    const a = rows.find((r) => r.clave === 'fuente:espn/partidos');
     assert.ok(a, 'no apareció el aviso de la fuente');
-    assert.match(a.texto, /^La fuente de partidos de copas y selección no se actualiza desde el \d{2}\/\d{2}\. Avisar a Mazdesign\.$/);
+    assert.match(a.texto, /^La fuente de partidos de Uruguay \(ESPN\) no se actualiza desde el \d{2}\/\d{2}\. Avisar a Mazdesign\.$/);
+  }));
+
+test('0050: API-Football caída ya NO genera avisos (fuente apagada)', () =>
+  enTransaccion(async () => {
+    await corrida('api-football', 'partidos', 'error', 1);
+    await corrida('api-football', 'estadisticas', 'error', 1);
+    await como(ids.felipe);
+    const { rows } = await c.query(`select clave from avisos_sistema() where clave like 'fuente:api-football/%'`);
+    assert.equal(rows.length, 0);
   }));
 
 test('0029: una falla reciente con un ok dentro de las 36 h NO avisa', () =>
   enTransaccion(async () => {
     await comoDueno();
-    await c.query(`delete from sincronizaciones where proveedor = 'api-football' and recurso = 'partidos'`);
-    await corrida('api-football', 'partidos', 'ok', 20);
-    await corrida('api-football', 'partidos', 'error', 1);
+    await c.query(`delete from sincronizaciones where proveedor = 'espn' and recurso = 'partidos'`);
+    await corrida('espn', 'partidos', 'ok', 20);
+    await corrida('espn', 'partidos', 'error', 1);
     await como(ids.felipe);
-    const { rows } = await c.query(`select clave from avisos_sistema() where clave = 'fuente:api-football/partidos'`);
+    const { rows } = await c.query(`select clave from avisos_sistema() where clave = 'fuente:espn/partidos'`);
     assert.equal(rows.length, 0);
   }));
 
